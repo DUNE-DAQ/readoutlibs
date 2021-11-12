@@ -6,8 +6,8 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_MODELS_READOUTMODEL_HPP_
-#define READOUT_INCLUDE_READOUT_MODELS_READOUTMODEL_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_READOUTMODEL_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_READOUTMODEL_HPP_
 
 #include "appfwk/app/Nljs.hpp"
 #include "appfwk/cmd/Nljs.hpp"
@@ -27,19 +27,19 @@
 #include "dfmessages/DataRequest.hpp"
 #include "dfmessages/TimeSync.hpp"
 
-#include "readout/ReadoutLogging.hpp"
-#include "readout/concepts/ReadoutConcept.hpp"
-#include "readout/readoutconfig/Nljs.hpp"
-#include "readout/readoutinfo/InfoNljs.hpp"
+#include "readoutlibs/ReadoutLogging.hpp"
+#include "readoutlibs/concepts/ReadoutConcept.hpp"
+#include "readoutlibs/readoutconfig/Nljs.hpp"
+#include "readoutlibs/readoutinfo/InfoNljs.hpp"
 
-#include "readout/FrameErrorRegistry.hpp"
+#include "readoutlibs/FrameErrorRegistry.hpp"
 
-#include "readout/concepts/LatencyBufferConcept.hpp"
-#include "readout/concepts/RawDataProcessorConcept.hpp"
-#include "readout/concepts/RequestHandlerConcept.hpp"
+#include "readoutlibs/concepts/LatencyBufferConcept.hpp"
+#include "readoutlibs/concepts/RawDataProcessorConcept.hpp"
+#include "readoutlibs/concepts/RequestHandlerConcept.hpp"
 
-#include "readout/ReadoutIssues.hpp"
-#include "readout/utils/ReusableThread.hpp"
+#include "readoutlibs/ReadoutIssues.hpp"
+#include "readoutlibs/utils/ReusableThread.hpp"
 
 #include <functional>
 #include <memory>
@@ -47,12 +47,12 @@
 #include <utility>
 #include <vector>
 
-using dunedaq::readout::logging::TLVL_QUEUE_POP;
-using dunedaq::readout::logging::TLVL_TAKE_NOTE;
-using dunedaq::readout::logging::TLVL_WORK_STEPS;
+using dunedaq::readoutlibs::logging::TLVL_QUEUE_POP;
+using dunedaq::readoutlibs::logging::TLVL_TAKE_NOTE;
+using dunedaq::readoutlibs::logging::TLVL_WORK_STEPS;
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 
 template<class ReadoutType, class RequestHandlerType, class LatencyBufferType, class RawDataProcessorType>
 class ReadoutModel : public ReadoutConcept
@@ -402,7 +402,7 @@ private:
   std::chrono::time_point<std::chrono::high_resolution_clock> m_t0;
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_MODELS_READOUTMODEL_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_READOUTMODEL_HPP_

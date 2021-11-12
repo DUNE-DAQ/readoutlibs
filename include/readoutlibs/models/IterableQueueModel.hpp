@@ -21,13 +21,13 @@
 // Modification by Roland Sipos and Florian Till Groetschla
 // for DUNE-DAQ software framework
 
-#ifndef READOUT_INCLUDE_READOUT_MODELS_ITERABLEQUEUEMODEL_HPP_
-#define READOUT_INCLUDE_READOUT_MODELS_ITERABLEQUEUEMODEL_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_ITERABLEQUEUEMODEL_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_ITERABLEQUEUEMODEL_HPP_
 
-#include "readout/ReadoutIssues.hpp"
-#include "readout/concepts/LatencyBufferConcept.hpp"
-#include "readout/readoutconfig/Nljs.hpp"
-#include "readout/readoutconfig/Structs.hpp"
+#include "readoutlibs/ReadoutIssues.hpp"
+#include "readoutlibs/concepts/LatencyBufferConcept.hpp"
+#include "readoutlibs/readoutconfig/Nljs.hpp"
+#include "readoutlibs/readoutconfig/Structs.hpp"
 
 #include "logging/Logging.hpp"
 
@@ -56,7 +56,7 @@
 #endif
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 
 /**
  * IterableQueueModel is a one producer and one consumer queue without locks.
@@ -520,7 +520,7 @@ protected:
   char pad1_[folly::hardware_destructive_interference_size - sizeof(writeIndex_)]; // NOLINT(runtime/arrays)
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_MODELS_ITERABLEQUEUEMODEL_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_ITERABLEQUEUEMODEL_HPP_

@@ -14,15 +14,14 @@
 #include "boost/test/unit_test.hpp"
 
 #include "logging/Logging.hpp"
-#include "readout/ReadoutTypes.hpp"
-#include "readout/utils/BufferedFileReader.hpp"
-#include "readout/utils/BufferedFileWriter.hpp"
+#include "readoutlibs/utils/BufferedFileReader.hpp"
+#include "readoutlibs/utils/BufferedFileWriter.hpp"
 
 #include <cstdio>
 #include <string>
 #include <vector>
 
-using namespace dunedaq::readout;
+using namespace dunedaq::readoutlibs;
 
 BOOST_AUTO_TEST_SUITE(readoutlibs_BufferedReadWrite_test)
 
@@ -163,33 +162,6 @@ BOOST_AUTO_TEST_CASE(BufferedReadWrite_destructor)
   BOOST_REQUIRE(read_successful);
   BOOST_REQUIRE_EQUAL(value, 42);
 
-  reader.close();
-
-  remove("test.out");
-}
-
-BOOST_AUTO_TEST_CASE(BufferedReadWrite_superchunk)
-{
-  remove("test.out");
-  TLOG() << "Read and write superchunks" << std::endl;
-  BufferedFileWriter writer("test.out", 8388608);
-
-  std::vector<types::WIB_SUPERCHUNK_STRUCT> chunks(100000);
-  for (uint i = 0; i < chunks.size(); ++i) {
-    memset(&chunks[i], i, sizeof(chunks[i]));
-    bool write_successful = writer.write(reinterpret_cast<char*>(&chunks[i]), sizeof(chunks[i]));
-    BOOST_REQUIRE(write_successful);
-  }
-  writer.close();
-
-  BufferedFileReader<types::WIB_SUPERCHUNK_STRUCT> reader("test.out", 8388608);
-  types::WIB_SUPERCHUNK_STRUCT chunk;
-  for (uint i = 0; i < chunks.size(); ++i) {
-    bool read_successful = reader.read(chunk);
-    BOOST_REQUIRE(read_successful);
-    bool read_chunk_equals_written_chunk = !memcmp(&chunk, &chunks[i], sizeof(chunk));
-    BOOST_REQUIRE(read_chunk_equals_written_chunk);
-  }
   reader.close();
 
   remove("test.out");

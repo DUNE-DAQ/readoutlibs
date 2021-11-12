@@ -6,10 +6,10 @@
  * received with this code.
  */
 
-#include "readout/models/IterableQueueModel.hpp"
-#include "readout/models/SkipListLatencyBufferModel.hpp"
+#include "readoutlibs/models/IterableQueueModel.hpp"
+#include "readoutlibs/models/SkipListLatencyBufferModel.hpp"
 
-#include "readout/concepts/RawDataProcessorConcept.hpp"
+#include "readoutlibs/concepts/RawDataProcessorConcept.hpp"
 
 #include "logging/Logging.hpp"
 
@@ -26,7 +26,7 @@
 
 //#define REGISTER (*(volatile unsigned char*)0x1234)
 
-using namespace dunedaq::readout;
+using namespace dunedaq::readoutlibs;
 
 namespace {
 struct kBlock {

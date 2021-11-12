@@ -5,19 +5,19 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_MODELS_RECORDERMODEL_HPP_
-#define READOUT_INCLUDE_READOUT_MODELS_RECORDERMODEL_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_RECORDERMODEL_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_RECORDERMODEL_HPP_
 
 #include "appfwk/DAQModuleHelper.hpp"
 #include "appfwk/DAQSource.hpp"
 #include "appfwk/ThreadHelper.hpp"
-#include "readout/ReadoutTypes.hpp"
-#include "readout/concepts/RecorderConcept.hpp"
-#include "readout/datarecorder/Nljs.hpp"
-#include "readout/datarecorder/Structs.hpp"
-#include "readout/datarecorderinfo/InfoStructs.hpp"
-#include "readout/utils/BufferedFileWriter.hpp"
-#include "readout/utils/ReusableThread.hpp"
+#include "readoutlibs/ReadoutTypes.hpp"
+#include "readoutlibs/concepts/RecorderConcept.hpp"
+#include "readoutlibs/datarecorder/Nljs.hpp"
+#include "readoutlibs/datarecorder/Structs.hpp"
+#include "readoutlibs/datarecorderinfo/InfoStructs.hpp"
+#include "readoutlibs/utils/BufferedFileWriter.hpp"
+#include "readoutlibs/utils/ReusableThread.hpp"
 
 #include <atomic>
 #include <fstream>
@@ -26,7 +26,7 @@
 #include <string>
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 template<class ReadoutType>
 class RecorderImpl : public RecorderConcept
 {
@@ -130,7 +130,7 @@ private:
 
   std::string m_name;
 };
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_MODELS_RECORDERMODEL_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_RECORDERMODEL_HPP_

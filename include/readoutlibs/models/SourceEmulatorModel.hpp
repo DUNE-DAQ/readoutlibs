@@ -5,8 +5,8 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_MODELS_SOURCEEMULATORMODEL_HPP_
-#define READOUT_INCLUDE_READOUT_MODELS_SOURCEEMULATORMODEL_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_SOURCEEMULATORMODEL_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_SOURCEEMULATORMODEL_HPP_
 
 #include "appfwk/DAQSink.hpp"
 #include "appfwk/DAQSource.hpp"
@@ -15,15 +15,15 @@
 
 #include "opmonlib/InfoCollector.hpp"
 
-#include "readout/sourceemulatorconfig/Nljs.hpp"
-#include "readout/sourceemulatorinfo/InfoNljs.hpp"
+#include "readoutlibs/sourceemulatorconfig/Nljs.hpp"
+#include "readoutlibs/sourceemulatorinfo/InfoNljs.hpp"
 
-#include "readout/ReadoutIssues.hpp"
-#include "readout/concepts/SourceEmulatorConcept.hpp"
-#include "readout/utils/ErrorBitGenerator.hpp"
-#include "readout/utils/FileSourceBuffer.hpp"
-#include "readout/utils/RateLimiter.hpp"
-#include "readout/utils/ReusableThread.hpp"
+#include "readoutlibs/ReadoutIssues.hpp"
+#include "readoutlibs/concepts/SourceEmulatorConcept.hpp"
+#include "readoutlibs/utils/ErrorBitGenerator.hpp"
+#include "readoutlibs/utils/FileSourceBuffer.hpp"
+#include "readoutlibs/utils/RateLimiter.hpp"
+#include "readoutlibs/utils/ReusableThread.hpp"
 
 #include <functional>
 #include <memory>
@@ -34,11 +34,11 @@
 #include "unistd.h"
 #include <chrono>
 
-using dunedaq::readout::logging::TLVL_TAKE_NOTE;
-using dunedaq::readout::logging::TLVL_WORK_STEPS;
+using dunedaq::readoutlibs::logging::TLVL_TAKE_NOTE;
+using dunedaq::readoutlibs::logging::TLVL_WORK_STEPS;
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 
 template<class ReadoutType>
 class SourceEmulatorModel : public SourceEmulatorConcept
@@ -244,9 +244,9 @@ private:
   std::unique_ptr<raw_sink_qt> m_raw_data_sink;
 
   bool m_sink_is_set = false;
-  using module_conf_t = dunedaq::readout::sourceemulatorconfig::Conf;
+  using module_conf_t = dunedaq::readoutlibs::sourceemulatorconfig::Conf;
   module_conf_t m_conf;
-  using link_conf_t = dunedaq::readout::sourceemulatorconfig::LinkConfiguration;
+  using link_conf_t = dunedaq::readoutlibs::sourceemulatorconfig::LinkConfiguration;
   link_conf_t m_link_conf;
 
   std::unique_ptr<RateLimiter> m_rate_limiter;
@@ -267,7 +267,7 @@ private:
   daqdataformats::GeoID m_geoid;
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_MODELS_SOURCEEMULATORMODEL_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_SOURCEEMULATORMODEL_HPP_

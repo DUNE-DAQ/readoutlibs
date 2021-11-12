@@ -5,12 +5,12 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_MODELS_SKIPLISTLATENCYBUFFERMODEL_HPP_
-#define READOUT_INCLUDE_READOUT_MODELS_SKIPLISTLATENCYBUFFERMODEL_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_SKIPLISTLATENCYBUFFERMODEL_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_SKIPLISTLATENCYBUFFERMODEL_HPP_
 
-#include "readout/ReadoutIssues.hpp"
-#include "readout/ReadoutLogging.hpp"
-#include "readout/concepts/LatencyBufferConcept.hpp"
+#include "readoutlibs/ReadoutIssues.hpp"
+#include "readoutlibs/ReadoutLogging.hpp"
+#include "readoutlibs/concepts/LatencyBufferConcept.hpp"
 
 #include "logging/Logging.hpp"
 
@@ -19,10 +19,10 @@
 #include <memory>
 #include <utility>
 
-using dunedaq::readout::logging::TLVL_WORK_STEPS;
+using dunedaq::readoutlibs::logging::TLVL_WORK_STEPS;
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 
 template<class T>
 class SkipListLatencyBufferModel : public LatencyBufferConcept<T>
@@ -180,7 +180,7 @@ private:
   static constexpr uint32_t unconfigured_head_height = 2; // NOLINT(build/unsigned)
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_MODELS_SKIPLISTLATENCYBUFFERMODEL_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_SKIPLISTLATENCYBUFFERMODEL_HPP_

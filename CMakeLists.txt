@@ -18,7 +18,7 @@ find_package(folly REQUIRED)
 find_package(Boost COMPONENTS iostreams REQUIRED)
 set(BOOST_LIBS Boost::iostreams ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_LIBRARIES})
 
-daq_codegen( readoutconfig.jsonnet TEMPLATES Structs.hpp.j2 Nljs.hpp.j2 )
+daq_codegen( readoutconfig.jsonnet sourceemulatorconfig.jsonnet TEMPLATES Structs.hpp.j2 Nljs.hpp.j2 )
 daq_codegen( *info.jsonnet DEP_PKGS opmonlib TEMPLATES opmonlib/InfoStructs.hpp.j2 opmonlib/InfoNljs.hpp.j2 )
 
 ##############################################################################
@@ -54,18 +54,18 @@ daq_add_library(
 
 ##############################################################################
 # Integration tests
-daq_add_application(readout_test_ratelimiter test_ratelimiter_app.cxx TEST LINK_LIBRARIES readout)
-daq_add_application(readout_test_lb_allocation test_lb_allocation_app.cxx TEST LINK_LIBRARIES readout)
-daq_add_application(readout_test_bufferedfilewriter test_bufferedfilewriter_app.cxx TEST LINK_LIBRARIES readout ${BOOST_LIBS})
-daq_add_application(readout_test_bufferedfilereader test_bufferedfilereader_app.cxx TEST LINK_LIBRARIES readout ${BOOST_LIBS})
-daq_add_application(readout_test_skiplist test_skiplist_app.cxx TEST LINK_LIBRARIES readout ${BOOST_LIBS})
+daq_add_application(readoutlibs_test_ratelimiter test_ratelimiter_app.cxx TEST LINK_LIBRARIES readoutlibs)
+daq_add_application(readoutlibs_test_lb_allocation test_lb_allocation_app.cxx TEST LINK_LIBRARIES readoutlibs)
+#daq_add_application(readoutlibs_test_bufferedfilewriter test_bufferedfilewriter_app.cxx TEST LINK_LIBRARIES readoutlibs ${BOOST_LIBS})
+#daq_add_application(readoutlibs_test_bufferedfilereader test_bufferedfilereader_app.cxx TEST LINK_LIBRARIES readoutlibs ${BOOST_LIBS})
+#daq_add_application(readoutlibs_test_skiplist test_skiplist_app.cxx TEST LINK_LIBRARIES readoutlibs ${BOOST_LIBS})
 
 
 ##############################################################################
 # Unit Tests
 
 daq_add_unit_test(readoutlibs_BufferedReadWrite_test LINK_LIBRARIES readoutlibs ${BOOST_LIBS})
-daq_add_unit_test(readoutlibs VariableSizeElementQueue_test LINK_LIBRARIES readoutlibs )
+#daq_add_unit_test(readoutlibs_VariableSizeElementQueue_test LINK_LIBRARIES readoutlibs ${BOOST_LIBS})
 
 ##############################################################################
 # Installation

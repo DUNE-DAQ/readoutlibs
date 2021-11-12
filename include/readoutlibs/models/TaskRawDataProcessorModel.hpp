@@ -6,17 +6,17 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_MODELS_TASKRAWDATAPROCESSORMODEL_HPP_
-#define READOUT_INCLUDE_READOUT_MODELS_TASKRAWDATAPROCESSORMODEL_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_TASKRAWDATAPROCESSORMODEL_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_TASKRAWDATAPROCESSORMODEL_HPP_
 
 #include "daqdataformats/GeoID.hpp"
 #include "logging/Logging.hpp"
-#include "readout/FrameErrorRegistry.hpp"
-#include "readout/ReadoutIssues.hpp"
-#include "readout/ReadoutLogging.hpp"
-#include "readout/concepts/RawDataProcessorConcept.hpp"
-#include "readout/readoutconfig/Nljs.hpp"
-#include "readout/utils/ReusableThread.hpp"
+#include "readoutlibs/FrameErrorRegistry.hpp"
+#include "readoutlibs/ReadoutIssues.hpp"
+#include "readoutlibs/ReadoutLogging.hpp"
+#include "readoutlibs/concepts/RawDataProcessorConcept.hpp"
+#include "readoutlibs/readoutconfig/Nljs.hpp"
+#include "readoutlibs/utils/ReusableThread.hpp"
 
 #include <folly/ProducerConsumerQueue.h>
 
@@ -28,10 +28,10 @@
 #include <utility>
 #include <vector>
 
-using dunedaq::readout::logging::TLVL_WORK_STEPS;
+using dunedaq::readoutlibs::logging::TLVL_WORK_STEPS;
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 
 template<class ReadoutType>
 class TaskRawDataProcessorModel : public RawDataProcessorConcept<ReadoutType>
@@ -162,7 +162,7 @@ protected:
   std::atomic<std::uint64_t> m_last_processed_daq_ts{ 0 }; // NOLINT(build/unsigned)
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_MODELS_TASKRAWDATAPROCESSORMODEL_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_TASKRAWDATAPROCESSORMODEL_HPP_

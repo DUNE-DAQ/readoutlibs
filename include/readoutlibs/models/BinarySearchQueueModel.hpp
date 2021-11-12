@@ -5,18 +5,18 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_MODELS_BINARYSEARCHQUEUEMODEL_HPP_
-#define READOUT_INCLUDE_READOUT_MODELS_BINARYSEARCHQUEUEMODEL_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_BINARYSEARCHQUEUEMODEL_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_BINARYSEARCHQUEUEMODEL_HPP_
 
-#include "readout/ReadoutIssues.hpp"
-#include "readout/ReadoutLogging.hpp"
+#include "readoutlibs/ReadoutIssues.hpp"
+#include "readoutlibs/ReadoutLogging.hpp"
 
 #include "logging/Logging.hpp"
 
 #include "IterableQueueModel.hpp"
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs{
 
 template<class T>
 class BinarySearchQueueModel : public IterableQueueModel<T>
@@ -68,7 +68,7 @@ public:
   }
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_MODELS_BINARYSEARCHQUEUEMODEL_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_BINARYSEARCHQUEUEMODEL_HPP_

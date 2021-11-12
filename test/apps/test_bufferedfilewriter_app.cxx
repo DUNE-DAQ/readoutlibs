@@ -6,7 +6,7 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#include "readout/utils/BufferedFileWriter.hpp"
+#include "readoutlibs/utils/BufferedFileWriter.hpp"
 
 #include "logging/Logging.hpp"
 #include "readout/ReadoutTypes.hpp"
@@ -16,13 +16,13 @@
 #include <memory>
 #include <string>
 
-using namespace dunedaq::readout;
+using namespace dunedaq::readoutlibs;
 
 int
 main(int argc, char* argv[])
 {
   if (argc != 2) {
-    TLOG() << "usage: readout_test_bufferedfilewriter filename" << std::endl;
+    TLOG() << "usage: readoutlibs_test_bufferedfilewriter filename" << std::endl;
     exit(1);
   }
   remove(argv[1]); // NOLINT

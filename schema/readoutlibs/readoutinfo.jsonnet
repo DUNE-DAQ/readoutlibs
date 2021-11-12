@@ -41,7 +41,7 @@ local info = {
         s.field("num_payloads_written",          self.uint8,     0, doc="Number of payloads written in the recording")
    ], doc="Request Handler information"),
 
-   readoutinfo: s.record("ReadoutInfo", [
+   readoutlibsinfo: s.record("ReadoutInfo", [
        s.field("sum_payloads",                  self.uint8,     0, doc="Total number of received payloads"),
        s.field("num_payloads",                  self.uint8,     0, doc="Number of received payloads"),
        s.field("sum_requests",                  self.uint8,     0, doc="Total number of received requests"),

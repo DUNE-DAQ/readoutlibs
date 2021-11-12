@@ -6,23 +6,23 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_MODELS_DEFAULTREQUESTHANDLERMODEL_HPP_
-#define READOUT_INCLUDE_READOUT_MODELS_DEFAULTREQUESTHANDLERMODEL_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_DEFAULTREQUESTHANDLERMODEL_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_DEFAULTREQUESTHANDLERMODEL_HPP_
 
-#include "readout/ReadoutIssues.hpp"
-#include "readout/concepts/RequestHandlerConcept.hpp"
-#include "readout/utils/BufferedFileWriter.hpp"
-#include "readout/utils/ReusableThread.hpp"
+#include "readoutlibs/ReadoutIssues.hpp"
+#include "readoutlibs/concepts/RequestHandlerConcept.hpp"
+#include "readoutlibs/utils/BufferedFileWriter.hpp"
+#include "readoutlibs/utils/ReusableThread.hpp"
 
-#include "readout/readoutconfig/Nljs.hpp"
+#include "readoutlibs/readoutconfig/Nljs.hpp"
 
 #include "appfwk/Issues.hpp"
 #include "daqdataformats/Fragment.hpp"
 #include "daqdataformats/Types.hpp"
 #include "dfmessages/DataRequest.hpp"
 #include "logging/Logging.hpp"
-#include "readout/FrameErrorRegistry.hpp"
-#include "readout/ReadoutLogging.hpp"
+#include "readoutlibs/FrameErrorRegistry.hpp"
+#include "readoutlibs/ReadoutLogging.hpp"
 
 #include <boost/asio.hpp>
 
@@ -44,12 +44,12 @@
 #include <utility>
 #include <vector>
 
-using dunedaq::readout::logging::TLVL_HOUSEKEEPING;
-using dunedaq::readout::logging::TLVL_QUEUE_PUSH;
-using dunedaq::readout::logging::TLVL_WORK_STEPS;
+using dunedaq::readoutlibs::logging::TLVL_HOUSEKEEPING;
+using dunedaq::readoutlibs::logging::TLVL_QUEUE_PUSH;
+using dunedaq::readoutlibs::logging::TLVL_WORK_STEPS;
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 
 template<class ReadoutType, class LatencyBufferType>
 class DefaultRequestHandlerModel : public RequestHandlerConcept<ReadoutType, LatencyBufferType>
@@ -77,8 +77,8 @@ public:
     TLOG_DEBUG(TLVL_WORK_STEPS) << "DefaultRequestHandlerModel created...";
   }
 
-  using RequestResult = typename dunedaq::readout::RequestHandlerConcept<ReadoutType, LatencyBufferType>::RequestResult;
-  using ResultCode = typename dunedaq::readout::RequestHandlerConcept<ReadoutType, LatencyBufferType>::ResultCode;
+  using RequestResult = typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::RequestResult;
+  using ResultCode = typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::ResultCode;
 
   struct RequestElement
   {
@@ -457,7 +457,7 @@ protected:
           } else if (m_waiting_requests[i].retry_count >= m_retry_count) {
             auto fragment = create_empty_fragment(m_waiting_requests[i].request);
 
-            ers::warning(dunedaq::readout::RequestTimedOut(ERS_HERE, m_geoid));
+            ers::warning(dunedaq::readoutlibs::RequestTimedOut(ERS_HERE, m_geoid));
             m_num_requests_bad++;
             m_num_requests_timed_out++;
             try { // Push to Fragment queue
@@ -477,7 +477,7 @@ protected:
           } else if (!m_run_marker.load()) {
             auto fragment = create_empty_fragment(m_waiting_requests[i].request);
 
-            ers::warning(dunedaq::readout::EndOfRunEmptyFragment(ERS_HERE, m_geoid));
+            ers::warning(dunedaq::readoutlibs::EndOfRunEmptyFragment(ERS_HERE, m_geoid));
             m_num_requests_bad++;
             try { // Push to Fragment queue
               TLOG_DEBUG(TLVL_QUEUE_PUSH)
@@ -610,7 +610,7 @@ protected:
     }
 
     if (rres.result_code != ResultCode::kFound) {
-      ers::warning(dunedaq::readout::TrmWithEmptyFragment(ERS_HERE, m_geoid, oss.str()));
+      ers::warning(dunedaq::readoutlibs::TrmWithEmptyFragment(ERS_HERE, m_geoid, oss.str()));
     }
 
     // Create fragment from pieces
@@ -694,7 +694,7 @@ protected:
   // std::mutex m_response_time_log_lock;
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_MODELS_DEFAULTREQUESTHANDLERMODEL_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_DEFAULTREQUESTHANDLERMODEL_HPP_

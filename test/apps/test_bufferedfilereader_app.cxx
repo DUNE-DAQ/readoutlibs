@@ -6,23 +6,23 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#include "readout/utils/BufferedFileReader.hpp"
+#include "readoutlibs/utils/BufferedFileReader.hpp"
 
 #include "logging/Logging.hpp"
-#include "readout/ReadoutTypes.hpp"
+#include "readoutlibs/ReadoutTypes.hpp"
 
 #include <atomic>
 #include <chrono>
 #include <memory>
 #include <string>
 
-using namespace dunedaq::readout;
+using namespace dunedaq::readoutlibs;
 
 int
 main(int argc, char* argv[])
 {
   if (argc != 2) {
-    TLOG() << "usage: readout_test_bufferedfilereader filename" << std::endl;
+    TLOG() << "usage: readoutlibs_test_bufferedfilereader filename" << std::endl;
     exit(1);
   }
   std::string filename(argv[1]);

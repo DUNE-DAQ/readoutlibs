@@ -5,21 +5,21 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_MODELS_EMPTYFRAGMENTREQUESTHANDLERMODEL_HPP_
-#define READOUT_INCLUDE_READOUT_MODELS_EMPTYFRAGMENTREQUESTHANDLERMODEL_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_EMPTYFRAGMENTREQUESTHANDLERMODEL_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_EMPTYFRAGMENTREQUESTHANDLERMODEL_HPP_
 
-#include "readout/models/DefaultRequestHandlerModel.hpp"
+#include "readoutlibs/models/DefaultRequestHandlerModel.hpp"
 
 #include <memory>
 #include <utility>
 #include <vector>
 
-using dunedaq::readout::logging::TLVL_HOUSEKEEPING;
-using dunedaq::readout::logging::TLVL_QUEUE_PUSH;
-using dunedaq::readout::logging::TLVL_WORK_STEPS;
+using dunedaq::readoutlibs::logging::TLVL_HOUSEKEEPING;
+using dunedaq::readoutlibs::logging::TLVL_QUEUE_PUSH;
+using dunedaq::readoutlibs::logging::TLVL_WORK_STEPS;
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 
 template<class ReadoutType, class LatencyBufferType>
 class EmptyFragmentRequestHandlerModel : public DefaultRequestHandlerModel<ReadoutType, LatencyBufferType>
@@ -34,8 +34,8 @@ public:
     TLOG_DEBUG(TLVL_WORK_STEPS) << "EmptyFragmentRequestHandlerModel created...";
   }
 
-  using RequestResult = typename dunedaq::readout::RequestHandlerConcept<ReadoutType, LatencyBufferType>::RequestResult;
-  using ResultCode = typename dunedaq::readout::RequestHandlerConcept<ReadoutType, LatencyBufferType>::ResultCode;
+  using RequestResult = typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::RequestResult;
+  using ResultCode = typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::ResultCode;
 
   void issue_request(dfmessages::DataRequest datarequest,
                      appfwk::DAQSink<std::unique_ptr<daqdataformats::Fragment>>& fragment_queue) override
@@ -45,7 +45,7 @@ public:
     auto fragment = std::make_unique<daqdataformats::Fragment>(std::vector<std::pair<void*, size_t>>());
     fragment->set_header_fields(frag_header);
 
-    // ers::warning(dunedaq::readout::TrmWithEmptyFragment(ERS_HERE, "DLH is configured to send empty fragment"));
+    // ers::warning(dunedaq::readoutlibs::TrmWithEmptyFragment(ERS_HERE, "DLH is configured to send empty fragment"));
     TLOG_DEBUG(TLVL_WORK_STEPS) << "DLH is configured to send empty fragment";
 
     try { // Push to Fragment queue
@@ -62,7 +62,7 @@ public:
   }
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
 #endif // READOUT_INCLUDE_READOUT_MODELS_EMPTYFRAGMENTREQUESTHANDLERMODEL_HPP_

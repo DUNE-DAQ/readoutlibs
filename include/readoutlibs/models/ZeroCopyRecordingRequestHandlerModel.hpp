@@ -6,13 +6,13 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_MODELS_ZEROCOPYRECORDINGREQUESTHANDLERMODEL_HPP_
-#define READOUT_INCLUDE_READOUT_MODELS_ZEROCOPYRECORDINGREQUESTHANDLERMODEL_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_ZEROCOPYRECORDINGREQUESTHANDLERMODEL_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_ZEROCOPYRECORDINGREQUESTHANDLERMODEL_HPP_
 
-#include "readout/models/DefaultRequestHandlerModel.hpp"
+#include "readoutlibs/models/DefaultRequestHandlerModel.hpp"
 
 namespace dunedaq {
-  namespace readout {
+  namespace readoutlibs {
 
     template<class ReadoutType, class LatencyBufferType>
     class ZeroCopyRecordingRequestHandlerModel : public DefaultRequestHandlerModel<ReadoutType, LatencyBufferType>
@@ -197,7 +197,7 @@ namespace dunedaq {
       int m_oflag;
     };
 
-  } // namespace readout
+  } // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_MODELS_ZEROCOPYRECORDINGREQUESTHANDLERMODEL_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_ZEROCOPYRECORDINGREQUESTHANDLERMODEL_HPP_
