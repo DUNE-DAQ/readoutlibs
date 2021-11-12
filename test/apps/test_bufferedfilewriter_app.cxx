@@ -9,7 +9,7 @@
 #include "readoutlibs/utils/BufferedFileWriter.hpp"
 
 #include "logging/Logging.hpp"
-#include "readout/ReadoutTypes.hpp"
+#include "readoutlibs/ReadoutTypes.hpp"
 
 #include <atomic>
 #include <chrono>
