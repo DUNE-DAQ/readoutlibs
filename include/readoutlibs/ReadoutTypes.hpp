@@ -8,19 +8,6 @@
 #ifndef READOUTLIBS_INCLUDE_READOUTLIBS_READOUTTYPES_HPP_
 #define READOUTLIBS_INCLUDE_READOUTLIBS_READOUTTYPES_HPP_
 
-#include "RawWIBTp.hpp"
-
-#include "appfwk/DAQSink.hpp"
-#include "appfwk/DAQSource.hpp"
-
-#include "daqdataformats/FragmentHeader.hpp"
-#include "daqdataformats/GeoID.hpp"
-#include "detdataformats/daphne/DAPHNEFrame.hpp"
-#include "detdataformats/ssp/SSPTypes.hpp"
-#include "detdataformats/wib/WIBFrame.hpp"
-#include "detdataformats/wib2/WIB2Frame.hpp"
-#include "triggeralgs/TriggerPrimitive.hpp"
-
 #include <cstdint> // uint_t types
 #include <memory>  // unique_ptr
 
