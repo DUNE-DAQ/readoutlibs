@@ -1,5 +1,5 @@
 /**
- * @file BufferedReadWrite_test.cxx Unit Tests for BufferedFileWriter and BufferedFileReader
+ * @file readoutlibs_BufferedReadWrite_test.cxx Unit Tests for BufferedFileWriter and BufferedFileReader
  *
  * This is part of the DUNE DAQ Application Framework, copyright 2020.
  * Licensing/copyright details are in the COPYING file that you should have
@@ -9,7 +9,7 @@
 /**
  * @brief Name of this test module
  */
-#define BOOST_TEST_MODULE BufferedReadWrite_test // NOLINT
+#define BOOST_TEST_MODULE readoutlibs_BufferedReadWrite_test // NOLINT
 
 #include "boost/test/unit_test.hpp"
 
@@ -24,7 +24,7 @@
 
 using namespace dunedaq::readout;
 
-BOOST_AUTO_TEST_SUITE(BufferedReadWrite_test)
+BOOST_AUTO_TEST_SUITE(readoutlibs_BufferedReadWrite_test)
 
 void
 test_read_write(BufferedFileWriter<>& writer, BufferedFileReader<int>& reader, uint numbers_to_write)

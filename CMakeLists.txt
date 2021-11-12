@@ -64,8 +64,8 @@ daq_add_application(readout_test_skiplist test_skiplist_app.cxx TEST LINK_LIBRAR
 ##############################################################################
 # Unit Tests
 
-daq_add_unit_test(BufferedReadWrite_test       LINK_LIBRARIES readout ${BOOST_LIBS})
-#daq_add_unit_test(VariableSizeElementQueue_test LINK_LIBRARIES readout)
+daq_add_unit_test(readoutlibs_BufferedReadWrite_test LINK_LIBRARIES readoutlibs ${BOOST_LIBS})
+daq_add_unit_test(readoutlibs VariableSizeElementQueue_test LINK_LIBRARIES readoutlibs )
 
 ##############################################################################
 # Installation
