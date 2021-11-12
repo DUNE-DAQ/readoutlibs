@@ -28,7 +28,7 @@ main(int argc, char* argv[])
   remove(argv[1]); // NOLINT
   std::string filename(argv[1]);
   BufferedFileWriter writer(filename, 8388608);
-  types::WIB_SUPERCHUNK_STRUCT chunk;
+  types::DUMMY_FRAME_STRUCT chunk;
   for (uint i = 0; i < sizeof(chunk); ++i) {
     (reinterpret_cast<char*>(&chunk))[i] = static_cast<char>(i); // NOLINT
   }

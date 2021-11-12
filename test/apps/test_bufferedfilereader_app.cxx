@@ -26,8 +26,8 @@ main(int argc, char* argv[])
     exit(1);
   }
   std::string filename(argv[1]);
-  BufferedFileReader<types::WIB_SUPERCHUNK_STRUCT> reader(filename, 8388608);
-  types::WIB_SUPERCHUNK_STRUCT chunk;
+  BufferedFileReader<types::DUMMY_FRAME_STRUCT> reader(filename, 8388608);
+  types::DUMMY_FRAME_STRUCT chunk;
   for (uint i = 0; i < sizeof(chunk); ++i) {
     (reinterpret_cast<char*>(&chunk))[i] = static_cast<char>(i); // NOLINT
   }

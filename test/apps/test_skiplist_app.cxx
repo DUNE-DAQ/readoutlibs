@@ -31,7 +31,7 @@ main(int /*argc*/, char** /*argv[]*/)
 {
 
   // ConcurrentSkipList from Folly
-  typedef ConcurrentSkipList<types::WIB_SUPERCHUNK_STRUCT> SkipListT;
+  typedef ConcurrentSkipList<types::DUMMY_FRAME_STRUCT> SkipListT;
   typedef SkipListT::Accessor SkipListTAcc;
   // typedef SkipListT::Skipper SkipListTSkip; //Skipper accessor to test
 
@@ -78,7 +78,7 @@ main(int /*argc*/, char** /*argv[]*/)
     TLOG() << "SkipList Producer spawned... Creating accessor.";
     uint64_t ts = 0; // NOLINT(build/unsigned)
     while (marker) {
-      types::WIB_SUPERCHUNK_STRUCT pl;
+      types::DUMMY_FRAME_STRUCT pl;
       auto plptr = const_cast<dunedaq::detdataformats::wib::WIBHeader*>(
         reinterpret_cast<const dunedaq::detdataformats::wib::WIBHeader*>(&pl)); // NOLINT
       plptr->timestamp_1 = ts;
@@ -150,7 +150,7 @@ main(int /*argc*/, char** /*argv[]*/)
 
           // Adjust trigger right in between:
           auto trigts = (tailts + headts) / static_cast<uint64_t>(2); // NOLINT(build/unsigned)
-          types::WIB_SUPERCHUNK_STRUCT trigger_pl;
+          types::DUMMY_FRAME_STRUCT trigger_pl;
           auto trigptr = const_cast<dunedaq::detdataformats::wib::WIBHeader*>(
             reinterpret_cast<const dunedaq::detdataformats::wib::WIBHeader*>(&trigger_pl)); // NOLINT
           trigptr->timestamp_1 = trigts;
