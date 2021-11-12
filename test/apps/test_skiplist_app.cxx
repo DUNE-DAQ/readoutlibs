@@ -81,8 +81,7 @@ main(int /*argc*/, char** /*argv[]*/)
       types::DUMMY_FRAME_STRUCT pl;
       auto plptr = const_cast<types::DUMMY_FRAME_STRUCT*>(
         reinterpret_cast<const types::DUMMY_FRAME_STRUCT*>(&pl)); // NOLINT
-      plptr->timestamp_1 = ts;
-      plptr->timestamp_2 = ts >> 32;
+      plptr->timestamp = ts;
       {
         SkipListTAcc prodacc(skl);
         prodacc.insert(std::move(pl));
@@ -153,8 +152,7 @@ main(int /*argc*/, char** /*argv[]*/)
           types::DUMMY_FRAME_STRUCT trigger_pl;
           auto trigptr = const_cast<types::DUMMY_FRAME_STRUCT*>(
             reinterpret_cast<const types::DUMMY_FRAME_STRUCT*>(&trigger_pl)); // NOLINT
-          trigptr->timestamp_1 = trigts;
-          trigptr->timestamp_2 = trigts >> 32;
+          trigptr->timestamp = trigts;
 
           // Find closest to trigger payload
           auto close = exacc.lower_bound(trigger_pl);
