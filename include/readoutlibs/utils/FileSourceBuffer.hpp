@@ -5,11 +5,11 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_UTILS_FILESOURCEBUFFER_HPP_
-#define READOUT_INCLUDE_READOUT_UTILS_FILESOURCEBUFFER_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_UTILS_FILESOURCEBUFFER_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_UTILS_FILESOURCEBUFFER_HPP_
 
-#include "readout/ReadoutIssues.hpp"
-#include "readout/ReadoutLogging.hpp"
+#include "readoutlibs/ReadoutIssues.hpp"
+#include "readoutlibs/ReadoutLogging.hpp"
 
 #include "logging/Logging.hpp"
 
@@ -18,10 +18,10 @@
 #include <string>
 #include <vector>
 
-using dunedaq::readout::logging::TLVL_BOOKKEEPING;
+using dunedaq::readoutlibs::logging::TLVL_BOOKKEEPING;
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 
 class FileSourceBuffer
 {
@@ -98,7 +98,7 @@ private:
   std::vector<std::uint8_t> m_input_buffer; // NOLINT(build/unsigned)
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_UTILS_FILESOURCEBUFFER_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_UTILS_FILESOURCEBUFFER_HPP_

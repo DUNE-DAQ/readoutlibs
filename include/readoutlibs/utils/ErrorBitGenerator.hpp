@@ -5,14 +5,14 @@
  * received with this code.
  */
 
-#ifndef READOUT_INCLUDE_READOUT_UTILS_ERRORBITGENERATOR_HPP_
-#define READOUT_INCLUDE_READOUT_UTILS_ERRORBITGENERATOR_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_UTILS_ERRORBITGENERATOR_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_UTILS_ERRORBITGENERATOR_HPP_
 
 #include <random>
 #include <unistd.h>
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 
 /** ErrorBitGenerator usage:
  *
@@ -84,7 +84,7 @@ private:
   bool m_set_error_bits;
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_UTILS_ERRORBITGENERATOR_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_UTILS_ERRORBITGENERATOR_HPP_

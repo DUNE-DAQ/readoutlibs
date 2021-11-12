@@ -11,8 +11,8 @@
 #ifndef READOUT_INCLUDE_READOUT_UTILS_BUFFEREDFILEWRITER_HPP_
 #define READOUT_INCLUDE_READOUT_UTILS_BUFFEREDFILEWRITER_HPP_
 
-#include "readout/ReadoutIssues.hpp"
-#include "readout/ReadoutLogging.hpp"
+#include "readoutlibs/ReadoutIssues.hpp"
+#include "readoutlibs/ReadoutLogging.hpp"
 
 #include "logging/Logging.hpp"
 
@@ -32,10 +32,10 @@
 #include <string>
 #include <unistd.h>
 
-using dunedaq::readout::logging::TLVL_WORK_STEPS;
+using dunedaq::readoutlibs::logging::TLVL_WORK_STEPS;
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 /**
  * Class to buffer and write data of a specified type to a file using O_DIRECT. In addition, data can be compressed.
  * before being written.
@@ -204,7 +204,7 @@ private:
   bool m_use_o_direct = true;
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
 #endif // READOUT_INCLUDE_READOUT_UTILS_BUFFEREDFILEWRITER_HPP_
