@@ -5,15 +5,15 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_CONCEPTS_LATENCYBUFFERCONCEPT_HPP_
-#define READOUT_INCLUDE_READOUT_CONCEPTS_LATENCYBUFFERCONCEPT_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_LATENCYBUFFERCONCEPT_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_LATENCYBUFFERCONCEPT_HPP_
 
 #include <nlohmann/json.hpp>
 
 #include <cstddef>
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 
 /**
  * Concept of a LatencyBuffer.
@@ -61,7 +61,7 @@ public:
   virtual void flush() = 0;
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_CONCEPTS_LATENCYBUFFERCONCEPT_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_LATENCYBUFFERCONCEPT_HPP_

@@ -5,16 +5,16 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_CONCEPTS_RECORDERCONCEPT_HPP_
-#define READOUT_INCLUDE_READOUT_CONCEPTS_RECORDERCONCEPT_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_RECORDERCONCEPT_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_RECORDERCONCEPT_HPP_
 
 #include "appfwk/DAQSource.hpp"
 #include "appfwk/ThreadHelper.hpp"
 #include "opmonlib/InfoCollector.hpp"
-#include "readout/ReadoutTypes.hpp"
-#include "readout/datarecorder/Structs.hpp"
-#include "readout/utils/BufferedFileWriter.hpp"
-#include "readout/utils/ReusableThread.hpp"
+#include "readoutlibs/ReadoutTypes.hpp"
+#include "readoutlibs/datarecorder/Structs.hpp"
+#include "readoutlibs/utils/BufferedFileWriter.hpp"
+#include "readoutlibs/utils/ReusableThread.hpp"
 
 #include <atomic>
 #include <fstream>
@@ -24,7 +24,8 @@
 #include <utility>
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
+
 class RecorderConcept
 {
 public:
@@ -43,7 +44,8 @@ public:
   virtual void do_start(const nlohmann::json& obj) = 0;
   virtual void do_stop(const nlohmann::json& obj) = 0;
 };
-} // namespace readout
+
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_CONCEPTS_RECORDERCONCEPT_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_RECORDERCONCEPT_HPP_

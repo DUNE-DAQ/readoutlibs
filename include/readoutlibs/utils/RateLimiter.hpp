@@ -5,8 +5,8 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_UTILS_RATELIMITER_HPP_
-#define READOUT_INCLUDE_READOUT_UTILS_RATELIMITER_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_UTILS_RATELIMITER_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_UTILS_RATELIMITER_HPP_
 
 #include <atomic>
 #include <chrono>
@@ -14,7 +14,7 @@
 #include <unistd.h>
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 
 /** RateLimiter usage:
  *
@@ -92,7 +92,7 @@ private:
   timestamp_t m_deadline;
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_UTILS_RATELIMITER_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_UTILS_RATELIMITER_HPP_

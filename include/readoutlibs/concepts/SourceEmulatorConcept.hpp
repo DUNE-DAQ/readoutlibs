@@ -6,19 +6,19 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_CONCEPTS_SOURCEEMULATORCONCEPT_HPP_
-#define READOUT_INCLUDE_READOUT_CONCEPTS_SOURCEEMULATORCONCEPT_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_SOURCEEMULATORCONCEPT_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_SOURCEEMULATORCONCEPT_HPP_
 
 #include "opmonlib/InfoCollector.hpp"
 
-#include "readout/utils/RateLimiter.hpp"
+#include "readoutlibs/utils/RateLimiter.hpp"
 
 #include <map>
 #include <string>
 #include <thread>
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 
 class SourceEmulatorConcept
 {
@@ -44,7 +44,7 @@ public:
 private:
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_CONCEPTS_SOURCEEMULATORCONCEPT_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_SOURCEEMULATORCONCEPT_HPP_

@@ -6,13 +6,13 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_CONCEPTS_READOUTCONCEPT_HPP_
-#define READOUT_INCLUDE_READOUT_CONCEPTS_READOUTCONCEPT_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_READOUTCONCEPT_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_READOUTCONCEPT_HPP_
 
 #include "opmonlib/InfoCollector.hpp"
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 
 class ReadoutConcept
 {
@@ -40,7 +40,7 @@ public:
   virtual void run_requests() = 0;
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_CONCEPTS_READOUTCONCEPT_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_READOUTCONCEPT_HPP_

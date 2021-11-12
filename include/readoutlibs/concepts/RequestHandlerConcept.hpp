@@ -5,8 +5,8 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_CONCEPTS_REQUESTHANDLERCONCEPT_HPP_
-#define READOUT_INCLUDE_READOUT_CONCEPTS_REQUESTHANDLERCONCEPT_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_REQUESTHANDLERCONCEPT_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_REQUESTHANDLERCONCEPT_HPP_
 
 #include "appfwk/DAQSink.hpp"
 #include "daqdataformats/Fragment.hpp"
@@ -19,7 +19,7 @@
 #include <utility>
 
 namespace dunedaq {
-namespace readout {
+namespace readoutlibs {
 
 template<class ReadoutType, class LatencyBufferType>
 class RequestHandlerConcept
@@ -91,7 +91,7 @@ protected:
 private:
 };
 
-} // namespace readout
+} // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_CONCEPTS_REQUESTHANDLERCONCEPT_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_REQUESTHANDLERCONCEPT_HPP_
