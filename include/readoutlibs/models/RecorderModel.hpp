@@ -13,9 +13,9 @@
 #include "appfwk/ThreadHelper.hpp"
 #include "readoutlibs/ReadoutTypes.hpp"
 #include "readoutlibs/concepts/RecorderConcept.hpp"
-#include "readoutlibs/datarecorder/Nljs.hpp"
-#include "readoutlibs/datarecorder/Structs.hpp"
-#include "readoutlibs/datarecorderinfo/InfoStructs.hpp"
+#include "readoutlibs/recorderconfig/Nljs.hpp"
+#include "readoutlibs/recorderconfig/Structs.hpp"
+#include "readoutlibs/recorderinfo/InfoStructs.hpp"
 #include "readoutlibs/utils/BufferedFileWriter.hpp"
 #include "readoutlibs/utils/ReusableThread.hpp"
 
@@ -48,7 +48,7 @@ public:
 
   void get_info(opmonlib::InfoCollector& ci, int /* level */) override
   {
-    datarecorderinfo::Info info;
+    recorderinfo::Info info;
     info.packets_processed = m_packets_processed_total;
     double time_diff = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() -
                                                                                  m_time_point_last_info)
@@ -63,7 +63,7 @@ public:
 
   void do_conf(const nlohmann::json& args) override
   {
-    m_conf = args.get<datarecorder::Conf>();
+    m_conf = args.get<recorderconfig::Conf>();
     std::string output_file = m_conf.output_file;
     if (remove(output_file.c_str()) == 0) {
       TLOG(TLVL_WORK_STEPS) << "Removed existing output file from previous run" << std::endl;
@@ -116,7 +116,7 @@ private:
   std::unique_ptr<source_t> m_input_queue;
 
   // Internal
-  datarecorder::Conf m_conf;
+  recorderconfig::Conf m_conf;
   BufferedFileWriter<> m_buffered_writer;
 
   // Threading
