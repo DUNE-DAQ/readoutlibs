@@ -27,6 +27,8 @@
 #include "dfmessages/DataRequest.hpp"
 #include "dfmessages/TimeSync.hpp"
 
+#include "networkmanager/NetworkManager.hpp"
+
 #include "readoutlibs/ReadoutLogging.hpp"
 #include "readoutlibs/concepts/ReadoutConcept.hpp"
 #include "readoutlibs/readoutconfig/Nljs.hpp"
@@ -75,7 +77,6 @@ public:
     , m_latency_buffer_impl(nullptr)
     , m_raw_processor_impl(nullptr)
     , m_requester_thread(0)
-    , m_timesync_queue_timeout_ms(0)
     , m_timesync_thread(0)
   {}
 
@@ -84,11 +85,10 @@ public:
     setup_request_response_queues(args);
 
     try {
-      auto queue_index = appfwk::queue_index(args, { "raw_input", "timesync" });
+      auto queue_index = appfwk::queue_index(args, { "raw_input" });
       m_raw_data_source.reset(new raw_source_qt(queue_index["raw_input"].inst));
-      m_timesync_sink.reset(new timesync_sink_qt(queue_index["timesync"].inst));
     } catch (const ers::Issue& excpt) {
-      throw ResourceQueueError(ERS_HERE, "raw_input/timesync", "ReadoutModel", excpt);
+      throw ResourceQueueError(ERS_HERE, "raw_input", "ReadoutModel", excpt);
     }
 
     // Instantiate functionalities
@@ -109,6 +109,9 @@ public:
       m_fake_trigger = true;
     }
     m_source_queue_timeout_ms = std::chrono::milliseconds(conf.source_queue_timeout_ms);
+
+    m_timesync_connection_name = conf.timesync_connection_name;
+    m_timesync_topic_name = conf.timesync_topic_name;
     TLOG_DEBUG(TLVL_WORK_STEPS) << "ReadoutModel creation";
 
     m_geoid.element_id = conf.element_id;
@@ -215,12 +218,6 @@ private:
     while (queue_index.find("data_requests_" + std::to_string(index)) != queue_index.end()) {
       m_data_request_queues.push_back(
         std::make_unique<request_source_qt>(queue_index["data_requests_" + std::to_string(index)].inst));
-      if (queue_index.find("data_response_" + std::to_string(index)) == queue_index.end()) {
-        throw InitializationError(ERS_HERE, "Queue not found: ", "data_response_" + std::to_string(index));
-      } else {
-        m_data_response_queues.push_back(
-          std::make_unique<fragment_sink_qt>(queue_index["data_response_" + std::to_string(index)].inst));
-      }
       index++;
     }
   }
@@ -268,9 +265,14 @@ private:
         // TLOG() << "New timesync: daq=" << timesyncmsg.daq_time << " wall=" << timesyncmsg.system_time;
         if (timesyncmsg.daq_time != 0) {
           try {
-            m_timesync_sink->push(std::move(timesyncmsg));
-          } catch (const ers::Issue& excpt) {
-            ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "timesync message queue", excpt));
+            auto serialised_timesync = dunedaq::serialization::serialize(timesyncmsg, dunedaq::serialization::kMsgPack);
+            networkmanager::NetworkManager::get().send_to(m_timesync_connection_name,
+                                                          static_cast<const void*>(serialised_timesync.data()),
+                                                          serialised_timesync.size(),
+                                                          std::chrono::milliseconds(500),
+                                                          m_timesync_topic_name);
+          } catch (ers::Issue& excpt) {
+            ers::warning(TimeSyncTransmissionFailed(ERS_HERE, m_geoid, m_timesync_connection_name, m_timesync_topic_name, excpt));
           }
 
           if (m_fake_trigger) {
@@ -280,13 +282,13 @@ private:
             dr.trigger_timestamp = timesyncmsg.daq_time > 500 * us ? timesyncmsg.daq_time - 500 * us : 0;
             auto width = 300000;
             uint offset = 100;
-            dr.window_begin = dr.trigger_timestamp > offset ? dr.trigger_timestamp - offset : 0;
-            dr.window_end = dr.window_begin + width;
+            dr.request_information.window_begin = dr.trigger_timestamp > offset ? dr.trigger_timestamp - offset : 0;
+            dr.request_information.window_end = dr.request_information.window_begin + width;
             TLOG_DEBUG(TLVL_WORK_STEPS) << "Issuing fake trigger based on timesync. "
-                                        << " ts=" << dr.trigger_timestamp << " window_begin=" << dr.window_begin
-                                        << " window_end=" << dr.window_end;
-            for (size_t i = 0; i < m_data_response_queues.size(); ++i) {
-              m_request_handler_impl->issue_request(dr, *m_data_response_queues[i]);
+                                        << " ts=" << dr.trigger_timestamp << " window_begin=" << dr.request_information.window_begin
+                                        << " window_end=" << dr.request_information.window_end;
+            for (size_t i = 0; i < m_data_request_queues.size(); ++i) {
+              m_request_handler_impl->issue_request(dr);
             }
             ++m_num_requests;
             ++m_sum_requests;
@@ -317,11 +319,10 @@ private:
       bool popped_element = false;
       for (size_t i = 0; i < m_data_request_queues.size(); ++i) {
         auto& request_source = *m_data_request_queues[i];
-        auto& response_sink = *m_data_response_queues[i];
         try {
           request_source.pop(data_request, std::chrono::milliseconds(0));
           popped_element = true;
-          m_request_handler_impl->issue_request(data_request, response_sink);
+          m_request_handler_impl->issue_request(data_request);
           ++m_num_requests;
           ++m_sum_requests;
           TLOG_DEBUG(TLVL_QUEUE_POP) << "Received DataRequest for trigger_number " << data_request.trigger_number
@@ -378,8 +379,6 @@ private:
 
   // FRAGMENT SINKS
   std::chrono::milliseconds m_fragment_queue_timeout_ms;
-  using fragment_sink_qt = appfwk::DAQSink<std::unique_ptr<daqdataformats::Fragment>>;
-  std::vector<std::unique_ptr<fragment_sink_qt>> m_data_response_queues;
 
   // LATENCY BUFFER:
   std::unique_ptr<LatencyBufferType> m_latency_buffer_impl;
@@ -394,10 +393,9 @@ private:
   std::unique_ptr<FrameErrorRegistry> m_error_registry;
 
   // TIME-SYNC
-  std::chrono::milliseconds m_timesync_queue_timeout_ms;
-  using timesync_sink_qt = appfwk::DAQSink<dfmessages::TimeSync>;
-  std::unique_ptr<timesync_sink_qt> m_timesync_sink;
   ReusableThread m_timesync_thread;
+  std::string m_timesync_connection_name;
+  std::string m_timesync_topic_name;
 
   std::chrono::time_point<std::chrono::high_resolution_clock> m_t0;
 };

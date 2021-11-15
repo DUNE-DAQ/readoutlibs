@@ -16,6 +16,17 @@
 
 namespace dunedaq {
 ERS_DECLARE_ISSUE(readoutlibs,
+                  FragmentTransmissionFailed,
+                  "GeoID" << geoid << " failed to send data for trigger number " << tr_num << ".",
+                  ((daqdataformats::GeoID)geoid)((int64_t)tr_num))
+
+ERS_DECLARE_ISSUE(readoutlibs,
+                  TimeSyncTransmissionFailed,
+                  "GeoID " << geoid << " failed to send send TimeSync message to " << dest << " with topic " << topic
+                           << ".",
+                  ((daqdataformats::GeoID)geoid)((std::string)dest)((std::string)topic))
+
+ERS_DECLARE_ISSUE(readoutlibs,
                   InternalError,
                   "GeoID[" << geoid << "] Internal Error: " << error,
                   ((daqdataformats::GeoID)geoid)((std::string)error))
@@ -25,7 +36,10 @@ ERS_DECLARE_ISSUE(readoutlibs,
                   "GeoID[" << geoid << "] Command Error: " << commanderror,
                   ((daqdataformats::GeoID)geoid)((std::string)commanderror))
 
-ERS_DECLARE_ISSUE(readoutlibs, InitializationError, "Readout Initialization Error: " << initerror, ((std::string)initerror))
+ERS_DECLARE_ISSUE(readoutlibs,
+                  InitializationError,
+                  "Readout Initialization Error: " << initerror,
+                  ((std::string)initerror))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   ConfigurationError,
@@ -42,7 +56,10 @@ ERS_DECLARE_ISSUE(readoutlibs,
                   "Configuration Error: " << conferror,
                   ((std::string)conferror))
 
-ERS_DECLARE_ISSUE(readoutlibs, GenericConfigurationError, "Configuration Error: " << conferror, ((std::string)conferror))
+ERS_DECLARE_ISSUE(readoutlibs,
+                  GenericConfigurationError,
+                  "Configuration Error: " << conferror,
+                  ((std::string)conferror))
 
 ERS_DECLARE_ISSUE(readoutlibs, CannotOpenFile, "Couldn't open binary file: " << filename, ((std::string)filename))
 
@@ -98,7 +115,10 @@ ERS_DECLARE_ISSUE_BASE(readoutlibs,
                        ((std::string)name),
                        ((std::string)initparams))
 
-ERS_DECLARE_ISSUE(readoutlibs, FailedFakeCardInitialization, "Could not initialize fake card " << name, ((std::string)name))
+ERS_DECLARE_ISSUE(readoutlibs,
+                  FailedFakeCardInitialization,
+                  "Could not initialize fake card " << name,
+                  ((std::string)name))
 
 ERS_DECLARE_ISSUE_BASE(readoutlibs,
                        NoImplementationAvailableError,
@@ -131,7 +151,10 @@ ERS_DECLARE_ISSUE(readoutlibs,
                   "GeoID[" << geoid << "] Configuration problem: " << text,
                   ((daqdataformats::GeoID)geoid)((std::string)text))
 
-ERS_DECLARE_ISSUE(readoutlibs, RequestTimedOut, "GeoID[" << geoid << "] Request timed out", ((daqdataformats::GeoID)geoid))
+ERS_DECLARE_ISSUE(readoutlibs,
+                  RequestTimedOut,
+                  "GeoID[" << geoid << "] Request timed out",
+                  ((daqdataformats::GeoID)geoid))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   EndOfRunEmptyFragment,
