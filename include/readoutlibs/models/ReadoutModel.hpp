@@ -120,7 +120,8 @@ public:
 
     // Configure implementations:
     m_raw_processor_impl->conf(args);
-    // Configure the latency buffer before the request handler so the request handler can check for alignment restrictions
+    // Configure the latency buffer before the request handler so the request handler can check for alignment
+    // restrictions
     try {
       m_latency_buffer_impl->conf(args);
     } catch (const std::bad_alloc& be) {
@@ -272,7 +273,8 @@ private:
                                                           std::chrono::milliseconds(500),
                                                           m_timesync_topic_name);
           } catch (ers::Issue& excpt) {
-            ers::warning(TimeSyncTransmissionFailed(ERS_HERE, m_geoid, m_timesync_connection_name, m_timesync_topic_name, excpt));
+            ers::warning(
+              TimeSyncTransmissionFailed(ERS_HERE, m_geoid, m_timesync_connection_name, m_timesync_topic_name, excpt));
           }
 
           if (m_fake_trigger) {
@@ -285,7 +287,8 @@ private:
             dr.request_information.window_begin = dr.trigger_timestamp > offset ? dr.trigger_timestamp - offset : 0;
             dr.request_information.window_end = dr.request_information.window_begin + width;
             TLOG_DEBUG(TLVL_WORK_STEPS) << "Issuing fake trigger based on timesync. "
-                                        << " ts=" << dr.trigger_timestamp << " window_begin=" << dr.request_information.window_begin
+                                        << " ts=" << dr.trigger_timestamp
+                                        << " window_begin=" << dr.request_information.window_begin
                                         << " window_end=" << dr.request_information.window_end;
             for (size_t i = 0; i < m_data_request_queues.size(); ++i) {
               m_request_handler_impl->issue_request(dr);

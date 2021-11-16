@@ -15,17 +15,17 @@
 #include "readoutlibs/utils/ReusableThread.hpp"
 
 #include "readoutlibs/readoutconfig/Nljs.hpp"
+#include "readoutlibs/readoutinfo/InfoNljs.hpp"
 
 #include "appfwk/Issues.hpp"
 #include "daqdataformats/Fragment.hpp"
 #include "daqdataformats/Types.hpp"
 #include "dfmessages/DataRequest.hpp"
+#include "dfmessages/Fragment_serialization.hpp"
 #include "logging/Logging.hpp"
+#include "networkmanager/NetworkManager.hpp"
 #include "readoutlibs/FrameErrorRegistry.hpp"
 #include "readoutlibs/ReadoutLogging.hpp"
-
-#include "networkmanager/NetworkManager.hpp"
-#include "dfmessages/Fragment_serialization.hpp"
 
 #include <boost/asio.hpp>
 
@@ -80,13 +80,13 @@ public:
     TLOG_DEBUG(TLVL_WORK_STEPS) << "DefaultRequestHandlerModel created...";
   }
 
-  using RequestResult = typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::RequestResult;
+  using RequestResult =
+    typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::RequestResult;
   using ResultCode = typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::ResultCode;
 
   struct RequestElement
   {
-    RequestElement(dfmessages::DataRequest data_request,
-                   size_t retries)
+    RequestElement(dfmessages::DataRequest data_request, size_t retries)
       : request(data_request)
       , retry_count(retries)
     {}
@@ -224,7 +224,7 @@ public:
 
             for (; chunk_iter != end && chunk_iter.good() && processed_chunks_in_loop < 1000;) {
               if ((*chunk_iter).get_first_timestamp() >= m_next_timestamp_to_record) {
-                if (!m_buffered_writer.write(reinterpret_cast<char*>(chunk_iter->begin()), // NOLINT 
+                if (!m_buffered_writer.write(reinterpret_cast<char*>(chunk_iter->begin()), // NOLINT
                                              chunk_iter->get_payload_size())) {
                   ers::warning(CannotWriteToFile(ERS_HERE, m_output_file));
                 }
@@ -276,14 +276,16 @@ public:
       m_cv.notify_all();
       if (result.result_code == ResultCode::kFound || result.result_code == ResultCode::kNotFound) {
 
-      try {
-          auto serialised_frag = dunedaq::serialization::serialize(std::move(result.fragment), dunedaq::serialization::kMsgPack);
-          networkmanager::NetworkManager::get().send_to(datarequest.data_destination, static_cast<const void*>(serialised_frag.data()),     
-                                                        serialised_frag.size(), std::chrono::milliseconds(1000));
-      }
-      catch(ers::Issue &e) {
-          ers::warning(FragmentTransmissionFailed(ERS_HERE, m_geoid , datarequest.trigger_number, e));
-      }
+        try {
+          auto serialised_frag =
+            dunedaq::serialization::serialize(std::move(result.fragment), dunedaq::serialization::kMsgPack);
+          networkmanager::NetworkManager::get().send_to(datarequest.data_destination,
+                                                        static_cast<const void*>(serialised_frag.data()),
+                                                        serialised_frag.size(),
+                                                        std::chrono::milliseconds(1000));
+        } catch (ers::Issue& e) {
+          ers::warning(FragmentTransmissionFailed(ERS_HERE, m_geoid, datarequest.trigger_number, e));
+        }
 
       } else if (result.result_code == ResultCode::kNotYet) {
         TLOG_DEBUG(TLVL_WORK_STEPS) << "Re-queue request. "
@@ -450,7 +452,7 @@ protected:
         size_t size = m_waiting_requests.size();
         for (size_t i = 0; i < size;) {
           if (m_waiting_requests[i].request.request_information.window_end < newest_ts) {
-//            issue_request(m_waiting_requests[i].request, *(m_waiting_requests[i].fragment_sink));
+            //            issue_request(m_waiting_requests[i].request, *(m_waiting_requests[i].fragment_sink));
             issue_request(m_waiting_requests[i].request);
             std::swap(m_waiting_requests[i], m_waiting_requests.back());
             m_waiting_requests.pop_back();
@@ -463,27 +465,31 @@ protected:
             m_num_requests_timed_out++;
 
             try {
-                auto serialised_frag = dunedaq::serialization::serialize(std::move(fragment), dunedaq::serialization::kMsgPack);
-                networkmanager::NetworkManager::get().send_to(m_waiting_requests[i].request.data_destination, static_cast<const void*>(serialised_frag.data()), 
-                                                              serialised_frag.size(), std::chrono::milliseconds(1000));
-           }
-           catch(ers::Issue &e) {
-                ers::warning(FragmentTransmissionFailed(ERS_HERE, m_geoid, m_waiting_requests[i].request.trigger_number, e));
-           }
-
-/*
-            try { // Push to Fragment queue
-              TLOG_DEBUG(TLVL_QUEUE_PUSH)
-                << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run number "
-                << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
-              m_waiting_requests[i].fragment_sink->push(std::move(fragment),
-                                                        std::chrono::milliseconds(m_fragment_queue_timeout));
-            } catch (const ers::Issue& excpt) {
-              std::ostringstream oss;
-              oss << "fragments output queue for link " << m_geoid.element_id;
-              ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
+              auto serialised_frag =
+                dunedaq::serialization::serialize(std::move(fragment), dunedaq::serialization::kMsgPack);
+              networkmanager::NetworkManager::get().send_to(m_waiting_requests[i].request.data_destination,
+                                                            static_cast<const void*>(serialised_frag.data()),
+                                                            serialised_frag.size(),
+                                                            std::chrono::milliseconds(1000));
+            } catch (ers::Issue& e) {
+              ers::warning(
+                FragmentTransmissionFailed(ERS_HERE, m_geoid, m_waiting_requests[i].request.trigger_number, e));
             }
-*/
+
+            /*
+                        try { // Push to Fragment queue
+                          TLOG_DEBUG(TLVL_QUEUE_PUSH)
+                            << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run
+               number "
+                            << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
+                          m_waiting_requests[i].fragment_sink->push(std::move(fragment),
+                                                                    std::chrono::milliseconds(m_fragment_queue_timeout));
+                        } catch (const ers::Issue& excpt) {
+                          std::ostringstream oss;
+                          oss << "fragments output queue for link " << m_geoid.element_id;
+                          ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
+                        }
+            */
 
             std::swap(m_waiting_requests[i], m_waiting_requests.back());
             m_waiting_requests.pop_back();
@@ -495,25 +501,29 @@ protected:
             m_num_requests_bad++;
 
             try {
-                auto serialised_frag = dunedaq::serialization::serialize(std::move(fragment), dunedaq::serialization::kMsgPack);
-                networkmanager::NetworkManager::get().send_to(m_waiting_requests[i].request.data_destination, static_cast<const void*>(serialised_frag.data()),     
-                                                              serialised_frag.size(), std::chrono::milliseconds(1000));
-           }
-           catch(ers::Issue &e) {
-                ers::warning(FragmentTransmissionFailed(ERS_HERE, m_geoid, m_waiting_requests[i].request.trigger_number, e));
-           }
-
-/*
-            try { // Push to Fragment queue
-              TLOG_DEBUG(TLVL_QUEUE_PUSH)
-                << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run number "
-                << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
-              m_waiting_requests[i].fragment_sink->push(std::move(fragment),
-                                                        std::chrono::milliseconds(m_fragment_queue_timeout));
-            } catch (const ers::Issue& excpt) {
-              ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
+              auto serialised_frag =
+                dunedaq::serialization::serialize(std::move(fragment), dunedaq::serialization::kMsgPack);
+              networkmanager::NetworkManager::get().send_to(m_waiting_requests[i].request.data_destination,
+                                                            static_cast<const void*>(serialised_frag.data()),
+                                                            serialised_frag.size(),
+                                                            std::chrono::milliseconds(1000));
+            } catch (ers::Issue& e) {
+              ers::warning(
+                FragmentTransmissionFailed(ERS_HERE, m_geoid, m_waiting_requests[i].request.trigger_number, e));
             }
-*/
+
+            /*
+                        try { // Push to Fragment queue
+                          TLOG_DEBUG(TLVL_QUEUE_PUSH)
+                            << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run
+               number "
+                            << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
+                          m_waiting_requests[i].fragment_sink->push(std::move(fragment),
+                                                                    std::chrono::milliseconds(m_fragment_queue_timeout));
+                        } catch (const ers::Issue& excpt) {
+                          ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
+                        }
+            */
             std::swap(m_waiting_requests[i], m_waiting_requests.back());
             m_waiting_requests.pop_back();
             size--;
@@ -557,8 +567,9 @@ protected:
       if (last_ts <= start_win_ts && end_win_ts <= newest_ts) { // data is there
         ReadoutType request_element;
         request_element.set_first_timestamp(start_win_ts);
-        auto start_iter = m_error_registry->has_error("MISSING_FRAMES") ? m_latency_buffer->lower_bound(request_element, true)
-                                                        : m_latency_buffer->lower_bound(request_element, false);
+        auto start_iter = m_error_registry->has_error("MISSING_FRAMES")
+                            ? m_latency_buffer->lower_bound(request_element, true)
+                            : m_latency_buffer->lower_bound(request_element, false);
         if (start_iter == m_latency_buffer->end()) {
           // Due to some concurrent access, the start_iter could not be retrieved successfully, try again
           ++m_num_requests_delayed;

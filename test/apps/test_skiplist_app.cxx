@@ -79,8 +79,8 @@ main(int /*argc*/, char** /*argv[]*/)
     uint64_t ts = 0; // NOLINT(build/unsigned)
     while (marker) {
       types::DUMMY_FRAME_STRUCT pl;
-      auto plptr = const_cast<types::DUMMY_FRAME_STRUCT*>(
-        reinterpret_cast<const types::DUMMY_FRAME_STRUCT*>(&pl)); // NOLINT
+      auto plptr =
+        const_cast<types::DUMMY_FRAME_STRUCT*>(reinterpret_cast<const types::DUMMY_FRAME_STRUCT*>(&pl)); // NOLINT
       plptr->timestamp = ts;
       {
         SkipListTAcc prodacc(skl);
