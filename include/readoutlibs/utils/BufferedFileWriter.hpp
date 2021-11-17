@@ -8,8 +8,8 @@
  * Licensing/copyright details are in the COPYING file that you should have
  * received with this code.
  */
-#ifndef READOUT_INCLUDE_READOUT_UTILS_BUFFEREDFILEWRITER_HPP_
-#define READOUT_INCLUDE_READOUT_UTILS_BUFFEREDFILEWRITER_HPP_
+#ifndef READOUTLIBS_INCLUDE_READOUTLIBS_UTILS_BUFFEREDFILEWRITER_HPP_
+#define READOUTLIBS_INCLUDE_READOUTLIBS_UTILS_BUFFEREDFILEWRITER_HPP_
 
 #include "readoutlibs/ReadoutIssues.hpp"
 #include "readoutlibs/ReadoutLogging.hpp"
@@ -207,4 +207,4 @@ private:
 } // namespace readoutlibs
 } // namespace dunedaq
 
-#endif // READOUT_INCLUDE_READOUT_UTILS_BUFFEREDFILEWRITER_HPP_
+#endif // READOUTLIBS_INCLUDE_READOUTLIBS_UTILS_BUFFEREDFILEWRITER_HPP_

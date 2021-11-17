@@ -198,7 +198,6 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
       records_ = static_cast<T*>(_mm_malloc(sizeof(T) * size, alignment_size));
 
     } else if (!intrinsic_allocator && alignment_size > 0) { // std aligned allocator
-      std::cout << "Aligned alloc" << std::endl;
       records_ = static_cast<T*>(std::aligned_alloc(alignment_size, sizeof(T) * size));
 
     } else if (numa_aware && numa_node >= 0 && numa_node < 8) { // numa allocator from libnuma
@@ -452,6 +451,20 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
       }
       flush();
     }
+  }
+
+  void scrap(const nlohmann::json& /*cfg*/) override
+  {
+    free_memory();
+    numa_aware_ = false;
+    numa_node_ = 0;
+    intrinsic_allocator_ = false;
+    alignment_size_ = 0;
+    invalid_configuration_requested_ = false;
+    size_ = 2;
+    records_ = static_cast<T*>(std::malloc(sizeof(T) * 2));
+    readIndex_ = 0;
+    writeIndex_ = 0;
   }
 
   void flush() override { pop(occupancy()); }

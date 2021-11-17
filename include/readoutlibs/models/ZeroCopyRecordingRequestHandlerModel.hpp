@@ -10,6 +10,7 @@
 #define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_ZEROCOPYRECORDINGREQUESTHANDLERMODEL_HPP_
 
 #include "readoutlibs/models/DefaultRequestHandlerModel.hpp"
+#include <memory>
 
 namespace dunedaq {
 namespace readoutlibs {
@@ -75,9 +76,9 @@ public:
 
         const char* current_write_pointer = nullptr;
         const char* start_of_buffer_pointer =
-          reinterpret_cast<const char*>(inherited::m_latency_buffer->start_of_buffer());
+          reinterpret_cast<const char*>(inherited::m_latency_buffer->start_of_buffer()); // NOLINT
         const char* current_end_pointer;
-        const char* end_of_buffer_pointer = reinterpret_cast<const char*>(inherited::m_latency_buffer->end_of_buffer());
+        const char* end_of_buffer_pointer = reinterpret_cast<const char*>(inherited::m_latency_buffer->end_of_buffer()); // NOLINT
 
         size_t bytes_written = 0;
 
@@ -104,7 +105,7 @@ public:
               }
               inherited::m_next_timestamp_to_record = begin->get_first_timestamp();
               size_t skipped_frames = 0;
-              while (reinterpret_cast<std::uintptr_t>(&(*begin)) % alignment_size) {
+              while (reinterpret_cast<std::uintptr_t>(&(*begin)) % alignment_size) { // NOLINT
                 ++begin;
                 skipped_frames++;
                 if (!begin.good()) {
@@ -116,14 +117,14 @@ public:
                 }
               }
               TLOG() << "Skipped " << skipped_frames << " frames";
-              current_write_pointer = reinterpret_cast<const char*>(&(*begin));
+              current_write_pointer = reinterpret_cast<const char*>(&(*begin)); // NOLINT
             }
 
-            current_end_pointer = reinterpret_cast<const char*>(inherited::m_latency_buffer->back());
+            current_end_pointer = reinterpret_cast<const char*>(inherited::m_latency_buffer->back()); // NOLINT
 
             // Break the loop from time to time to update the timestamp and check if we should stop recording
             while (considered_chunks_in_loop < 100) {
-              auto iptr = reinterpret_cast<std::uintptr_t>(current_write_pointer);
+              auto iptr = reinterpret_cast<std::uintptr_t>(current_write_pointer); // NOLINT
               if (iptr % alignment_size) {
                 // This should never happen
                 TLOG() << "Error: Write pointer is not aligned";
@@ -168,7 +169,7 @@ public:
               considered_chunks_in_loop++;
               // This expression is "a bit" complicated as it finds the last frame that was written to file completely
               inherited::m_next_timestamp_to_record =
-                reinterpret_cast<const ReadoutType*>(
+                reinterpret_cast<const ReadoutType*>( // NOLINT
                   start_of_buffer_pointer +
                   (((current_write_pointer - start_of_buffer_pointer) / ReadoutType::fixed_payload_size) *
                    ReadoutType::fixed_payload_size))

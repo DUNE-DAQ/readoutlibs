@@ -136,6 +136,13 @@ public:
     m_requester_thread.set_name("requests", conf.element_id);
   }
 
+  void scrap(const nlohmann::json& args)
+  {
+    m_request_handler_impl->scrap(args);
+    m_latency_buffer_impl->scrap(args);
+    m_raw_processor_impl->scrap(args);
+  }
+
   void start(const nlohmann::json& args)
   {
     // Reset opmon variables

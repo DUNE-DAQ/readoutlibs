@@ -15,7 +15,7 @@
 #include "readoutlibs/utils/ReusableThread.hpp"
 
 #include "readoutlibs/readoutconfig/Nljs.hpp"
-#include "readoutlibs/readoutinfo/InfoNljs.hpp"
+#include "readoutlibs/readoutinfo/InfoStructs.hpp"
 
 #include "appfwk/Issues.hpp"
 #include "daqdataformats/Fragment.hpp"
@@ -139,6 +139,13 @@ public:
         << "auto-pop size: " << m_pop_size_pct * 100.0f << "% "
         << "max requested elements: " << m_max_requested_elements;
     TLOG_DEBUG(TLVL_WORK_STEPS) << oss.str();
+  }
+
+  void scrap(const nlohmann::json& /*args*/) override
+  {
+    if (m_buffered_writer.is_open()) {
+      m_buffered_writer.close();
+    }
   }
 
   void start(const nlohmann::json& /*args*/)

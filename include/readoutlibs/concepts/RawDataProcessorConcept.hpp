@@ -38,6 +38,8 @@ public:
   virtual void stop(const nlohmann::json& args) = 0;
   //! Set the emulator mode, if active, timestamps of processed packets are overwritten with new ones
   virtual void conf(const nlohmann::json& cfg) = 0;
+  //! Unconfigure
+  virtual void scrap(const nlohmann::json& args) = 0;
   //! Get info from the raw processor
   virtual void get_info(opmonlib::InfoCollector& ci, int level) = 0;
   //! Get newest timestamp of last seen packet

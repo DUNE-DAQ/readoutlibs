@@ -43,6 +43,7 @@ public:
   virtual void do_conf(const nlohmann::json& obj) = 0;
   virtual void do_start(const nlohmann::json& obj) = 0;
   virtual void do_stop(const nlohmann::json& obj) = 0;
+  virtual void do_scrap(const nlohmann::json& obj) = 0;
 };
 
 } // namespace readoutlibs

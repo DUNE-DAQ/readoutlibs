@@ -11,6 +11,8 @@
 #include <cstdint> // uint_t types
 #include <map>
 #include <mutex>
+#include <utility>
+#include <string>
 
 namespace dunedaq {
 namespace readoutlibs {
