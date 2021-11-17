@@ -21,7 +21,7 @@
 #include <vector>
 
 #ifdef WITH_LIBNUMA_SUPPORT
-  #include <numaif.h>
+#include <numaif.h>
 #endif
 
 //#define REGISTER (*(volatile unsigned char*)0x1234)
@@ -29,7 +29,8 @@
 using namespace dunedaq::readoutlibs;
 
 namespace {
-struct kBlock {
+struct kBlock
+{
   kBlock(){};
   char data[1024];
 };
@@ -50,10 +51,10 @@ main(int /*argc*/, char** /*argv[]*/)
   TLOG() << "Creating IQM with NUMA allocator...";
   IterableQueueModel<kBlock> numa0IQM(1000, true, 0, false, 0);
   IterableQueueModel<kBlock> numa1IQM(1000, true, 1, false, 0);
-  
-  numa0IQM.write( kBlock() );
-  numa1IQM.write( kBlock() );
- 
+
+  numa0IQM.write(kBlock());
+  numa1IQM.write(kBlock());
+
   int numa_node = -1;
   get_mempolicy(&numa_node, NULL, 0, (void*)numa0IQM.front(), MPOL_F_NODE | MPOL_F_ADDR);
   TLOG() << "NUMA 0 IQM frontAddr : " << std::hex << (void*)numa0IQM.front() << " is on: " << numa_node << std::dec;
@@ -70,7 +71,6 @@ main(int /*argc*/, char** /*argv[]*/)
 
   return 0;
 
-
   // Stats
   auto stats = std::thread([&]() {
     TLOG() << "Spawned stats thread...";
@@ -83,7 +83,7 @@ main(int /*argc*/, char** /*argv[]*/)
   // Producer
   auto producer = std::thread([&]() {
     TLOG() << "Spawned producer thread...";
-    while (marker) { 
+    while (marker) {
       std::this_thread::sleep_for(std::chrono::seconds(1));
     }
   });
@@ -91,7 +91,7 @@ main(int /*argc*/, char** /*argv[]*/)
   // Consumer
   auto consumer = std::thread([&]() {
     TLOG() << "Spawned consumer thread...";
-    while (marker) { 
+    while (marker) {
       std::this_thread::sleep_for(std::chrono::seconds(1));
     }
   });

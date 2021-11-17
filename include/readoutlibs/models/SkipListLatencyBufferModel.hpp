@@ -78,7 +78,7 @@ public:
     m_skip_list = folly::ConcurrentSkipList<T>::createInstance(unconfigured_head_height);
   }
 
-  void scrap(const nlohmann::json& /*args*/) override 
+  void scrap(const nlohmann::json& /*args*/) override
   {
     m_skip_list = folly::ConcurrentSkipList<T>::createInstance(unconfigured_head_height);
   }

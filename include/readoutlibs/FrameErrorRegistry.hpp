@@ -38,7 +38,8 @@ public:
     : m_errors()
   {}
 
-  void add_error(std::string error_name, ErrorInterval error) {
+  void add_error(std::string error_name, ErrorInterval error)
+  {
     std::lock_guard<std::mutex> guard(m_error_map_mutex);
     if (m_errors.find(error_name) == m_errors.end()) {
       TLOG() << "Encountered new error";
@@ -60,9 +61,7 @@ public:
     }
   }
 
-  bool has_error(std::string error_name) {
-    return m_errors.find(error_name) != m_errors.end();
-  }
+  bool has_error(std::string error_name) { return m_errors.find(error_name) != m_errors.end(); }
 
   bool has_error() { return !m_errors.empty(); }
 

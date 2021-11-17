@@ -77,7 +77,8 @@ public:
     TLOG_DEBUG(TLVL_WORK_STEPS) << "DefaultRequestHandlerModel created...";
   }
 
-  using RequestResult = typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::RequestResult;
+  using RequestResult =
+    typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::RequestResult;
   using ResultCode = typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::ResultCode;
 
   struct RequestElement
@@ -144,7 +145,7 @@ public:
   void scrap(const nlohmann::json& /*args*/) override
   {
     if (m_buffered_writer.is_open()) {
-        m_buffered_writer.close();
+      m_buffered_writer.close();
     }
   }
 
@@ -231,7 +232,7 @@ public:
 
             for (; chunk_iter != end && chunk_iter.good() && processed_chunks_in_loop < 1000;) {
               if ((*chunk_iter).get_first_timestamp() >= m_next_timestamp_to_record) {
-                if (!m_buffered_writer.write(reinterpret_cast<char*>(chunk_iter->begin()), // NOLINT 
+                if (!m_buffered_writer.write(reinterpret_cast<char*>(chunk_iter->begin()), // NOLINT
                                              chunk_iter->get_payload_size())) {
                   ers::warning(CannotWriteToFile(ERS_HERE, m_output_file));
                 }
@@ -538,8 +539,9 @@ protected:
       if (last_ts <= start_win_ts && end_win_ts <= newest_ts) { // data is there
         ReadoutType request_element;
         request_element.set_first_timestamp(start_win_ts);
-        auto start_iter = m_error_registry->has_error("MISSING_FRAMES") ? m_latency_buffer->lower_bound(request_element, true)
-                                                        : m_latency_buffer->lower_bound(request_element, false);
+        auto start_iter = m_error_registry->has_error("MISSING_FRAMES")
+                            ? m_latency_buffer->lower_bound(request_element, true)
+                            : m_latency_buffer->lower_bound(request_element, false);
         if (start_iter == m_latency_buffer->end()) {
           // Due to some concurrent access, the start_iter could not be retrieved successfully, try again
           ++m_num_requests_delayed;

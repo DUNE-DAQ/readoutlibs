@@ -117,7 +117,8 @@ public:
 
     // Configure implementations:
     m_raw_processor_impl->conf(args);
-    // Configure the latency buffer before the request handler so the request handler can check for alignment restrictions
+    // Configure the latency buffer before the request handler so the request handler can check for alignment
+    // restrictions
     try {
       m_latency_buffer_impl->conf(args);
     } catch (const std::bad_alloc& be) {

@@ -16,7 +16,7 @@
 #include "IterableQueueModel.hpp"
 
 namespace dunedaq {
-namespace readoutlibs{
+namespace readoutlibs {
 
 template<class T>
 class BinarySearchQueueModel : public IterableQueueModel<T>

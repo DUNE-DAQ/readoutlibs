@@ -74,10 +74,7 @@ public:
     m_work_thread.set_name(m_name, 0);
   }
 
-  void do_scrap(const nlohmann::json& /*args*/) override
-  {
-    m_buffered_writer.close();
-  }
+  void do_scrap(const nlohmann::json& /*args*/) override { m_buffered_writer.close(); }
 
   void do_start(const nlohmann::json& /* args */) override
   {

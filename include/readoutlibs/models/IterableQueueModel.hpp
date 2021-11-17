@@ -418,15 +418,9 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
     return &records_[currentLast];
   };
 
-  T* start_of_buffer()
-  {
-    return &records_[0];
-  }
+  T* start_of_buffer() { return &records_[0]; }
 
-  T* end_of_buffer()
-  {
-    return &records_[size_];  
-  }
+  T* end_of_buffer() { return &records_[size_]; }
 
   Iterator end()
   {
@@ -460,7 +454,7 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
     }
   }
 
-  void scrap(const nlohmann::json& /*cfg*/) override 
+  void scrap(const nlohmann::json& /*cfg*/) override
   {
     free_memory();
     numa_aware_ = false;
@@ -476,9 +470,7 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
 
   void flush() override { pop(occupancy()); }
 
-  std::size_t get_alignment_size() {
-    return alignment_size_;
-  }
+  std::size_t get_alignment_size() { return alignment_size_; }
 
 protected:
   template<class... Args>

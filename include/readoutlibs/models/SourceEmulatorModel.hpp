@@ -25,14 +25,14 @@
 #include "readoutlibs/utils/RateLimiter.hpp"
 #include "readoutlibs/utils/ReusableThread.hpp"
 
+#include "unistd.h"
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <random>
 #include <string>
 #include <utility>
 #include <vector>
-#include "unistd.h"
-#include <chrono>
 
 using dunedaq::readoutlibs::logging::TLVL_TAKE_NOTE;
 using dunedaq::readoutlibs::logging::TLVL_WORK_STEPS;
