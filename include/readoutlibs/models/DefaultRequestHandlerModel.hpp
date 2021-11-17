@@ -141,6 +141,13 @@ public:
     TLOG_DEBUG(TLVL_WORK_STEPS) << oss.str();
   }
 
+  void scrap(const nlohmann::json& /*args*/) override
+  {
+    if (m_buffered_writer.is_open()) {
+        m_buffered_writer.close();
+    }
+  }
+
   void start(const nlohmann::json& /*args*/)
   {
     // Reset opmon variables

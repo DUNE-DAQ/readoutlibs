@@ -460,6 +460,20 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
     }
   }
 
+  void scrap(const nlohmann::json& /*cfg*/) override 
+  {
+    free_memory();
+    numa_aware_ = false;
+    numa_node_ = 0;
+    intrinsic_allocator_ = false;
+    alignment_size_ = 0;
+    invalid_configuration_requested_ = false;
+    size_ = 2;
+    records_ = static_cast<T*>(std::malloc(sizeof(T) * 2));
+    readIndex_ = 0;
+    writeIndex_ = 0;
+  }
+
   void flush() override { pop(occupancy()); }
 
   std::size_t get_alignment_size() {

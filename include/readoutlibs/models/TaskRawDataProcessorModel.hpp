@@ -62,6 +62,14 @@ public:
     m_geoid.system_type = ReadoutType::system_type;
   }
 
+  void scrap(const nlohmann::json& /*cfg*/) override
+  {
+    m_items_to_postprocess_queues.clear();
+    m_post_process_threads.clear();
+    m_post_process_functions.clear();
+    m_preprocess_functions.clear();
+  }
+
   void start(const nlohmann::json& /*args*/) override
   {
     // m_last_processed_daq_ts =

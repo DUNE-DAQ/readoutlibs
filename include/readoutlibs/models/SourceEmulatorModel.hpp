@@ -120,9 +120,13 @@ public:
     m_producer_thread.set_name("fakeprod", m_link_conf.geoid.element);
   }
 
-  bool is_configured() override { return m_is_configured; }
+  void scrap(const nlohmann::json& /*args*/)
+  {
+    m_file_source.reset();
+    m_is_configured = false;
+  }
 
-  void scrap(const nlohmann::json& /*args*/) { m_is_configured = false; }
+  bool is_configured() override { return m_is_configured; }
 
   void start(const nlohmann::json& /*args*/)
   {

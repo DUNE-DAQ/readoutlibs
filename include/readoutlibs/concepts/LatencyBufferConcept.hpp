@@ -36,6 +36,9 @@ public:
   //! Configure the LB
   virtual void conf(const nlohmann::json& cfg) = 0;
 
+  //! Unconfigure the LB
+  virtual void scrap(const nlohmann::json& cfg) = 0;
+
   //! Occupancy of LB
   virtual std::size_t occupancy() const = 0;
 
