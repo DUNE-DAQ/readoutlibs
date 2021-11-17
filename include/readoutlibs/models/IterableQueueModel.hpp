@@ -198,7 +198,6 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
       records_ = static_cast<T*>(_mm_malloc(sizeof(T) * size, alignment_size));
 
     } else if (!intrinsic_allocator && alignment_size > 0) { // std aligned allocator
-      std::cout << "Aligned alloc" << std::endl;
       records_ = static_cast<T*>(std::aligned_alloc(alignment_size, sizeof(T) * size));
 
     } else if (numa_aware && numa_node >= 0 && numa_node < 8) { // numa allocator from libnuma

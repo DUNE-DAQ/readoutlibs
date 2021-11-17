@@ -21,7 +21,7 @@ struct DUMMY_FRAME_STRUCT
   using FrameType = DUMMY_FRAME_STRUCT;
 
   // header
-  uint64_t timestamp;
+  uint64_t timestamp; // NOLINT(build/unsigned)
 
   // data
   char data[DUMMY_FRAME_SIZE];
