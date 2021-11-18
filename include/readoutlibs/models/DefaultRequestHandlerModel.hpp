@@ -21,9 +21,7 @@
 #include "daqdataformats/Fragment.hpp"
 #include "daqdataformats/Types.hpp"
 #include "dfmessages/DataRequest.hpp"
-#include "dfmessages/Fragment_serialization.hpp"
 #include "logging/Logging.hpp"
-#include "networkmanager/NetworkManager.hpp"
 #include "readoutlibs/FrameErrorRegistry.hpp"
 #include "readoutlibs/ReadoutLogging.hpp"
 
@@ -90,6 +88,7 @@ public:
                    appfwk::DAQSink<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>* sink,
                    size_t retries)
       : request(data_request)
+      , fragment_sink(sink)
       , retry_count(retries)
     {}
 
@@ -295,12 +294,11 @@ public:
         } catch (const ers::Issue& excpt) {
           ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
         }
-
       } else if (result.result_code == ResultCode::kNotYet) {
         TLOG_DEBUG(TLVL_WORK_STEPS) << "Re-queue request. "
                                     << "With timestamp=" << result.data_request.trigger_timestamp;
         std::lock_guard<std::mutex> wait_lock_guard(m_waiting_requests_lock);
-        m_waiting_requests.push_back(RequestElement(datarequest, 0));
+        m_waiting_requests.push_back(RequestElement(datarequest, &fragment_queue, 0));
       }
       auto t_req_end = std::chrono::high_resolution_clock::now();
       auto us_req_took = std::chrono::duration_cast<std::chrono::microseconds>(t_req_end - t_req_begin);
@@ -483,22 +481,6 @@ protected:
               oss << "fragments output queue for link " << m_geoid.element_id;
               ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
             }
-
-            /*
-                        try { // Push to Fragment queue
-                          TLOG_DEBUG(TLVL_QUEUE_PUSH)
-                            << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run
-               number "
-                            << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
-                          m_waiting_requests[i].fragment_sink->push(std::move(fragment),
-                                                                    std::chrono::milliseconds(m_fragment_queue_timeout));
-                        } catch (const ers::Issue& excpt) {
-                          std::ostringstream oss;
-                          oss << "fragments output queue for link " << m_geoid.element_id;
-                          ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
-                        }
-            */
-
             std::swap(m_waiting_requests[i], m_waiting_requests.back());
             m_waiting_requests.pop_back();
             size--;
@@ -516,19 +498,6 @@ protected:
             } catch (const ers::Issue& excpt) {
               ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
             }
-
-            /*
-                        try { // Push to Fragment queue
-                          TLOG_DEBUG(TLVL_QUEUE_PUSH)
-                            << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run
-               number "
-                            << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
-                          m_waiting_requests[i].fragment_sink->push(std::move(fragment),
-                                                                    std::chrono::milliseconds(m_fragment_queue_timeout));
-                        } catch (const ers::Issue& excpt) {
-                          ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
-                        }
-            */
             std::swap(m_waiting_requests[i], m_waiting_requests.back());
             m_waiting_requests.pop_back();
             size--;

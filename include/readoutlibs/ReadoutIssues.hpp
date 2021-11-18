@@ -16,17 +16,6 @@
 
 namespace dunedaq {
 ERS_DECLARE_ISSUE(readoutlibs,
-                  FragmentTransmissionFailed,
-                  "GeoID" << geoid << " failed to send data for trigger number " << tr_num << ".",
-                  ((daqdataformats::GeoID)geoid)((int64_t)tr_num))
-
-ERS_DECLARE_ISSUE(readoutlibs,
-                  TimeSyncTransmissionFailed,
-                  "GeoID " << geoid << " failed to send send TimeSync message to " << dest << " with topic " << topic
-                           << ".",
-                  ((daqdataformats::GeoID)geoid)((std::string)dest)((std::string)topic))
-
-ERS_DECLARE_ISSUE(readoutlibs,
                   InternalError,
                   "GeoID[" << geoid << "] Internal Error: " << error,
                   ((daqdataformats::GeoID)geoid)((std::string)error))
