@@ -28,6 +28,8 @@
 #include "dfmessages/TimeSync.hpp"
 #include "networkmanager/NetworkManager.hpp"
 
+#include "networkmanager/NetworkManager.hpp"
+
 #include "readoutlibs/ReadoutLogging.hpp"
 #include "readoutlibs/concepts/ReadoutConcept.hpp"
 #include "readoutlibs/readoutconfig/Nljs.hpp"
@@ -109,6 +111,9 @@ public:
       m_fake_trigger = true;
     }
     m_source_queue_timeout_ms = std::chrono::milliseconds(conf.source_queue_timeout_ms);
+
+    m_timesync_connection_name = conf.timesync_connection_name;
+    m_timesync_topic_name = conf.timesync_topic_name;
     TLOG_DEBUG(TLVL_WORK_STEPS) << "ReadoutModel creation";
 
     m_geoid.element_id = conf.element_id;

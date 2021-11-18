@@ -32,6 +32,8 @@ local readoutconfig = {
 
     file_name : s.string("FileName",
                       doc="A string field"),
+                      
+    netmgr_name : s.string("NetworkManagerName", doc="Connection or topic name to be used with NetworkManager"),
 
     string : s.string("String", moo.re.ident,
                       doc="A string field"),
