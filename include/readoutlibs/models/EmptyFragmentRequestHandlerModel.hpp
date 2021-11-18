@@ -38,7 +38,8 @@ public:
     typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::RequestResult;
   using ResultCode = typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::ResultCode;
 
-  void issue_request(dfmessages::DataRequest datarequest) override
+  void issue_request(dfmessages::DataRequest datarequest,
+                     appfwk::DAQSink<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>& fragment_queue) override
   {
     auto frag_header = inherited::create_fragment_header(datarequest);
     frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
@@ -48,15 +49,16 @@ public:
     // ers::warning(dunedaq::readoutlibs::TrmWithEmptyFragment(ERS_HERE, "DLH is configured to send empty fragment"));
     TLOG_DEBUG(TLVL_WORK_STEPS) << "DLH is configured to send empty fragment";
 
-    try {
-      auto serialised_frag = dunedaq::serialization::serialize(std::move(fragment), dunedaq::serialization::kMsgPack);
-      networkmanager::NetworkManager::get().send_to(datarequest.data_destination,
-                                                    static_cast<const void*>(serialised_frag.data()),
-                                                    serialised_frag.size(),
-                                                    std::chrono::milliseconds(1000));
-    } catch (ers::Issue& e) {
-      ers::warning(
-        FragmentTransmissionFailed(ERS_HERE, datarequest.request_information.component, datarequest.trigger_number, e));
+    try { // Push to Fragment queue
+      TLOG_DEBUG(TLVL_QUEUE_PUSH) << "Sending fragment with trigger_number " << fragment->get_trigger_number()
+                                  << ", run number " << fragment->get_run_number() << ", and GeoID "
+                                  << fragment->get_element_id();
+      fragment_queue.push(std::make_pair(std::move(fragment), datarequest.data_destination),
+                          std::chrono::milliseconds(
+                            DefaultRequestHandlerModel<ReadoutType, LatencyBufferType>::m_fragment_queue_timeout));
+    } catch (const ers::Issue& excpt) {
+      ers::warning(CannotWriteToQueue(
+        ERS_HERE, DefaultRequestHandlerModel<ReadoutType, LatencyBufferType>::m_geoid, "fragment queue"));
     }
   }
 };
