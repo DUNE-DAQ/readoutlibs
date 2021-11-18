@@ -50,6 +50,13 @@ ERS_DECLARE_ISSUE(readoutlibs,
                   "Configuration Error: " << conferror,
                   ((std::string)conferror))
 
+
+ERS_DECLARE_ISSUE(readoutlibs,
+                  TimeSyncTransmissionFailed,
+                  "GeoID " << geoid << " failed to send send TimeSync message to " << dest << " with topic " << topic
+                           << ".",
+                  ((daqdataformats::GeoID)geoid)((std::string)dest)((std::string)topic))
+
 ERS_DECLARE_ISSUE(readoutlibs, CannotOpenFile, "Couldn't open binary file: " << filename, ((std::string)filename))
 
 ERS_DECLARE_ISSUE(readoutlibs,
@@ -86,6 +93,12 @@ ERS_DECLARE_ISSUE(readoutlibs,
                   "GeoID[" << geoid << "] Failed attempt to write to the queue: " << queuename
                            << ". Data will be lost!",
                   ((daqdataformats::GeoID)geoid)((std::string)queuename))
+
+ERS_DECLARE_ISSUE(readoutlibs,
+                  RequestGeoIDMismatch,
+                  "GeoID[" << geoid << "] Got request for GeoID: " << request_geoid,
+                  ((daqdataformats::GeoID)geoid)((daqdataformats::GeoID)request_geoid))
+
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   TrmWithEmptyFragment,
