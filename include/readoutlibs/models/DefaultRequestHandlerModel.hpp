@@ -85,7 +85,7 @@ public:
   struct RequestElement
   {
     RequestElement(dfmessages::DataRequest data_request,
-                   appfwk::DAQSink<std::unique_ptr<daqdataformats::Fragment>>* sink,
+                   appfwk::DAQSink<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>* sink,
                    size_t retries)
       : request(data_request)
       , fragment_sink(sink)
@@ -93,7 +93,7 @@ public:
     {}
 
     dfmessages::DataRequest request;
-    appfwk::DAQSink<std::unique_ptr<daqdataformats::Fragment>>* fragment_sink;
+    appfwk::DAQSink<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>* fragment_sink;
     size_t retry_count;
   };
 
@@ -268,7 +268,7 @@ public:
   }
 
   void issue_request(dfmessages::DataRequest datarequest,
-                     appfwk::DAQSink<std::unique_ptr<daqdataformats::Fragment>>& fragment_queue) override
+                     appfwk::DAQSink<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>& fragment_queue) override
   {
     boost::asio::post(*m_request_handler_thread_pool, [&, datarequest]() { // start a thread from pool
       auto t_req_begin = std::chrono::high_resolution_clock::now();
@@ -290,7 +290,7 @@ public:
                                       << result.fragment->get_trigger_number() << ", run number "
                                       << result.fragment->get_run_number() << ", and GeoID "
                                       << result.fragment->get_element_id();
-          fragment_queue.push(std::move(result.fragment), std::chrono::milliseconds(m_fragment_queue_timeout));
+          fragment_queue.push(std::make_pair(std::move(result.fragment), datarequest.data_destination), std::chrono::milliseconds(m_fragment_queue_timeout));
         } catch (const ers::Issue& excpt) {
           ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
         }
@@ -377,8 +377,8 @@ protected:
     fh.size = sizeof(fh);
     fh.trigger_number = dr.trigger_number;
     fh.trigger_timestamp = dr.trigger_timestamp;
-    fh.window_begin = dr.window_begin;
-    fh.window_end = dr.window_end;
+    fh.window_begin = dr.request_information.window_begin;
+    fh.window_end = dr.request_information.window_end;
     fh.run_number = dr.run_number;
     fh.sequence_number = dr.sequence_number;
     fh.element_id = { m_geoid.system_type, m_geoid.region_id, m_geoid.element_id };
@@ -458,7 +458,7 @@ protected:
 
         size_t size = m_waiting_requests.size();
         for (size_t i = 0; i < size;) {
-          if (m_waiting_requests[i].request.window_end < newest_ts) {
+          if (m_waiting_requests[i].request.request_information.window_end < newest_ts) {
             issue_request(m_waiting_requests[i].request, *(m_waiting_requests[i].fragment_sink));
             std::swap(m_waiting_requests[i], m_waiting_requests.back());
             m_waiting_requests.pop_back();
@@ -473,7 +473,8 @@ protected:
               TLOG_DEBUG(TLVL_QUEUE_PUSH)
                 << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run number "
                 << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
-              m_waiting_requests[i].fragment_sink->push(std::move(fragment),
+              
+              m_waiting_requests[i].fragment_sink->push(std::make_pair(std::move(fragment), m_waiting_requests[i].request.data_destination),
                                                         std::chrono::milliseconds(m_fragment_queue_timeout));
             } catch (const ers::Issue& excpt) {
               std::ostringstream oss;
@@ -492,7 +493,7 @@ protected:
               TLOG_DEBUG(TLVL_QUEUE_PUSH)
                 << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run number "
                 << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
-              m_waiting_requests[i].fragment_sink->push(std::move(fragment),
+              m_waiting_requests[i].fragment_sink->push(std::make_pair(std::move(fragment), m_waiting_requests[i].request.data_destination),
                                                         std::chrono::milliseconds(m_fragment_queue_timeout));
             } catch (const ers::Issue& excpt) {
               ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
@@ -527,8 +528,8 @@ protected:
       uint64_t last_ts = front_element->get_first_timestamp();  // NOLINT(build/unsigned)
       uint64_t newest_ts = last_element->get_first_timestamp(); // NOLINT(build/unsigned)
 
-      uint64_t start_win_ts = dr.window_begin; // NOLINT(build/unsigned)
-      uint64_t end_win_ts = dr.window_end;     // NOLINT(build/unsigned)
+      uint64_t start_win_ts = dr.request_information.window_begin; // NOLINT(build/unsigned)
+      uint64_t end_win_ts = dr.request_information.window_end;     // NOLINT(build/unsigned)
       TLOG_DEBUG(TLVL_WORK_STEPS) << "Data request for "
                                   << "Trigger TS=" << dr.trigger_timestamp << " "
                                   << "Oldest stored TS=" << last_ts << " "

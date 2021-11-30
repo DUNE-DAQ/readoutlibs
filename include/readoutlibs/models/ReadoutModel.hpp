@@ -26,6 +26,7 @@
 
 #include "dfmessages/DataRequest.hpp"
 #include "dfmessages/TimeSync.hpp"
+#include "networkmanager/NetworkManager.hpp"
 
 #include "readoutlibs/ReadoutLogging.hpp"
 #include "readoutlibs/concepts/ReadoutConcept.hpp"
@@ -75,20 +76,19 @@ public:
     , m_latency_buffer_impl(nullptr)
     , m_raw_processor_impl(nullptr)
     , m_requester_thread(0)
-    , m_timesync_queue_timeout_ms(0)
     , m_timesync_thread(0)
   {}
 
   void init(const nlohmann::json& args)
   {
-    setup_request_response_queues(args);
+    setup_request_queues(args);
 
     try {
-      auto queue_index = appfwk::queue_index(args, { "raw_input", "timesync" });
+      auto queue_index = appfwk::queue_index(args, { "raw_input", "fragment_queue" });
       m_raw_data_source.reset(new raw_source_qt(queue_index["raw_input"].inst));
-      m_timesync_sink.reset(new timesync_sink_qt(queue_index["timesync"].inst));
+      m_fragment_queue.reset(new fragment_sink_qt(queue_index["fragment_queue"].inst));
     } catch (const ers::Issue& excpt) {
-      throw ResourceQueueError(ERS_HERE, "raw_input/timesync", "ReadoutModel", excpt);
+      throw ResourceQueueError(ERS_HERE, "Could not find all necessary queues: raw_input or fragment_queue", "ReadoutModel", excpt);
     }
 
     // Instantiate functionalities
@@ -114,6 +114,9 @@ public:
     m_geoid.element_id = conf.element_id;
     m_geoid.region_id = conf.region_id;
     m_geoid.system_type = ReadoutType::system_type;
+
+    m_timesync_connection_name = conf.timesync_connection_name;
+    m_timesync_topic_name = conf.timesync_topic_name;
 
     // Configure implementations:
     m_raw_processor_impl->conf(args);
@@ -216,19 +219,13 @@ public:
   }
 
 private:
-  void setup_request_response_queues(const nlohmann::json& args)
+  void setup_request_queues(const nlohmann::json& args)
   {
     auto queue_index = appfwk::queue_index(args, {});
     size_t index = 0;
     while (queue_index.find("data_requests_" + std::to_string(index)) != queue_index.end()) {
       m_data_request_queues.push_back(
         std::make_unique<request_source_qt>(queue_index["data_requests_" + std::to_string(index)].inst));
-      if (queue_index.find("data_response_" + std::to_string(index)) == queue_index.end()) {
-        throw InitializationError(ERS_HERE, "Queue not found: ", "data_response_" + std::to_string(index));
-      } else {
-        m_data_response_queues.push_back(
-          std::make_unique<fragment_sink_qt>(queue_index["data_response_" + std::to_string(index)].inst));
-      }
       index++;
     }
   }
@@ -245,7 +242,6 @@ private:
       ReadoutType payload;
       // Try to acquire data
       try {
-        // m_raw_data_source->pop(payload_ptr, m_source_queue_timeout_ms);
         m_raw_data_source->pop(payload, m_source_queue_timeout_ms);
         m_raw_processor_impl->preprocess_item(&payload);
         if (!m_latency_buffer_impl->write(std::move(payload))) {
@@ -276,11 +272,18 @@ private:
         // TLOG() << "New timesync: daq=" << timesyncmsg.daq_time << " wall=" << timesyncmsg.system_time;
         if (timesyncmsg.daq_time != 0) {
           try {
-            m_timesync_sink->push(std::move(timesyncmsg));
-          } catch (const ers::Issue& excpt) {
-            ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "timesync message queue", excpt));
+            auto serialised_timesync = dunedaq::serialization::serialize(timesyncmsg, dunedaq::serialization::kMsgPack);
+            networkmanager::NetworkManager::get().send_to(m_timesync_connection_name,
+                                                          static_cast<const void*>(serialised_timesync.data()),
+                                                          serialised_timesync.size(),
+                                                          std::chrono::milliseconds(500),
+                                                          m_timesync_topic_name);
+          } catch (ers::Issue& excpt) {
+            ers::warning(
+              TimeSyncTransmissionFailed(ERS_HERE, m_geoid, m_timesync_connection_name, m_timesync_topic_name, excpt));
           }
-
+  
+            
           if (m_fake_trigger) {
             dfmessages::DataRequest dr;
             ++m_current_fake_trigger_id;
@@ -288,14 +291,13 @@ private:
             dr.trigger_timestamp = timesyncmsg.daq_time > 500 * us ? timesyncmsg.daq_time - 500 * us : 0;
             auto width = 300000;
             uint offset = 100;
-            dr.window_begin = dr.trigger_timestamp > offset ? dr.trigger_timestamp - offset : 0;
-            dr.window_end = dr.window_begin + width;
+            dr.request_information.window_begin = dr.trigger_timestamp > offset ? dr.trigger_timestamp - offset : 0;
+            dr.request_information.window_end = dr.request_information.window_begin + width;
+            dr.request_information.component = m_geoid;
             TLOG_DEBUG(TLVL_WORK_STEPS) << "Issuing fake trigger based on timesync. "
-                                        << " ts=" << dr.trigger_timestamp << " window_begin=" << dr.window_begin
-                                        << " window_end=" << dr.window_end;
-            for (size_t i = 0; i < m_data_response_queues.size(); ++i) {
-              m_request_handler_impl->issue_request(dr, *m_data_response_queues[i]);
-            }
+                                        << " ts=" << dr.trigger_timestamp << " window_begin=" << dr.request_information.window_begin
+                                        << " window_end=" << dr.request_information.window_end;
+            m_request_handler_impl->issue_request(dr, *m_fragment_queue);
             ++m_num_requests;
             ++m_sum_requests;
           }
@@ -325,11 +327,14 @@ private:
       bool popped_element = false;
       for (size_t i = 0; i < m_data_request_queues.size(); ++i) {
         auto& request_source = *m_data_request_queues[i];
-        auto& response_sink = *m_data_response_queues[i];
         try {
           request_source.pop(data_request, std::chrono::milliseconds(0));
           popped_element = true;
-          m_request_handler_impl->issue_request(data_request, response_sink);
+          if (data_request.request_information.component != m_geoid) {
+            ers::error(RequestGeoIDMismatch(ERS_HERE, m_geoid, data_request.request_information.component));
+            return;
+          }
+          m_request_handler_impl->issue_request(data_request, *m_fragment_queue);
           ++m_num_requests;
           ++m_sum_requests;
           TLOG_DEBUG(TLVL_QUEUE_POP) << "Received DataRequest for trigger_number " << data_request.trigger_number
@@ -379,15 +384,15 @@ private:
   using raw_source_qt = appfwk::DAQSource<ReadoutType>;
   std::unique_ptr<raw_source_qt> m_raw_data_source;
 
-  // REQUEST SOURCE
+  // REQUEST SOURCES
   std::chrono::milliseconds m_request_queue_timeout_ms;
   using request_source_qt = appfwk::DAQSource<dfmessages::DataRequest>;
   std::vector<std::unique_ptr<request_source_qt>> m_data_request_queues;
 
-  // FRAGMENT SINKS
+  // FRAGMENT SINK
   std::chrono::milliseconds m_fragment_queue_timeout_ms;
-  using fragment_sink_qt = appfwk::DAQSink<std::unique_ptr<daqdataformats::Fragment>>;
-  std::vector<std::unique_ptr<fragment_sink_qt>> m_data_response_queues;
+  using fragment_sink_qt = appfwk::DAQSink<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>;
+  std::unique_ptr<fragment_sink_qt> m_fragment_queue;
 
   // LATENCY BUFFER:
   std::unique_ptr<LatencyBufferType> m_latency_buffer_impl;
@@ -402,10 +407,9 @@ private:
   std::unique_ptr<FrameErrorRegistry> m_error_registry;
 
   // TIME-SYNC
-  std::chrono::milliseconds m_timesync_queue_timeout_ms;
-  using timesync_sink_qt = appfwk::DAQSink<dfmessages::TimeSync>;
-  std::unique_ptr<timesync_sink_qt> m_timesync_sink;
   ReusableThread m_timesync_thread;
+  std::string m_timesync_connection_name;
+  std::string m_timesync_topic_name;
 
   std::chrono::time_point<std::chrono::high_resolution_clock> m_t0;
 };

@@ -36,6 +36,8 @@ local readoutconfig = {
     string : s.string("String", moo.re.ident,
                       doc="A string field"),
 
+    netmgr_name : s.string("NetworkManagerName", doc="Connection or topic name to be used with NetworkManager"),
+
     latencybufferconf : s.record("LatencyBufferConf", [
             s.field("latency_buffer_size", self.size, 100000,
                             doc="Size of latency buffer"),
@@ -117,7 +119,9 @@ local readoutconfig = {
             s.field("region_id", self.region_id, 0,
                             doc="The APA number of this link"),
             s.field("element_id", self.element_id, 0,
-                            doc="The link number of this link")
+                            doc="The link number of this link"),
+            s.field("timesync_connection_name", self.netmgr_name, "", doc="Connection name for sending timesyncs"),
+            s.field("timesync_topic_name", self.netmgr_name, "Timesync", doc="Topic for sending timesyncs")
     ], doc="Readout Model Config"),
 
     conf: s.record("Conf", [
