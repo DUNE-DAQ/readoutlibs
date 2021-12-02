@@ -8,10 +8,9 @@ find_dependency(logging)
 find_dependency(opmonlib)
 find_dependency(appfwk)
 find_dependency(daqdataformats)
-find_dependency(detdataformats)
 find_dependency(dfmessages)
 find_dependency(folly)
-
+find_dependency(Boost COMPONENTS iostreams)
 
 if (EXISTS ${CMAKE_SOURCE_DIR}/@PROJECT_NAME@)
 
