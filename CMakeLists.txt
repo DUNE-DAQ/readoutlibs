@@ -12,7 +12,7 @@ find_package(opmonlib REQUIRED)
 find_package(daqdataformats REQUIRED)
 find_package(dfmessages REQUIRED)
 find_package(folly REQUIRED)
-find_package(Boost COMPONENTS iostreams REQUIRED)
+find_package(Boost COMPONENTS iostreams unit_test_framework REQUIRED)
 set(BOOST_LIBS Boost::iostreams ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_LIBRARIES})
 
 daq_codegen( readoutconfig.jsonnet sourceemulatorconfig.jsonnet recorderconfig.jsonnet TEMPLATES Structs.hpp.j2 Nljs.hpp.j2 )
