@@ -270,7 +270,7 @@ private:
     TLOG_DEBUG(TLVL_WORK_STEPS) << "TimeSync thread started...";
     m_num_requests = 0;
     m_sum_requests = 0;
-    size_t msg_seqno = 0;
+    uint64_t msg_seqno = 0;
     auto once_per_run = true;
     while (m_run_marker.load()) {
       try {
@@ -422,7 +422,7 @@ private:
   ReusableThread m_timesync_thread;
   std::string m_timesync_connection_name;
   std::string m_timesync_topic_name;
-  size_t m_pid_of_current_process;
+  uint32_t m_pid_of_current_process;
 
   std::chrono::time_point<std::chrono::high_resolution_clock> m_t0;
 };
