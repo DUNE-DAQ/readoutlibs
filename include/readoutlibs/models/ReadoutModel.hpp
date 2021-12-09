@@ -50,6 +50,7 @@
 
 using dunedaq::readoutlibs::logging::TLVL_QUEUE_POP;
 using dunedaq::readoutlibs::logging::TLVL_TAKE_NOTE;
+using dunedaq::readoutlibs::logging::TLVL_TIME_SYNCS;
 using dunedaq::readoutlibs::logging::TLVL_WORK_STEPS;
 
 namespace dunedaq {
@@ -77,7 +78,9 @@ public:
     , m_raw_processor_impl(nullptr)
     , m_requester_thread(0)
     , m_timesync_thread(0)
-  {}
+  {
+    m_pid_of_current_process = getpid();
+  }
 
   void init(const nlohmann::json& args)
   {
@@ -155,6 +158,8 @@ public:
     m_rawq_timeout_count = 0;
 
     m_t0 = std::chrono::high_resolution_clock::now();
+
+    m_run_number = args.value<dunedaq::daqdataformats::run_number_t>("run", 1);
 
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Starting threads...";
     m_raw_processor_impl->start(args);
@@ -265,12 +270,18 @@ private:
     TLOG_DEBUG(TLVL_WORK_STEPS) << "TimeSync thread started...";
     m_num_requests = 0;
     m_sum_requests = 0;
+    uint64_t msg_seqno = 0;
     auto once_per_run = true;
     while (m_run_marker.load()) {
       try {
         auto timesyncmsg = dfmessages::TimeSync(m_raw_processor_impl->get_last_daq_time());
-        // TLOG() << "New timesync: daq=" << timesyncmsg.daq_time << " wall=" << timesyncmsg.system_time;
         if (timesyncmsg.daq_time != 0) {
+          timesyncmsg.run_number = m_run_number;
+          timesyncmsg.sequence_number = ++msg_seqno;
+          timesyncmsg.source_pid = m_pid_of_current_process;
+          TLOG_DEBUG(TLVL_TIME_SYNCS) << "New timesync: daq=" << timesyncmsg.daq_time
+                                      << " wall=" << timesyncmsg.system_time << " run=" << timesyncmsg.run_number
+                                      << " seqno=" << timesyncmsg.sequence_number << " pid=" << timesyncmsg.source_pid;
           try {
             auto serialised_timesync = dunedaq::serialization::serialize(timesyncmsg, dunedaq::serialization::kMsgPack);
             networkmanager::NetworkManager::get().send_to(m_timesync_connection_name,
@@ -366,6 +377,7 @@ private:
   bool m_fake_trigger;
   int m_current_fake_trigger_id;
   daqdataformats::GeoID m_geoid;
+  daqdataformats::run_number_t m_run_number;
 
   // STATS
   std::atomic<int> m_num_payloads{ 0 };
@@ -410,6 +422,7 @@ private:
   ReusableThread m_timesync_thread;
   std::string m_timesync_connection_name;
   std::string m_timesync_topic_name;
+  uint32_t m_pid_of_current_process;
 
   std::chrono::time_point<std::chrono::high_resolution_clock> m_t0;
 };
