@@ -611,7 +611,8 @@ protected:
           << "Oldest stored TS=" << last_ts << " "
           << "Start of window TS=" << start_win_ts << " "
           << "End of window TS=" << end_win_ts << " "
-          << "Estimated newest stored TS=" << newest_ts;
+          << "Estimated newest stored TS=" << newest_ts << " "
+          << "Requestor=" << dr.data_destination;
       TLOG_DEBUG(TLVL_WORK_STEPS) << oss.str();
     } else {
       ers::warning(RequestOnEmptyBuffer(ERS_HERE, m_geoid, "Data not found"));
