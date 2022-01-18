@@ -9,7 +9,7 @@
 #define READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_RECORDERCONCEPT_HPP_
 
 #include "appfwk/DAQSource.hpp"
-#include "appfwk/ThreadHelper.hpp"
+#include "utilities/WorkerThread.hpp"
 #include "opmonlib/InfoCollector.hpp"
 #include "readoutlibs/ReadoutTypes.hpp"
 #include "readoutlibs/recorderconfig/Structs.hpp"

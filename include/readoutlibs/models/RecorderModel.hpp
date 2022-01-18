@@ -10,7 +10,7 @@
 
 #include "appfwk/DAQModuleHelper.hpp"
 #include "appfwk/DAQSource.hpp"
-#include "appfwk/ThreadHelper.hpp"
+#include "utilities/WorkerThread.hpp"
 #include "readoutlibs/ReadoutTypes.hpp"
 #include "readoutlibs/concepts/RecorderConcept.hpp"
 #include "readoutlibs/recorderconfig/Nljs.hpp"
