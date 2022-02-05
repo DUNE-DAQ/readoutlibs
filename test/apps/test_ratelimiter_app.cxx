@@ -93,6 +93,9 @@ main(int /*argc*/, char** /*argv[]*/)
   if (stats.joinable()) {
     stats.join();
   }
+  if (adjuster.joinable()) {
+    adjuster.join();
+  }
 
   // Check
   // TLOG() << "Operations in 5 seconds (should be really close to 5 million:): " << sumops;
