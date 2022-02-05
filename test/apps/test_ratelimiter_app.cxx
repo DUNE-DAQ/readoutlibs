@@ -90,6 +90,9 @@ main(int /*argc*/, char** /*argv[]*/)
   if (killswitch.joinable()) {
     killswitch.join();
   }
+  if (stats.joinable()) {
+    stats.join();
+  }
 
   // Check
   // TLOG() << "Operations in 5 seconds (should be really close to 5 million:): " << sumops;
