@@ -12,9 +12,7 @@
 
 #include <atomic>
 #include <chrono>
-#include <memory>
 #include <random>
-#include <string>
 #include <vector>
 
 using namespace dunedaq::readoutlibs;
