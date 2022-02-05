@@ -198,6 +198,9 @@ main(int /*argc*/, char** /*argv[]*/)
   if (extractor.joinable()) {
     extractor.join();
   }
+  if (adjuster.joinable()) {
+    adjuster.join();
+  }
 
   // Exit
   TLOG() << "Exiting.";
