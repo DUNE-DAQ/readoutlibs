@@ -69,8 +69,19 @@ public:
     if (m_now > m_deadline + m_max_overshoot) {
       m_deadline = m_now + m_period.load();
     } else {
-      while (m_now < m_deadline) {
-        m_now = gettime();
+      if (m_now < m_deadline) {
+        if (m_deadline - m_now > 0) {
+          timespec tim;
+          tim.tv_sec = 0;
+          tim.tv_nsec = m_deadline - m_now;
+          // The second argument will be overwritten but we
+          // do not care about this temporary variable
+          nanosleep(&tim, &tim);
+          m_now = gettime();
+        }
+        while (m_now < m_deadline) {
+            m_now = gettime();
+        }
       }
       m_deadline += m_period.load();
     }
