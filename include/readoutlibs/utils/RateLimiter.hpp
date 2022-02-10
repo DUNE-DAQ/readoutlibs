@@ -25,6 +25,12 @@ namespace readoutlibs {
  *    limiter.limit();
  *  }
  */
+/** NOTES:
+    This rate limiter is a simple implementation that is intended to be
+    used for fast tasks, i.e. tasks that take less or much less time than the
+    time intervals (1 / rate) that the RateLimiter is operating with. It doesn't
+    work correctly if the tasks take longer than 1 / rate.
+ */
 class RateLimiter
 {
 public:
@@ -66,6 +72,7 @@ public:
 
   void limit()
   {
+    m_now = gettime();
     if (m_now > m_deadline + m_max_overshoot) {
       m_deadline = m_now + m_period.load();
     } else {
