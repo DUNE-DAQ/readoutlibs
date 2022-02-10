@@ -66,6 +66,7 @@ public:
 
   void limit()
   {
+    m_now = gettime();
     if (m_now > m_deadline + m_max_overshoot) {
       m_deadline = m_now + m_period.load();
     } else {
