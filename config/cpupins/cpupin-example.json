@@ -1,0 +1,30 @@
+{
+    "_comment": "Example JSON for CPU mask configuration of different processes.",
+
+    "other_proc": {
+    
+    },
+
+    "daq_application": {
+  
+        "--name trigger": {
+            "this field": "is ignored" 
+        },
+      
+        "--name dataflow0": {
+            "parent": "0-5,9"
+        },
+      
+        "--name ruflx0": {
+            "parent": "0 - 11 ,32-43",
+            "threads": {
+                "flx-dma-0": "0-11, 32, 33, 34, 35, 40, 41, 42, 43",
+                "ept-0-0-0": [0, 1, 1, 1, 1, 1, 1, 2, 3],
+      
+                "flx-dma-1": [0, 1, 2, 3, 8, 9, 10, 11, 32, 33, 34, 35, 40, 41, 42, 43],
+                "ept-0-1-0": [0, 1, 2, 3, 8, 9, 10, 11, 32, 33, 34, 35, 40, 41, 42, 43]
+            }
+        } 
+    }
+}
+
