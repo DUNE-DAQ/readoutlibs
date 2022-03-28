@@ -79,7 +79,7 @@ protected:
     RequestResult(ResultCode rc, dfmessages::DataRequest dr, daqdataformats::Fragment&& frag)
       : result_code(rc)
       , data_request(dr)
-      , fragment(std::move(frag))
+      , fragment(std::make_unique<daqdataformats::Fragment>(std::move(frag)))
     {}
     ResultCode result_code;
     dfmessages::DataRequest data_request;
