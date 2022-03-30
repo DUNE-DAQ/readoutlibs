@@ -12,9 +12,7 @@
 
 #include <atomic>
 #include <chrono>
-#include <memory>
 #include <random>
-#include <string>
 #include <vector>
 
 using namespace dunedaq::readoutlibs;
@@ -89,6 +87,12 @@ main(int /*argc*/, char** /*argv[]*/)
   TLOG() << "Flipping killswitch in order to stop...";
   if (killswitch.joinable()) {
     killswitch.join();
+  }
+  if (stats.joinable()) {
+    stats.join();
+  }
+  if (adjuster.joinable()) {
+    adjuster.join();
   }
 
   // Check
