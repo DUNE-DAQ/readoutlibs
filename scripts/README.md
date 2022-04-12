@@ -9,5 +9,5 @@ are specified.
 
 One can use the script as:
 
-    python readout-affinity.py --pinfile example-cpupin.json
+    readout-affinity.py --pinfile example-cpupin.json
 
