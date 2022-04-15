@@ -1,0 +1,62 @@
+{
+  "_comment": "For np04-srv-030 with software TPG",
+  
+  "daq_application": {
+
+    "--name dataflow0": {
+        "parent": [6,14,22]
+    },
+
+    "--name dfo": {
+      "parent": [14,22]
+    },
+
+    "--name hsi": {
+      "parent": [14,22]
+    },
+
+    "--name trigger": {
+      "parent": [14,22]
+    },
+
+    "--name ruemu0": {
+        "threads": {
+            "fakeprod-0": [0],
+            "postprocess-0-0": [2],
+            "ind-hits-0-0": [4],
+            "consumer-0": [24],
+
+            "fakeprod-1": [8],
+            "postprocess-0-1": [10],
+            "ind-hits-0-1": [12],
+            "consumer-1": [32],
+
+            "fakeprod-2": [16],
+            "postprocess-0-2": [18],
+            "ind-hits-0-2": [20],
+            "consumer-2": [40],
+
+            "fakeprod-3": [6],
+            "postprocess-0-3": [3],
+            "ind-hits-0-3": [5],
+            "consumer-3": [25],
+
+            "fakeprod-4": [9],
+            "postprocess-0-4": [11],
+            "ind-hits-0-4": [13],
+            "consumer-4": [33],
+
+            "fakeprod-5": [17],
+            "postprocess-0-5": [19],
+            "ind-hits-0-5": [21],
+            "consumer-5": [41],
+
+            "fakeprod-6": [7],
+            "postprocess-0-6": [15],
+            "ind-hits-0-6": [23],
+            "consumer-6": [31]
+      }
+    }
+  }
+}
+
