@@ -15,7 +15,7 @@
 #include "readoutlibs/utils/ReusableThread.hpp"
 
 #include "readoutlibs/readoutconfig/Nljs.hpp"
-#include "readoutlibs/readoutinfo/InfoStructs.hpp"
+#include "readoutlibs/readoutinfo/InfoNljs.hpp"
 
 #include "appfwk/Issues.hpp"
 #include "daqdataformats/Fragment.hpp"
