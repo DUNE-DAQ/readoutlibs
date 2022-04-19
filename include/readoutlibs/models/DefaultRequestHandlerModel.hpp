@@ -52,6 +52,13 @@ using dunedaq::readoutlibs::logging::TLVL_WORK_STEPS;
 namespace dunedaq {
 namespace readoutlibs {
 
+template<class T>
+uint64_t
+get_frame_iterator_timestamp(T iter)
+{
+  return iter->get_timestamp();
+}
+
 template<class ReadoutType, class LatencyBufferType>
 class DefaultRequestHandlerModel : public RequestHandlerConcept<ReadoutType, LatencyBufferType>
 {
@@ -562,7 +569,7 @@ protected:
                   end_win_ts) {
               // We don't need the whole aggregated object (e.g.: superchunk)
               for (auto frame_iter = element->begin(); frame_iter != element->end(); frame_iter++) {
-                if ((*frame_iter).get_timestamp() >= start_win_ts && (*frame_iter).get_timestamp() < end_win_ts) {
+                if (get_frame_iterator_timestamp(frame_iter) >= start_win_ts && get_frame_iterator_timestamp(frame_iter) < end_win_ts) {
                   frag_pieces.emplace_back(
                     std::make_pair<void*, size_t>(static_cast<void*>(&(*frame_iter)), element->get_frame_size()));
                 }
