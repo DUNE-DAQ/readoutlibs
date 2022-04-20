@@ -52,6 +52,16 @@ using dunedaq::readoutlibs::logging::TLVL_WORK_STEPS;
 namespace dunedaq {
 namespace readoutlibs {
 
+// This function takes the type returned by the begin() and end()
+// functions in a ReadoutType object and returns the timestamp that
+// should be used to determine whether the item pointed to by the
+// iterator is within the readout window. The "frame" type
+// ReadoutTypes all have a get_timestamp() function on the type
+// pointed to by the iterator (eg, WIBFrame), so we make this
+// "default" function return that. For other types, eg, those coming
+// from DS, there isn't a get_timestamp() function, so a different
+// template specialization is used in the appropriate package (eg,
+// trigger)
 template<class T>
 uint64_t
 get_frame_iterator_timestamp(T iter)
