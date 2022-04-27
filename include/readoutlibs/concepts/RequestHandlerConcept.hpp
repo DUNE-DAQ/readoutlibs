@@ -45,7 +45,8 @@ public:
   virtual void cleanup_check() = 0;
   //! Issue a data request to the request handler
   virtual void issue_request(dfmessages::DataRequest /*dr*/,
-                             appfwk::DAQSink<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>& /*fragment_queue*/) = 0;
+                             appfwk::DAQSink<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>& /*fragment_queue*/,
+                             bool send_partial_fragment_if_not_yet) = 0;
 
 protected:
   // Result code of requests
@@ -55,6 +56,7 @@ protected:
     kNotFound,
     kTooOld,
     kNotYet,
+    kPartial,
     kPass,
     kCleanup,
     kUnknown
@@ -62,6 +64,7 @@ protected:
   std::map<ResultCode, std::string> ResultCodeStrings{
     { ResultCode::kFound, "FOUND" },    { ResultCode::kNotFound, "NOT_FOUND" },
     { ResultCode::kTooOld, "TOO_OLD" }, { ResultCode::kNotYet, "NOT_YET_PRESENT" },
+    { ResultCode::kNotYet, "PARTIAL_RESULT" },
     { ResultCode::kPass, "PASSED" },    { ResultCode::kCleanup, "CLEANUP" },
     { ResultCode::kUnknown, "UNKNOWN" }
   };
@@ -87,7 +90,8 @@ protected:
   };
 
   virtual void cleanup() = 0;
-  virtual RequestResult data_request(dfmessages::DataRequest /*dr*/) = 0;
+  virtual RequestResult data_request(dfmessages::DataRequest /*dr*/,
+                                     bool send_partial_fragment_if_not_yet) = 0;
 
 private:
 };
