@@ -8,6 +8,7 @@ daq_setup_environment()
 find_package(ers REQUIRED)
 find_package(appfwk REQUIRED)
 find_package(logging REQUIRED)
+find_package(iomanager REQUIRED)
 find_package(opmonlib REQUIRED)
 find_package(daqdataformats REQUIRED)
 find_package(dfmessages REQUIRED)
@@ -44,6 +45,7 @@ endif()
 ##############################################################################
 # Main library
 daq_add_library(
+  *.cpp
   LINK_LIBRARIES ${READOUT_DEPENDENCIES}
 )
 
