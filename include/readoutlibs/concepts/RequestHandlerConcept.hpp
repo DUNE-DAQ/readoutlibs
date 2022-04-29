@@ -8,7 +8,6 @@
 #ifndef READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_REQUESTHANDLERCONCEPT_HPP_
 #define READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_REQUESTHANDLERCONCEPT_HPP_
 
-#include "appfwk/DAQSink.hpp"
 #include "iomanager/Sender.hpp"
 #include "daqdataformats/Fragment.hpp"
 #include "dfmessages/DataRequest.hpp"
@@ -46,8 +45,7 @@ public:
   virtual void cleanup_check() = 0;
   //! Issue a data request to the request handler
   virtual void issue_request(dfmessages::DataRequest /*dr*/,
-                             iomanager::SenderConcept<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>& /*fragment_conn*/) = 0;
-                             //appfwk::DAQSink<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>& /*fragment_conn*/) = 0;
+                             iomanager::SenderConcept<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>& /*fragment_sender*/) = 0;
 
 protected:
   // Result code of requests
