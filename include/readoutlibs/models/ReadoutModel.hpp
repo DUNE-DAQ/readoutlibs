@@ -362,12 +362,11 @@ private:
 
     // Clear receivers
     for (auto& receiver : m_data_request_receivers) {
-      bool timed_out = false;
-      while (!timed_out) {
+      while (true) {
         try {
           data_request = receiver->receive(std::chrono::milliseconds(10)); // RS -> Use proper timeout?
         } catch (const iomanager::TimeoutExpired& excpt) {
-          timed_out = true;
+          break;
         }
       }
     }
