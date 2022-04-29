@@ -8,8 +8,8 @@
 #ifndef READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_SOURCEEMULATORMODEL_HPP_
 #define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_SOURCEEMULATORMODEL_HPP_
 
-#include "appfwk/DAQSink.hpp"
-#include "appfwk/DAQSource.hpp"
+#include "iomanager/IOManager.hpp"
+#include "iomanager/Sender.hpp"
 
 #include "logging/Logging.hpp"
 
@@ -44,8 +44,6 @@ template<class ReadoutType>
 class SourceEmulatorModel : public SourceEmulatorConcept
 {
 public:
-  using sink_t = appfwk::DAQSink<ReadoutType>;
-
   explicit SourceEmulatorModel(std::string name,
                                std::atomic<bool>& run_marker,
                                uint64_t time_tick_diff, // NOLINT(build/unsigned)
@@ -57,8 +55,8 @@ public:
     , m_dropout_rate(dropout_rate)
     , m_frame_error_rate(frame_error_rate)
     , m_packet_count{ 0 }
-    , m_sink_queue_timeout_ms(0)
-    , m_raw_data_sink(nullptr)
+    , m_raw_sender_timeout_ms(0)
+    , m_raw_data_sender(nullptr)
     , m_producer_thread(0)
     , m_name(name)
     , m_rate_khz(rate_khz)
@@ -66,11 +64,13 @@ public:
 
   void init(const nlohmann::json& /*args*/) {}
 
-  void set_sink(const std::string& sink_name)
+  void set_sender(const std::string& conn_name)
   {
-    if (!m_sink_is_set) {
-      m_raw_data_sink = std::make_unique<sink_t>(sink_name);
-      m_sink_is_set = true;
+    if (!m_sender_is_set) {
+#warning RS -> Local IOManager instance!
+      iomanager::IOManager iom;
+      m_raw_data_sender = iom.get_sender<ReadoutType>(conn_name);
+      m_sender_is_set = true;
     } else {
       // ers::error();
     }
@@ -83,7 +83,7 @@ public:
     } else {
       m_conf = args.get<module_conf_t>();
       m_link_conf = link_conf.get<link_conf_t>();
-      m_sink_queue_timeout_ms = std::chrono::milliseconds(m_conf.queue_timeout_ms);
+      m_raw_sender_timeout_ms = std::chrono::milliseconds(m_conf.queue_timeout_ms);
 
       std::mt19937 mt(rand()); // NOLINT(runtime/threadsafe_fn)
       std::uniform_real_distribution<double> dis(0.0, 1.0);
@@ -203,9 +203,9 @@ protected:
         }
         payload.fake_frame_errors(&frame_errs);
 
-        // queue in to actual DAQSink
+        // send it
         try {
-          m_raw_data_sink->push(std::move(payload), m_sink_queue_timeout_ms);
+          m_raw_data_sender->send(payload, m_raw_sender_timeout_ms);
         } catch (ers::Issue& excpt) {
           ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "raw data input queue", excpt));
           // std::runtime_error("Queue timed out...");
@@ -242,12 +242,12 @@ private:
 
   sourceemulatorconfig::Conf m_cfg;
 
-  // RAW SINK
-  std::chrono::milliseconds m_sink_queue_timeout_ms;
-  using raw_sink_qt = appfwk::DAQSink<ReadoutType>;
-  std::unique_ptr<raw_sink_qt> m_raw_data_sink;
+  // RAW SENDER
+  std::chrono::milliseconds m_raw_sender_timeout_ms;
+  using raw_sender_ct = iomanager::SenderConcept<ReadoutType>;
+  std::shared_ptr<raw_sender_ct> m_raw_data_sender;
 
-  bool m_sink_is_set = false;
+  bool m_sender_is_set = false;
   using module_conf_t = dunedaq::readoutlibs::sourceemulatorconfig::Conf;
   module_conf_t m_conf;
   using link_conf_t = dunedaq::readoutlibs::sourceemulatorconfig::LinkConfiguration;

@@ -91,7 +91,7 @@ public:
     setup_request_queues(args);
 
     try {
-#warning Hard coded ConnectionRef, should come from config data
+#warning RS -> Hard coded ConnectionRef, should come from config data
       iomanager::ConnectionRef raw_input_ref = iomanager::ConnectionRef{ "input", "raw_input", iomanager::Direction::kInput };
       m_raw_data_receiver = m_iom.get_receiver<ReadoutType>(raw_input_ref);
       iomanager::ConnectionRef frag_output_ref = iomanager::ConnectionRef{ "output", "frag_output", iomanager::Direction::kOutput };

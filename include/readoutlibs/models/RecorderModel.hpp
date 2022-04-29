@@ -9,7 +9,8 @@
 #define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_RECORDERMODEL_HPP_
 
 #include "appfwk/DAQModuleHelper.hpp"
-#include "appfwk/DAQSource.hpp"
+#include "iomanager/IOManager.hpp"
+#include "iomanager/Receiver.hpp"
 #include "utilities/WorkerThread.hpp"
 #include "readoutlibs/ReadoutTypes.hpp"
 #include "readoutlibs/concepts/RecorderConcept.hpp"
@@ -27,6 +28,7 @@
 
 namespace dunedaq {
 namespace readoutlibs {
+
 template<class ReadoutType>
 class RecorderImpl : public RecorderConcept
 {
@@ -39,8 +41,10 @@ public:
   void init(const nlohmann::json& args) override
   {
     try {
-      auto qi = appfwk::queue_index(args, { "raw_recording" });
-      m_input_queue.reset(new source_t(qi["raw_recording"].inst));
+      auto ci = appfwk::connection_index(args, { "raw_recording" });
+#warning RS -> Local IOManager instance!
+      iomanager::IOManager iom;
+      m_data_receiver = iom.get_receiver<ReadoutType>(ci);
     } catch (const ers::Issue& excpt) {
       throw ResourceQueueError(ERS_HERE, "raw_recording", "RecorderModel");
     }
@@ -99,14 +103,14 @@ private:
     ReadoutType element;
     while (m_run_marker) {
       try {
-        m_input_queue->pop(element, std::chrono::milliseconds(100));
+        element = m_data_receiver->receive(std::chrono::milliseconds(100)); // RS -> Use confed timeout?
         m_packets_processed_total++;
         m_packets_processed_since_last_info++;
         if (!m_buffered_writer.write(reinterpret_cast<char*>(&element), sizeof(element))) { // NOLINT
           ers::warning(CannotWriteToFile(ERS_HERE, m_conf.output_file));
           break;
         }
-      } catch (const dunedaq::appfwk::QueueTimeoutExpired& excpt) {
+      } catch (const dunedaq::iomanager::TimeoutExpired& excpt) {
         continue;
       }
     }
@@ -114,8 +118,8 @@ private:
   }
 
   // Queue
-  using source_t = dunedaq::appfwk::DAQSource<ReadoutType>;
-  std::unique_ptr<source_t> m_input_queue;
+  using source_t = dunedaq::iomanager::ReceiverConcept<ReadoutType>;
+  std::unique_ptr<source_t> m_data_receiver;
 
   // Internal
   recorderconfig::Conf m_conf;
@@ -132,6 +136,7 @@ private:
 
   std::string m_name;
 };
+
 } // namespace readoutlibs
 } // namespace dunedaq
 
