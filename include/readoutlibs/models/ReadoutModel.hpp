@@ -14,6 +14,7 @@
 #include "appfwk/cmd/Structs.hpp"
 
 #include "appfwk/DAQModuleHelper.hpp"
+#include "iomanager/IOManager.hpp"
 #include "iomanager/Sender.hpp"
 #include "iomanager/Receiver.hpp"
 
