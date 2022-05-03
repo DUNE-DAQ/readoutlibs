@@ -38,8 +38,8 @@ public:
     typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::RequestResult;
   using ResultCode = typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::ResultCode;
 
-  void issue_request(dfmessages::DataRequest datarequest,
-                     iomanager::SenderConcept<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>& fragment_sender) override
+  void issue_request(dfmessages::DataRequest datarequest
+                     ) override
   {
     auto frag_header = inherited::create_fragment_header(datarequest);
     frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
@@ -53,8 +53,9 @@ public:
       TLOG_DEBUG(TLVL_QUEUE_PUSH) << "Sending fragment with trigger_number " << fragment->get_trigger_number()
                                   << ", run number " << fragment->get_run_number() << ", and GeoID "
                                   << fragment->get_element_id();
-      auto frag = std::make_pair(std::move(fragment), datarequest.data_destination);
-      fragment_sender.send(frag, std::chrono::milliseconds(inherited::m_fragment_queue_timeout));
+      //auto frag = std::make_pair(std::move(fragment), datarequest.data_destination);
+      iomanager::IOManager iom;
+      iom.get_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)->send(fragment, std::chrono::milliseconds(inherited::m_fragment_queue_timeout));
     } catch (const ers::Issue& excpt) {
       ers::warning(CannotWriteToQueue(
         ERS_HERE, DefaultRequestHandlerModel<ReadoutType, LatencyBufferType>::m_geoid, "fragment queue"));

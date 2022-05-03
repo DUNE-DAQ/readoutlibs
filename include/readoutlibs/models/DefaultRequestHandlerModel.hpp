@@ -102,15 +102,12 @@ public:
   struct RequestElement
   {
     RequestElement(dfmessages::DataRequest data_request,
-                   iomanager::SenderConcept<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>* sender,
                    size_t retries)
       : request(data_request)
-      , fragment_sender(sender)
       , retry_count(retries)
     {}
 
     dfmessages::DataRequest request;
-    iomanager::SenderConcept<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>* fragment_sender;
     size_t retry_count;
   };
 
@@ -284,8 +281,8 @@ public:
     }
   }
 
-  void issue_request(dfmessages::DataRequest datarequest,
-                     iomanager::SenderConcept<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>& fragment_sender) override
+  void issue_request(dfmessages::DataRequest datarequest
+                     ) override
   {
     boost::asio::post(*m_request_handler_thread_pool, [&, datarequest]() { // start a thread from pool
       auto t_req_begin = std::chrono::high_resolution_clock::now();
@@ -307,7 +304,8 @@ public:
                                       << result.fragment->get_trigger_number() << ", run number "
                                       << result.fragment->get_run_number() << ", and GeoID "
                                       << result.fragment->get_element_id();
-          fragment_sender.send(std::make_pair(std::move(result.fragment), datarequest.data_destination), std::chrono::milliseconds(m_fragment_sender_timeout));
+          iomanager::IOManager iom;
+	  iom.get_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)->send(result.fragment, std::chrono::milliseconds(m_fragment_sender_timeout));
         } catch (const ers::Issue& excpt) {
           ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
         }
@@ -315,7 +313,7 @@ public:
         TLOG_DEBUG(TLVL_WORK_STEPS) << "Re-queue request. "
                                     << "With timestamp=" << result.data_request.trigger_timestamp;
         std::lock_guard<std::mutex> wait_lock_guard(m_waiting_requests_lock);
-        m_waiting_requests.push_back(RequestElement(datarequest, &fragment_sender, 0));
+        m_waiting_requests.push_back(RequestElement(datarequest, 0));
       }
       auto t_req_end = std::chrono::high_resolution_clock::now();
       auto us_req_took = std::chrono::duration_cast<std::chrono::microseconds>(t_req_end - t_req_begin);
@@ -476,7 +474,7 @@ protected:
         size_t size = m_waiting_requests.size();
         for (size_t i = 0; i < size;) {
           if (m_waiting_requests[i].request.request_information.window_end < newest_ts) {
-            issue_request(m_waiting_requests[i].request, *(m_waiting_requests[i].fragment_sink));
+            issue_request(m_waiting_requests[i].request);
             std::swap(m_waiting_requests[i], m_waiting_requests.back());
             m_waiting_requests.pop_back();
             size--;
@@ -490,8 +488,8 @@ protected:
               TLOG_DEBUG(TLVL_QUEUE_PUSH)
                 << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run number "
                 << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
-              
-              m_waiting_requests[i].fragment_sink->push(std::make_pair(std::move(fragment), m_waiting_requests[i].request.data_destination),
+	      iomanager::IOManager iom;
+              iom.get_sender<std::unique_ptr<daqdataformats::Fragment>>(m_waiting_requests[i].request.data_destination)->send(fragment,
                                                         std::chrono::milliseconds(m_fragment_sender_timeout));
             } catch (const ers::Issue& excpt) {
               std::ostringstream oss;
@@ -510,8 +508,10 @@ protected:
               TLOG_DEBUG(TLVL_QUEUE_PUSH)
                 << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run number "
                 << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
-              m_waiting_requests[i].fragment_sink->push(std::make_pair(std::move(fragment), m_waiting_requests[i].request.data_destination),
+              iomanager::IOManager iom;
+              iom.get_sender<std::unique_ptr<daqdataformats::Fragment>>(m_waiting_requests[i].request.data_destination)->send(fragment,
                                                         std::chrono::milliseconds(m_fragment_sender_timeout));
+
             } catch (const ers::Issue& excpt) {
               ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
             }
