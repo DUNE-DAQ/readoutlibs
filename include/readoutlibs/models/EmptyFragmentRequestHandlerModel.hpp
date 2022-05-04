@@ -55,7 +55,7 @@ public:
                                   << fragment->get_element_id();
       //auto frag = std::make_pair(std::move(fragment), datarequest.data_destination);
       iomanager::IOManager iom;
-      iom.get_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)->send(fragment, std::chrono::milliseconds(inherited::m_fragment_queue_timeout));
+      iom.get_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)->send(fragment, iomanager::Sender::s_no_block);
     } catch (const ers::Issue& excpt) {
       ers::warning(CannotWriteToQueue(
         ERS_HERE, DefaultRequestHandlerModel<ReadoutType, LatencyBufferType>::m_geoid, "fragment queue"));

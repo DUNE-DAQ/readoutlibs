@@ -44,7 +44,7 @@ public:
       auto ci = appfwk::connection_index(args, { "raw_recording" });
 #warning RS -> Local IOManager instance!
       iomanager::IOManager iom;
-      m_data_receiver = iom.get_receiver<ReadoutType>(ci);
+      m_data_receiver = iom.get_receiver<ReadoutType>(ci["raw_recording"]);
     } catch (const ers::Issue& excpt) {
       throw ResourceQueueError(ERS_HERE, "raw_recording", "RecorderModel");
     }
@@ -119,7 +119,7 @@ private:
 
   // Queue
   using source_t = dunedaq::iomanager::ReceiverConcept<ReadoutType>;
-  std::unique_ptr<source_t> m_data_receiver;
+  std::shared_ptr<source_t> m_data_receiver;
 
   // Internal
   recorderconfig::Conf m_conf;

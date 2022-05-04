@@ -121,7 +121,6 @@ public:
     m_buffer_capacity = conf.latency_buffer_size;
     m_num_request_handling_threads = conf.num_request_handling_threads;
     m_retry_count = conf.retry_count;
-    m_fragment_sender_timeout = conf.fragment_queue_timeout_ms;
     m_output_file = conf.output_file;
     m_geoid.element_id = conf.element_id;
     m_geoid.region_id = conf.region_id;
@@ -305,7 +304,7 @@ public:
                                       << result.fragment->get_run_number() << ", and GeoID "
                                       << result.fragment->get_element_id();
           iomanager::IOManager iom;
-	  iom.get_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)->send(result.fragment, std::chrono::milliseconds(m_fragment_sender_timeout));
+	  iom.get_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)->send(result.fragment, iomanager::Sender::s_no_block);
         } catch (const ers::Issue& excpt) {
           ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
         }
@@ -490,7 +489,7 @@ protected:
                 << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
 	      iomanager::IOManager iom;
               iom.get_sender<std::unique_ptr<daqdataformats::Fragment>>(m_waiting_requests[i].request.data_destination)->send(fragment,
-                                                        std::chrono::milliseconds(m_fragment_sender_timeout));
+                                                        iomanager::Sender::s_no_block);
             } catch (const ers::Issue& excpt) {
               std::ostringstream oss;
               oss << "fragments output queue for link " << m_geoid.element_id;
@@ -510,7 +509,7 @@ protected:
                 << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
               iomanager::IOManager iom;
               iom.get_sender<std::unique_ptr<daqdataformats::Fragment>>(m_waiting_requests[i].request.data_destination)->send(fragment,
-                                                        std::chrono::milliseconds(m_fragment_sender_timeout));
+                                                        iomanager::Sender::s_no_block);
 
             } catch (const ers::Issue& excpt) {
               ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
@@ -696,7 +695,6 @@ protected:
   size_t m_buffer_capacity;
   daqdataformats::GeoID m_geoid;
   static const constexpr uint32_t m_min_delay_us = 30000; // NOLINT(build/unsigned)
-  int m_fragment_sender_timeout = 100;
   std::string m_output_file;
   size_t m_stream_buffer_size = 0;
   bool m_recording_configured = false;
