@@ -42,9 +42,7 @@ public:
   {
     try {
       auto ci = appfwk::connection_index(args, { "raw_recording" });
-#warning RS -> Local IOManager instance!
-      iomanager::IOManager iom;
-      m_data_receiver = iom.get_receiver<ReadoutType>(ci["raw_recording"]);
+      m_data_receiver = get_iom_receiver<ReadoutType>(ci["raw_recording"]);
     } catch (const ers::Issue& excpt) {
       throw ResourceQueueError(ERS_HERE, "raw_recording", "RecorderModel");
     }

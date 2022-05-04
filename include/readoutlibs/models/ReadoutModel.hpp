@@ -92,10 +92,10 @@ public:
     try {
 #warning RS -> Hard coded ConnectionRef, should come from config data
       iomanager::ConnectionRef raw_input_ref = iomanager::ConnectionRef{ "input", "raw_input", iomanager::Direction::kInput };
-      m_raw_data_receiver = m_iom.get_receiver<ReadoutType>(raw_input_ref);
+      m_raw_data_receiver = get_iom_receiver<ReadoutType>(raw_input_ref);
       iomanager::ConnectionRef frag_output_ref = iomanager::ConnectionRef{ "output", "frag_output", iomanager::Direction::kOutput };
       iomanager::ConnectionRef timesync_output_ref = iomanager::ConnectionRef{ "output", "timesync_output", iomanager::Direction::kOutput };
-      m_timesync_sender = m_iom.get_sender<dfmessages::TimeSync>(timesync_output_ref);
+      m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(timesync_output_ref);
     } catch (const ers::Issue& excpt) {
       throw ResourceQueueError(ERS_HERE, "Could not find all necessary connections: raw_input or frag_output", "ReadoutModel", excpt);
     }
@@ -236,7 +236,7 @@ private:
     iomanager::ConnectionRef request_input_ref = iomanager::ConnectionRef{ "input", "request_input_*", iomanager::Direction::kInput };
     // Loop over request_input refs...
     //while (queue_index.find("data_requests_" + std::to_string(index)) != queue_index.end()) {
-      m_data_request_receivers.push_back( m_iom.get_receiver<dfmessages::DataRequest>(request_input_ref) );
+      m_data_request_receivers.push_back( get_iom_receiver<dfmessages::DataRequest>(request_input_ref) );
       index++;
     //}
   }
@@ -393,9 +393,6 @@ private:
 
   // CONSUMER
   ReusableThread m_consumer_thread;
-
-#warning RS -> We need a static, globally configured IOManager instance! Temporary shortcut is having a local member.
-  iomanager::IOManager m_iom;
 
   // RAW RECEIVER
   std::chrono::milliseconds m_raw_receiver_timeout_ms;

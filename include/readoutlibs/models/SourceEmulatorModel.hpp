@@ -67,9 +67,7 @@ public:
   void set_sender(const std::string& conn_name)
   {
     if (!m_sender_is_set) {
-#warning RS -> Local IOManager instance!
-      iomanager::IOManager iom;
-      m_raw_data_sender = iom.get_sender<ReadoutType>(conn_name);
+      m_raw_data_sender = get_iom_sender<ReadoutType>(conn_name);
       m_sender_is_set = true;
     } else {
       // ers::error();
