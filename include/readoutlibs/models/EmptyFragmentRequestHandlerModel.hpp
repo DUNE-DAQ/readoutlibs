@@ -54,7 +54,7 @@ public:
                                   << ", run number " << fragment->get_run_number() << ", and GeoID "
                                   << fragment->get_element_id();
       //auto frag = std::make_pair(std::move(fragment), datarequest.data_destination);
-      get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)->send(fragment, iomanager::Sender::s_no_block);
+      get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)->send(std::move(fragment), iomanager::Sender::s_no_block);
     } catch (const ers::Issue& excpt) {
       ers::warning(CannotWriteToQueue(
         ERS_HERE, DefaultRequestHandlerModel<ReadoutType, LatencyBufferType>::m_geoid, "fragment queue"));

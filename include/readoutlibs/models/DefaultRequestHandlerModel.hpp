@@ -303,7 +303,7 @@ public:
                                       << result.fragment->get_trigger_number() << ", run number "
                                       << result.fragment->get_run_number() << ", and GeoID "
                                       << result.fragment->get_element_id();
-	  get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)->send(result.fragment, iomanager::Sender::s_no_block);
+	  get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)->send(std::move(result.fragment), iomanager::Sender::s_no_block);
         } catch (const ers::Issue& excpt) {
           ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
         }
@@ -486,7 +486,7 @@ protected:
               TLOG_DEBUG(TLVL_QUEUE_PUSH)
                 << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run number "
                 << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
-              get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(m_waiting_requests[i].request.data_destination)->send(fragment,
+              get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(m_waiting_requests[i].request.data_destination)->send(std::move(fragment),
                                                         iomanager::Sender::s_no_block);
             } catch (const ers::Issue& excpt) {
               std::ostringstream oss;
@@ -505,7 +505,7 @@ protected:
               TLOG_DEBUG(TLVL_QUEUE_PUSH)
                 << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run number "
                 << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
-              get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(m_waiting_requests[i].request.data_destination)->send(fragment,
+              get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(m_waiting_requests[i].request.data_destination)->send(std::move(fragment),
                                                         iomanager::Sender::s_no_block);
 
             } catch (const ers::Issue& excpt) {

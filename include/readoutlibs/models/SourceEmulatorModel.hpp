@@ -203,7 +203,7 @@ protected:
 
         // send it
         try {
-          m_raw_data_sender->send(payload, m_raw_sender_timeout_ms);
+          m_raw_data_sender->send(std::move(payload), m_raw_sender_timeout_ms);
         } catch (ers::Issue& excpt) {
           ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "raw data input queue", excpt));
           // std::runtime_error("Queue timed out...");

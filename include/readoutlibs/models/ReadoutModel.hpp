@@ -288,7 +288,8 @@ private:
                                       << " wall=" << timesyncmsg.system_time << " run=" << timesyncmsg.run_number
                                       << " seqno=" << timesyncmsg.sequence_number << " pid=" << timesyncmsg.source_pid;
           try {
-            m_timesync_sender->send(timesyncmsg, std::chrono::milliseconds(500), m_timesync_topic_name);
+              dfmessages::TimeSync timesyncmsg_copy(timesyncmsg);
+            m_timesync_sender->send(std::move(timesyncmsg_copy), std::chrono::milliseconds(500), m_timesync_topic_name);
           } catch (ers::Issue& excpt) {
             ers::warning(
               TimeSyncTransmissionFailed(ERS_HERE, m_geoid, m_timesync_connection_name, m_timesync_topic_name, excpt));
