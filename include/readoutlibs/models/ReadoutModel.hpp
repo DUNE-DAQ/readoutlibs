@@ -77,7 +77,6 @@ public:
     , m_raw_data_receiver(nullptr)
     , m_request_receiever_timeout_ms(0)
     , m_fragment_sender_timeout_ms(0)
-    , m_fragment_sender(nullptr)
     , m_latency_buffer_impl(nullptr)
     , m_raw_processor_impl(nullptr)
     , m_requester_thread(0)
@@ -93,11 +92,10 @@ public:
     try {
 #warning RS -> Hard coded ConnectionRef, should come from config data
       iomanager::ConnectionRef raw_input_ref = iomanager::ConnectionRef{ "input", "raw_input", iomanager::Direction::kInput };
-      m_raw_data_receiver = m_iom.get_receiver<ReadoutType>(raw_input_ref);
+      m_raw_data_receiver = get_iom_receiver<ReadoutType>(raw_input_ref);
       iomanager::ConnectionRef frag_output_ref = iomanager::ConnectionRef{ "output", "frag_output", iomanager::Direction::kOutput };
-      m_fragment_sender = m_iom.get_sender<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>(frag_output_ref);
       iomanager::ConnectionRef timesync_output_ref = iomanager::ConnectionRef{ "output", "timesync_output", iomanager::Direction::kOutput };
-      m_timesync_sender = m_iom.get_sender<dfmessages::TimeSync>(timesync_output_ref);
+      m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(timesync_output_ref);
     } catch (const ers::Issue& excpt) {
       throw ResourceQueueError(ERS_HERE, "Could not find all necessary connections: raw_input or frag_output", "ReadoutModel", excpt);
     }
@@ -238,7 +236,7 @@ private:
     iomanager::ConnectionRef request_input_ref = iomanager::ConnectionRef{ "input", "request_input_*", iomanager::Direction::kInput };
     // Loop over request_input refs...
     //while (queue_index.find("data_requests_" + std::to_string(index)) != queue_index.end()) {
-      m_data_request_receivers.push_back( m_iom.get_receiver<dfmessages::DataRequest>(request_input_ref) );
+      m_data_request_receivers.push_back( get_iom_receiver<dfmessages::DataRequest>(request_input_ref) );
       index++;
     //}
   }
@@ -309,7 +307,7 @@ private:
             TLOG_DEBUG(TLVL_WORK_STEPS) << "Issuing fake trigger based on timesync. "
                                         << " ts=" << dr.trigger_timestamp << " window_begin=" << dr.request_information.window_begin
                                         << " window_end=" << dr.request_information.window_end;
-            m_request_handler_impl->issue_request(dr, *m_fragment_sender);
+	    m_request_handler_impl->issue_request(dr);
             ++m_num_requests;
             ++m_sum_requests;
           }
@@ -346,7 +344,7 @@ private:
             ers::error(RequestGeoIDMismatch(ERS_HERE, m_geoid, data_request.request_information.component));
             return;
           }
-          m_request_handler_impl->issue_request(data_request, *m_fragment_sender);
+          m_request_handler_impl->issue_request(data_request);
           ++m_num_requests;
           ++m_sum_requests;
           TLOG_DEBUG(TLVL_QUEUE_POP) << "Received DataRequest for trigger_number " << data_request.trigger_number
@@ -396,9 +394,6 @@ private:
   // CONSUMER
   ReusableThread m_consumer_thread;
 
-#warning RS -> We need a static, globally configured IOManager instance! Temporary shortcut is having a local member.
-  iomanager::IOManager m_iom;
-
   // RAW RECEIVER
   std::chrono::milliseconds m_raw_receiver_timeout_ms;
   using raw_receiver_ct = iomanager::ReceiverConcept<ReadoutType>;
@@ -411,8 +406,8 @@ private:
 
   // FRAGMENT SENDER
   std::chrono::milliseconds m_fragment_sender_timeout_ms;
-  using fragment_sender_ct = iomanager::SenderConcept<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>;
-  std::shared_ptr<fragment_sender_ct> m_fragment_sender;
+  //using fragment_sender_ct = iomanager::SenderConcept<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>;
+  //std::shared_ptr<fragment_sender_ct> m_fragment_sender;
 
   // TIME-SYNC
   using timesync_sender_ct = iomanager::SenderConcept<dfmessages::TimeSync>; // no timeout -> published
