@@ -244,7 +244,7 @@ private:
     auto ini = args.get<appfwk::app::ModInit>();	  
     for (const auto& cr : ini.conn_refs) {
 	if(cr.name == "request_input") {
-		      m_data_request_receivers.push_back( get_iom_receiver<dfmessages::DataRequest>(cr) );
+		      m_data_request_receiver = get_iom_receiver<dfmessages::DataRequest>(cr) ;
 	}
     }
     //int index = 0;
@@ -351,10 +351,10 @@ private:
 
     while (m_run_marker.load()) {
       bool received_request = false;
-      for (size_t i = 0; i < m_data_request_receivers.size(); ++i) {
-        auto& request_receiver = *m_data_request_receivers[i];
+      //for (size_t i = 0; i < m_data_request_receivers.size(); ++i) {
+      //  auto& request_receiver = *m_data_request_receivers[i];
         try {
-          data_request = request_receiver.receive(std::chrono::milliseconds(0)); // RS -> Use proper timeout?
+          data_request = m_data_request_receiver->receive(std::chrono::milliseconds(0)); // RS -> Use proper timeout?
           received_request = true;
           if (data_request.request_information.component != m_geoid) {
             ers::error(RequestGeoIDMismatch(ERS_HERE, m_geoid, data_request.request_information.component));
@@ -369,22 +369,22 @@ private:
         } catch (const iomanager::TimeoutExpired& excpt) {
           // not an error, safe to continue
         }
-      }
+      //}
       if (!received_request) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
       }
     }
 
     // Clear receivers
-    for (auto& receiver : m_data_request_receivers) {
+    //for (auto& receiver : m_data_request_receivers) {
       while (true) {
         try {
-          data_request = receiver->receive(std::chrono::milliseconds(10)); // RS -> Use proper timeout?
+          data_request = m_data_request_receiver->receive(std::chrono::milliseconds(10)); // RS -> Use proper timeout?
         } catch (const iomanager::TimeoutExpired& excpt) {
           break;
         }
       }
-    }
+    //}
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Requester thread joins... ";
   }
 
@@ -418,7 +418,7 @@ private:
   // REQUEST RECEIVERS
   std::chrono::milliseconds m_request_receiever_timeout_ms;
   using request_receiver_ct = iomanager::ReceiverConcept<dfmessages::DataRequest>;
-  std::vector<std::shared_ptr<request_receiver_ct>> m_data_request_receivers;
+  std::shared_ptr<request_receiver_ct> m_data_request_receiver;
 
   // FRAGMENT SENDER
   std::chrono::milliseconds m_fragment_sender_timeout_ms;
