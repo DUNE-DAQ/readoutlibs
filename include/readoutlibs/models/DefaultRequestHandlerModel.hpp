@@ -299,8 +299,7 @@ public:
       m_cv.notify_all();
       if (result.result_code == ResultCode::kFound || result.result_code == ResultCode::kNotFound) {
         try { // Send to fragment connection
-          //TLOG_DEBUG(TLVL_QUEUE_PUSH) << "Sending fragment with trigger_number "
-          TLOG() << "Sending fragment with trigger_number "
+          TLOG_DEBUG(TLVL_QUEUE_PUSH) << "Sending fragment with trigger_number "
                                       << result.fragment->get_trigger_number() << ", run number "
                                       << result.fragment->get_run_number() << ", and GeoID "
                                       << result.fragment->get_element_id();
