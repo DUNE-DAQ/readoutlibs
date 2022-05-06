@@ -18,7 +18,7 @@
 #include "readoutlibs/readoutinfo/InfoNljs.hpp"
 
 #include "appfwk/Issues.hpp"
-#include "daqdataformats/Fragment.hpp"
+#include "dfmessages/Fragment_serialization.hpp"
 #include "daqdataformats/Types.hpp"
 #include "dfmessages/DataRequest.hpp"
 #include "logging/Logging.hpp"
