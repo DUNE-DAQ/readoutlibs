@@ -90,12 +90,21 @@ public:
     setup_request_queues(args);
 
     try {
-#warning RS -> Hard coded ConnectionRef, should come from config data
-      iomanager::ConnectionRef raw_input_ref = iomanager::ConnectionRef{ "input", "raw_input", iomanager::Direction::kInput };
-      m_raw_data_receiver = get_iom_receiver<ReadoutType>(raw_input_ref);
-      iomanager::ConnectionRef frag_output_ref = iomanager::ConnectionRef{ "output", "frag_output", iomanager::Direction::kOutput };
-      iomanager::ConnectionRef timesync_output_ref = iomanager::ConnectionRef{ "output", "timesync_output", iomanager::Direction::kOutput };
-      m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(timesync_output_ref);
+
+      auto ini = args.get<appfwk::app::ModInit>();
+      for (const auto &cr : ini.conn_refs) {
+	if (cr.name == "raw_input") {
+		m_raw_data_receiver = get_iom_receiver<ReadoutType>(cr);
+	}
+	else if (cr.name == "timesync_output") {
+		m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(cr);
+	}
+      }
+      //iomanager::ConnectionRef raw_input_ref = iomanager::ConnectionRef{ "input", "raw_input", iomanager::Direction::kInput };
+      //m_raw_data_receiver = get_iom_receiver<ReadoutType>(ini["raw_input"]);
+      //iomanager::ConnectionRef frag_output_ref = iomanager::ConnectionRef{ "output", "frag_output", iomanager::Direction::kOutput };
+      //iomanager::ConnectionRef timesync_output_ref = iomanager::ConnectionRef{ "output", "timesync_output", iomanager::Direction::kOutput };
+      //m_timesync_sender = get_iom_sender<dfmessages::TimeSync>("timesync_output");
     } catch (const ers::Issue& excpt) {
       throw ResourceQueueError(ERS_HERE, "Could not find all necessary connections: raw_input or frag_output", "ReadoutModel", excpt);
     }
@@ -232,12 +241,18 @@ public:
 private:
   void setup_request_queues(const nlohmann::json& args)
   {
-    int index = 0;
-    iomanager::ConnectionRef request_input_ref = iomanager::ConnectionRef{ "input", "request_input_*", iomanager::Direction::kInput };
+    auto ini = args.get<appfwk::app::ModInit>();	  
+    for (const auto& cr : ini.conn_refs) {
+	if(cr.name == "request_input") {
+		      m_data_request_receivers.push_back( get_iom_receiver<dfmessages::DataRequest>(cr) );
+	}
+    }
+    //int index = 0;
+    //iomanager::ConnectionRef request_input_ref = iomanager::ConnectionRef{ "input", "request_input_*", iomanager::Direction::kInput };
     // Loop over request_input refs...
     //while (queue_index.find("data_requests_" + std::to_string(index)) != queue_index.end()) {
-      m_data_request_receivers.push_back( get_iom_receiver<dfmessages::DataRequest>(request_input_ref) );
-      index++;
+    //  m_data_request_receivers.push_back( get_iom_receiver<dfmessages::DataRequest>(ini.conn_refs["request_input"]) );
+      //index++;
     //}
   }
 
