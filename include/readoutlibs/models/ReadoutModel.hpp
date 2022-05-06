@@ -94,9 +94,11 @@ public:
       auto ini = args.get<appfwk::app::ModInit>();
       for (const auto &cr : ini.conn_refs) {
 	if (cr.name == "raw_input") {
+                TLOG() << "Create raw_input receiver";
 		m_raw_data_receiver = get_iom_receiver<ReadoutType>(cr);
 	}
 	else if (cr.name == "timesync_output") {
+		TLOG() << "Create timesync sender";
 		m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(cr);
 	}
       }
@@ -339,7 +341,8 @@ private:
             dr.request_information.window_begin = dr.trigger_timestamp > offset ? dr.trigger_timestamp - offset : 0;
             dr.request_information.window_end = dr.request_information.window_begin + width;
             dr.request_information.component = m_geoid;
-            TLOG_DEBUG(TLVL_WORK_STEPS) << "Issuing fake trigger based on timesync. "
+            dr.data_destination = "data_fragments_q";
+	    TLOG_DEBUG(TLVL_WORK_STEPS) << "Issuing fake trigger based on timesync. "
                                         << " ts=" << dr.trigger_timestamp << " window_begin=" << dr.request_information.window_begin
                                         << " window_end=" << dr.request_information.window_end;
 	    m_request_handler_impl->issue_request(dr);
