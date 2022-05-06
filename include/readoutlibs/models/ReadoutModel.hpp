@@ -108,7 +108,26 @@ public:
       //iomanager::ConnectionRef timesync_output_ref = iomanager::ConnectionRef{ "output", "timesync_output", iomanager::Direction::kOutput };
       //m_timesync_sender = get_iom_sender<dfmessages::TimeSync>("timesync_output");
     } catch (const ers::Issue& excpt) {
-      throw ResourceQueueError(ERS_HERE, "Could not find all necessary connections: raw_input or frag_output", "ReadoutModel", excpt);
+      throw ResourceQueueError(ERS_HERE, "raw_input or frag_output", "ReadoutModel", excpt);
+    }
+
+    std::string errstring = "";
+    if (m_raw_data_receiver == nullptr)
+    {
+        errstring = "raw_input";
+    }
+    if (m_timesync_sender == nullptr)
+    {
+        if (errstring != "") errstring += ", ";
+        errstring += "timesync_output";
+    }
+    if (m_data_request_receiver == nullptr)
+    {
+        if (errstring != "") errstring += ", ";
+        errstring += "request_input";
+    }
+    if (errstring != "") {
+        throw ResourceQueueError(ERS_HERE, errstring, "ReadoutModel");
     }
 
     // Instantiate functionalities
