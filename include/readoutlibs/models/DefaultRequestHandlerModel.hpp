@@ -18,7 +18,7 @@
 #include "readoutlibs/readoutinfo/InfoNljs.hpp"
 
 #include "appfwk/Issues.hpp"
-#include "daqdataformats/Fragment.hpp"
+#include "dfmessages/Fragment_serialization.hpp"
 #include "daqdataformats/Types.hpp"
 #include "dfmessages/DataRequest.hpp"
 #include "logging/Logging.hpp"
@@ -102,15 +102,12 @@ public:
   struct RequestElement
   {
     RequestElement(dfmessages::DataRequest data_request,
-                   appfwk::DAQSink<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>* sink,
                    size_t retries)
       : request(data_request)
-      , fragment_sink(sink)
       , retry_count(retries)
     {}
 
     dfmessages::DataRequest request;
-    appfwk::DAQSink<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>* fragment_sink;
     size_t retry_count;
   };
 
@@ -124,7 +121,6 @@ public:
     m_buffer_capacity = conf.latency_buffer_size;
     m_num_request_handling_threads = conf.num_request_handling_threads;
     m_retry_count = conf.retry_count;
-    m_fragment_queue_timeout = conf.fragment_queue_timeout_ms;
     m_output_file = conf.output_file;
     m_geoid.element_id = conf.element_id;
     m_geoid.region_id = conf.region_id;
@@ -284,8 +280,8 @@ public:
     }
   }
 
-  void issue_request(dfmessages::DataRequest datarequest,
-                     appfwk::DAQSink<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>& fragment_queue) override
+  void issue_request(dfmessages::DataRequest datarequest
+                     ) override
   {
     boost::asio::post(*m_request_handler_thread_pool, [&, datarequest]() { // start a thread from pool
       auto t_req_begin = std::chrono::high_resolution_clock::now();
@@ -302,20 +298,20 @@ public:
       }
       m_cv.notify_all();
       if (result.result_code == ResultCode::kFound || result.result_code == ResultCode::kNotFound) {
-        try { // Push to Fragment queue
+        try { // Send to fragment connection
           TLOG_DEBUG(TLVL_QUEUE_PUSH) << "Sending fragment with trigger_number "
                                       << result.fragment->get_trigger_number() << ", run number "
                                       << result.fragment->get_run_number() << ", and GeoID "
                                       << result.fragment->get_element_id();
-          fragment_queue.push(std::make_pair(std::move(result.fragment), datarequest.data_destination), std::chrono::milliseconds(m_fragment_queue_timeout));
+	  get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)->send(std::move(result.fragment), std::chrono::milliseconds(10));
         } catch (const ers::Issue& excpt) {
-          ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
+          ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue", excpt));
         }
       } else if (result.result_code == ResultCode::kNotYet) {
         TLOG_DEBUG(TLVL_WORK_STEPS) << "Re-queue request. "
                                     << "With timestamp=" << result.data_request.trigger_timestamp;
         std::lock_guard<std::mutex> wait_lock_guard(m_waiting_requests_lock);
-        m_waiting_requests.push_back(RequestElement(datarequest, &fragment_queue, 0));
+        m_waiting_requests.push_back(RequestElement(datarequest, 0));
       }
       auto t_req_end = std::chrono::high_resolution_clock::now();
       auto us_req_took = std::chrono::duration_cast<std::chrono::microseconds>(t_req_end - t_req_begin);
@@ -476,7 +472,7 @@ protected:
         size_t size = m_waiting_requests.size();
         for (size_t i = 0; i < size;) {
           if (m_waiting_requests[i].request.request_information.window_end < newest_ts) {
-            issue_request(m_waiting_requests[i].request, *(m_waiting_requests[i].fragment_sink));
+            issue_request(m_waiting_requests[i].request);
             std::swap(m_waiting_requests[i], m_waiting_requests.back());
             m_waiting_requests.pop_back();
             size--;
@@ -490,9 +486,8 @@ protected:
               TLOG_DEBUG(TLVL_QUEUE_PUSH)
                 << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run number "
                 << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
-              
-              m_waiting_requests[i].fragment_sink->push(std::make_pair(std::move(fragment), m_waiting_requests[i].request.data_destination),
-                                                        std::chrono::milliseconds(m_fragment_queue_timeout));
+              get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(m_waiting_requests[i].request.data_destination)->send(std::move(fragment),
+                                                        iomanager::Sender::s_no_block);
             } catch (const ers::Issue& excpt) {
               std::ostringstream oss;
               oss << "fragments output queue for link " << m_geoid.element_id;
@@ -510,8 +505,9 @@ protected:
               TLOG_DEBUG(TLVL_QUEUE_PUSH)
                 << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run number "
                 << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
-              m_waiting_requests[i].fragment_sink->push(std::make_pair(std::move(fragment), m_waiting_requests[i].request.data_destination),
-                                                        std::chrono::milliseconds(m_fragment_queue_timeout));
+              get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(m_waiting_requests[i].request.data_destination)->send(std::move(fragment),
+                                                        iomanager::Sender::s_no_block);
+
             } catch (const ers::Issue& excpt) {
               ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
             }
@@ -696,7 +692,6 @@ protected:
   size_t m_buffer_capacity;
   daqdataformats::GeoID m_geoid;
   static const constexpr uint32_t m_min_delay_us = 30000; // NOLINT(build/unsigned)
-  int m_fragment_queue_timeout = 100;
   std::string m_output_file;
   size_t m_stream_buffer_size = 0;
   bool m_recording_configured = false;
