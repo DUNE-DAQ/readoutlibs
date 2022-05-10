@@ -503,23 +503,6 @@ protected:
             std::swap(m_waiting_requests[i], m_waiting_requests.back());
             m_waiting_requests.pop_back();
             size--;
-          } else if (!m_run_marker.load()) {
-            auto fragment = create_empty_fragment(m_waiting_requests[i].request);
-
-            ers::warning(dunedaq::readoutlibs::EndOfRunEmptyFragment(ERS_HERE, m_geoid));
-            m_num_requests_bad++;
-            try { // Push to Fragment queue
-              TLOG_DEBUG(TLVL_QUEUE_PUSH)
-                << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run number "
-                << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
-              m_waiting_requests[i].fragment_sink->push(std::make_pair(std::move(fragment), m_waiting_requests[i].request.data_destination),
-                                                        std::chrono::milliseconds(m_fragment_queue_timeout));
-            } catch (const ers::Issue& excpt) {
-              ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
-            }
-            std::swap(m_waiting_requests[i], m_waiting_requests.back());
-            m_waiting_requests.pop_back();
-            size--;
           } else {
             m_waiting_requests[i].retry_count++;
             i++;
