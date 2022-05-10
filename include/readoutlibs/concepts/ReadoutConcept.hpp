@@ -33,9 +33,9 @@ public:
   virtual void get_info(opmonlib::InfoCollector& ci, int level) = 0;
   virtual void record(const nlohmann::json& args) = 0;
 
-  //! Function that will be run in its own thread to read the raw packets from the queue and add them to the LB
+  //! Function that will be run in its own thread to read the raw packets from the connection and add them to the LB
   virtual void run_consume() = 0;
-  //! Function that will be run in its own thread and sends periodic timesync messages by pushing them to the queue
+  //! Function that will be run in its own thread and sends periodic timesync messages by pushing them to the connection
   virtual void run_timesync() = 0;
   //! Function that will be run in its own thread and consumes new incoming requests and handles them
   virtual void run_requests() = 0;
