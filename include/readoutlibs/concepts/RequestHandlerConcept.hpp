@@ -64,7 +64,6 @@ protected:
   std::map<ResultCode, std::string> ResultCodeStrings{
     { ResultCode::kFound, "FOUND" },    { ResultCode::kNotFound, "NOT_FOUND" },
     { ResultCode::kTooOld, "TOO_OLD" }, { ResultCode::kNotYet, "NOT_YET_PRESENT" },
-    { ResultCode::kNotYet, "PARTIAL_RESULT" },
     { ResultCode::kPass, "PASSED" },    { ResultCode::kCleanup, "CLEANUP" },
     { ResultCode::kUnknown, "UNKNOWN" }
   };
