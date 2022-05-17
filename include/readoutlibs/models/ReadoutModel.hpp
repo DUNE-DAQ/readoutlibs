@@ -77,10 +77,10 @@ public:
     , m_raw_data_receiver(nullptr)
     , m_request_receiever_timeout_ms(0)
     , m_fragment_sender_timeout_ms(0)
+    , m_timesync_thread(0)
     , m_latency_buffer_impl(nullptr)
     , m_raw_processor_impl(nullptr)
     , m_requester_thread(0)
-    , m_timesync_thread(0)
   {
     m_pid_of_current_process = getpid();
   }
