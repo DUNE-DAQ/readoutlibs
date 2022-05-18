@@ -44,7 +44,9 @@ public:
   //! Check if cleanup is necessary and execute it if necessary
   virtual void cleanup_check() = 0;
   //! Issue a data request to the request handler
-  virtual void issue_request(dfmessages::DataRequest /*dr*/) = 0;
+  virtual void issue_request(dfmessages::DataRequest /*dr*/,
+                             bool send_partial_fragment_if_not_yet) = 0;
+
 
 protected:
   // Result code of requests
@@ -54,6 +56,7 @@ protected:
     kNotFound,
     kTooOld,
     kNotYet,
+    kPartial,
     kPass,
     kCleanup,
     kUnknown
@@ -86,7 +89,8 @@ protected:
   };
 
   virtual void cleanup() = 0;
-  virtual RequestResult data_request(dfmessages::DataRequest /*dr*/) = 0;
+  virtual RequestResult data_request(dfmessages::DataRequest /*dr*/,
+                                     bool send_partial_fragment_if_not_yet) = 0;
 
 private:
 };

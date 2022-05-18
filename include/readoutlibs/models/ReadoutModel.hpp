@@ -345,7 +345,8 @@ private:
 	    TLOG_DEBUG(TLVL_WORK_STEPS) << "Issuing fake trigger based on timesync. "
                                         << " ts=" << dr.trigger_timestamp << " window_begin=" << dr.request_information.window_begin
                                         << " window_end=" << dr.request_information.window_end;
-	    m_request_handler_impl->issue_request(dr);
+	    m_request_handler_impl->issue_request(dr, false);
+
             ++m_num_requests;
             ++m_sum_requests;
           }
@@ -382,7 +383,8 @@ private:
             ers::error(RequestGeoIDMismatch(ERS_HERE, m_geoid, data_request.request_information.component));
             return;
           }
-          m_request_handler_impl->issue_request(data_request);
+          m_request_handler_impl->issue_request(data_request, false);
+
           ++m_num_requests;
           ++m_sum_requests;
           TLOG_DEBUG(TLVL_QUEUE_POP) << "Received DataRequest for trigger_number " << data_request.trigger_number

@@ -27,6 +27,7 @@
 
 #include <boost/asio.hpp>
 
+#include <daqdataformats/FragmentHeader.hpp>
 #include <folly/concurrency/UnboundedQueue.h>
 
 #include <algorithm>
@@ -280,8 +281,8 @@ public:
     }
   }
 
-  void issue_request(dfmessages::DataRequest datarequest
-                     ) override
+  void issue_request(dfmessages::DataRequest datarequest,
+                     bool send_partial_fragment_if_not_yet) override
   {
     boost::asio::post(*m_request_handler_thread_pool, [&, datarequest]() { // start a thread from pool
       auto t_req_begin = std::chrono::high_resolution_clock::now();
@@ -291,7 +292,7 @@ public:
         m_requests_running++;
       }
       m_cv.notify_all();
-      auto result = data_request(datarequest);
+      auto result = data_request(datarequest, send_partial_fragment_if_not_yet);
       {
         std::lock_guard<std::mutex> lock(m_cv_mutex);
         m_requests_running--;
@@ -472,27 +473,17 @@ protected:
         size_t size = m_waiting_requests.size();
         for (size_t i = 0; i < size;) {
           if (m_waiting_requests[i].request.request_information.window_end < newest_ts) {
-            issue_request(m_waiting_requests[i].request);
+              issue_request(m_waiting_requests[i].request, false);
             std::swap(m_waiting_requests[i], m_waiting_requests.back());
             m_waiting_requests.pop_back();
             size--;
           } else if (m_waiting_requests[i].retry_count >= m_retry_count) {
-            auto fragment = create_empty_fragment(m_waiting_requests[i].request);
+            issue_request(m_waiting_requests[i].request, true);
 
             ers::warning(dunedaq::readoutlibs::RequestTimedOut(ERS_HERE, m_geoid));
             m_num_requests_bad++;
             m_num_requests_timed_out++;
-            try { // Push to Fragment queue
-              TLOG_DEBUG(TLVL_QUEUE_PUSH)
-                << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run number "
-                << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
-              get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(m_waiting_requests[i].request.data_destination)->send(std::move(fragment),
-                                                        iomanager::Sender::s_no_block);
-            } catch (const ers::Issue& excpt) {
-              std::ostringstream oss;
-              oss << "fragments output queue for link " << m_geoid.element_id;
-              ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
-            }
+
             std::swap(m_waiting_requests[i], m_waiting_requests.back());
             m_waiting_requests.pop_back();
             size--;
@@ -524,7 +515,54 @@ protected:
     }
   }
 
-  RequestResult data_request(dfmessages::DataRequest dr) override
+  std::vector<std::pair<void*, size_t>> get_fragment_pieces(uint64_t start_win_ts,
+                                                            uint64_t end_win_ts,
+                                                            RequestResult& rres)
+  {
+    std::vector<std::pair<void*, size_t>> frag_pieces;
+    ReadoutType request_element;
+    request_element.set_first_timestamp(start_win_ts);
+    auto start_iter = m_error_registry->has_error("MISSING_FRAMES")
+                        ? m_latency_buffer->lower_bound(request_element, true)
+                        : m_latency_buffer->lower_bound(request_element, false);
+    if (start_iter == m_latency_buffer->end()) {
+      // Due to some concurrent access, the start_iter could not be retrieved successfully, try again
+      ++m_num_requests_delayed;
+      rres.result_code = ResultCode::kNotYet; // give it another chance
+    } else {
+      rres.result_code = ResultCode::kFound;
+      ++m_num_requests_found;
+
+      auto elements_handled = 0;
+
+      ReadoutType* element = &(*start_iter);
+      while (start_iter.good() && element->get_first_timestamp() < end_win_ts) {
+        if (element->get_first_timestamp() < start_win_ts ||
+            element->get_first_timestamp() + (element->get_num_frames() - 1) * ReadoutType::expected_tick_difference >=
+              end_win_ts) {
+          // We don't need the whole aggregated object (e.g.: superchunk)
+          for (auto frame_iter = element->begin(); frame_iter != element->end(); frame_iter++) {
+            if (get_frame_iterator_timestamp(frame_iter) >= start_win_ts &&
+                get_frame_iterator_timestamp(frame_iter) < end_win_ts) {
+              frag_pieces.emplace_back(
+                std::make_pair<void*, size_t>(static_cast<void*>(&(*frame_iter)), element->get_frame_size()));
+            }
+          }
+        } else {
+          // We are somewhere in the middle -> the whole aggregated object (e.g.: superchunk) can be copied
+          frag_pieces.emplace_back(
+            std::make_pair<void*, size_t>(static_cast<void*>((*start_iter).begin()), element->get_payload_size()));
+        }
+
+        elements_handled++;
+        ++start_iter;
+        element = &(*start_iter);
+      }
+    }
+    return frag_pieces;
+  }
+
+  RequestResult data_request(dfmessages::DataRequest dr, bool send_partial_fragment_if_not_yet) override
   {
     // Prepare response
     RequestResult rres(ResultCode::kUnknown, dr);
@@ -552,53 +590,24 @@ protected:
 
       // List of safe-extraction conditions
       if (last_ts <= start_win_ts && end_win_ts <= newest_ts) { // data is there
-        ReadoutType request_element;
-        request_element.set_first_timestamp(start_win_ts);
-        auto start_iter = m_error_registry->has_error("MISSING_FRAMES")
-                            ? m_latency_buffer->lower_bound(request_element, true)
-                            : m_latency_buffer->lower_bound(request_element, false);
-        if (start_iter == m_latency_buffer->end()) {
-          // Due to some concurrent access, the start_iter could not be retrieved successfully, try again
-          ++m_num_requests_delayed;
-          rres.result_code = ResultCode::kNotYet; // give it another chance
-        } else {
-          rres.result_code = ResultCode::kFound;
-          ++m_num_requests_found;
-
-          auto elements_handled = 0;
-
-          ReadoutType* element = &(*start_iter);
-          while (start_iter.good() && element->get_first_timestamp() < end_win_ts) {
-            if (element->get_first_timestamp() < start_win_ts ||
-                element->get_first_timestamp() +
-                    (element->get_num_frames() - 1) * ReadoutType::expected_tick_difference >=
-                  end_win_ts) {
-              // We don't need the whole aggregated object (e.g.: superchunk)
-              for (auto frame_iter = element->begin(); frame_iter != element->end(); frame_iter++) {
-                if (get_frame_iterator_timestamp(frame_iter) >= start_win_ts && get_frame_iterator_timestamp(frame_iter) < end_win_ts) {
-                  frag_pieces.emplace_back(
-                    std::make_pair<void*, size_t>(static_cast<void*>(&(*frame_iter)), element->get_frame_size()));
-                }
-              }
-            } else {
-              // We are somewhere in the middle -> the whole aggregated object (e.g.: superchunk) can be copied
-              frag_pieces.emplace_back(
-                std::make_pair<void*, size_t>(static_cast<void*>((*start_iter).begin()), element->get_payload_size()));
-            }
-
-            elements_handled++;
-            ++start_iter;
-            element = &(*start_iter);
-          }
-        }
+        frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
       } else if (last_ts > start_win_ts) { // data is gone.
         frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
         rres.result_code = ResultCode::kNotFound;
         ++m_num_requests_old_window;
         ++m_num_requests_bad;
       } else if (newest_ts < end_win_ts) {
-        ++m_num_requests_delayed;
-        rres.result_code = ResultCode::kNotYet; // give it another chance
+        if (send_partial_fragment_if_not_yet) {
+          // We've been asked to send the partial fragment if we don't
+          // have an object past the end of the window, so fill the
+          // fragment with what we have so far
+          TLOG() << "Returning partial fragment for trigger number " << dr.trigger_number << " with TS " << dr.trigger_timestamp << ". Component " << dr.request_information.component << " with type " << daqdataformats::fragment_type_to_string(daqdataformats::FragmentType(frag_header.fragment_type));
+          frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kIncomplete));
+          frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
+        } else {
+          ++m_num_requests_delayed;
+          rres.result_code = ResultCode::kNotYet; // give it another chance
+        }
       } else {
         TLOG() << "Don't know how to categorise this request";
         frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));

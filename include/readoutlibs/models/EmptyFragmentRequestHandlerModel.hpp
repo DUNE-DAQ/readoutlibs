@@ -38,7 +38,8 @@ public:
     typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::RequestResult;
   using ResultCode = typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::ResultCode;
 
-  void issue_request(dfmessages::DataRequest datarequest
+  void issue_request(dfmessages::DataRequest datarequest,
+                     bool /*send_partial_fragment_if_not_yet*/
                      ) override
   {
     auto frag_header = inherited::create_fragment_header(datarequest);
