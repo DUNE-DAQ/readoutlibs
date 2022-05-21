@@ -75,12 +75,9 @@ public:
     , m_consumer_thread(0)
     , m_raw_receiver_timeout_ms(0)
     , m_raw_data_receiver(nullptr)
-    , m_request_receiever_timeout_ms(0)
-    , m_fragment_sender_timeout_ms(0)
     , m_timesync_thread(0)
     , m_latency_buffer_impl(nullptr)
     , m_raw_processor_impl(nullptr)
-    , m_requester_thread(0)
   {
     m_pid_of_current_process = getpid();
   }
@@ -172,7 +169,6 @@ public:
     // Configure threads:
     m_consumer_thread.set_name("consumer", conf.element_id);
     m_timesync_thread.set_name("timesync", conf.element_id);
-    m_requester_thread.set_name("requests", conf.element_id);
   }
 
   void scrap(const nlohmann::json& args)
@@ -202,23 +198,24 @@ public:
     m_request_handler_impl->start(args);
     m_consumer_thread.set_work(
       &ReadoutModel<ReadoutType, RequestHandlerType, LatencyBufferType, RawDataProcessorType>::run_consume, this);
-    m_requester_thread.set_work(
-      &ReadoutModel<ReadoutType, RequestHandlerType, LatencyBufferType, RawDataProcessorType>::run_requests, this);
     m_timesync_thread.set_work(
       &ReadoutModel<ReadoutType, RequestHandlerType, LatencyBufferType, RawDataProcessorType>::run_timesync, this);
+    // Register callback to receive and dispatch data requests
+    m_data_request_receiver->add_callback(std::bind(&ReadoutModel<ReadoutType, RequestHandlerType, LatencyBufferType, RawDataProcessorType>::dispatch_requests, this, std::placeholders::_1));
   }
 
   void stop(const nlohmann::json& args)
   {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Stoppping threads...";
+
+    // Stop receiving data requests as first thing
+    m_data_request_receiver->remove_callback();
+    // Stop the other threads
     m_request_handler_impl->stop(args);
     while (!m_timesync_thread.get_readiness()) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     while (!m_consumer_thread.get_readiness()) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-    while (!m_requester_thread.get_readiness()) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Flushing latency buffer with occupancy: " << m_latency_buffer_impl->occupancy();
@@ -365,51 +362,18 @@ private:
     TLOG_DEBUG(TLVL_WORK_STEPS) << "TimeSync thread joins...";
   }
 
-  void run_requests()
+  void dispatch_requests(dfmessages::DataRequest& data_request)
   {
-    TLOG_DEBUG(TLVL_WORK_STEPS) << "Requester thread started...";
-    m_num_requests = 0;
-    m_sum_requests = 0;
-    dfmessages::DataRequest data_request;
-
-    while (m_run_marker.load()) {
-      bool received_request = false;
-      //for (size_t i = 0; i < m_data_request_receivers.size(); ++i) {
-      //  auto& request_receiver = *m_data_request_receivers[i];
-        try {
-          data_request = m_data_request_receiver->receive(std::chrono::milliseconds(0)); // RS -> Use proper timeout?
-          received_request = true;
-          if (data_request.request_information.component != m_geoid) {
-            ers::error(RequestGeoIDMismatch(ERS_HERE, m_geoid, data_request.request_information.component));
-            return;
-          }
-          m_request_handler_impl->issue_request(data_request, false);
-
-          ++m_num_requests;
-          ++m_sum_requests;
-          TLOG_DEBUG(TLVL_QUEUE_POP) << "Received DataRequest for trigger_number " << data_request.trigger_number
-                                     << ", run number " << data_request.run_number << " (APA number "
-                                     << m_geoid.region_id << ", link number " << m_geoid.element_id << ")";
-        } catch (const iomanager::TimeoutExpired& excpt) {
-          // not an error, safe to continue
-        }
-      //}
-      if (!received_request) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-      }
+    if (data_request.request_information.component != m_geoid) {
+       ers::error(RequestGeoIDMismatch(ERS_HERE, m_geoid, data_request.request_information.component));
+       return;
     }
-
-    // Clear receivers
-    //for (auto& receiver : m_data_request_receivers) {
-      while (true) {
-        try {
-          data_request = m_data_request_receiver->receive(std::chrono::milliseconds(10)); // RS -> Use proper timeout?
-        } catch (const iomanager::TimeoutExpired& excpt) {
-          break;
-        }
-      }
-    //}
-    TLOG_DEBUG(TLVL_WORK_STEPS) << "Requester thread joins... ";
+    m_request_handler_impl->issue_request(data_request, false);
+    ++m_num_requests;
+    ++m_sum_requests;
+    TLOG_DEBUG(TLVL_QUEUE_POP) << "Received DataRequest for trigger_number " << data_request.trigger_number
+                               << ", run number " << data_request.run_number << " (APA number "
+                               << m_geoid.region_id << ", link number " << m_geoid.element_id << ")";
   }
 
   // Constuctor params
@@ -440,12 +404,11 @@ private:
   std::shared_ptr<raw_receiver_ct> m_raw_data_receiver;
 
   // REQUEST RECEIVERS
-  std::chrono::milliseconds m_request_receiever_timeout_ms;
   using request_receiver_ct = iomanager::ReceiverConcept<dfmessages::DataRequest>;
   std::shared_ptr<request_receiver_ct> m_data_request_receiver;
 
   // FRAGMENT SENDER
-  std::chrono::milliseconds m_fragment_sender_timeout_ms;
+  //std::chrono::milliseconds m_fragment_sender_timeout_ms;
   //using fragment_sender_ct = iomanager::SenderConcept<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>;
   //std::shared_ptr<fragment_sender_ct> m_fragment_sender;
 
@@ -465,7 +428,6 @@ private:
 
   // REQUEST HANDLER
   std::unique_ptr<RequestHandlerType> m_request_handler_impl;
-  ReusableThread m_requester_thread;
 
   // ERROR REGISTRY
   std::unique_ptr<FrameErrorRegistry> m_error_registry;
