@@ -37,8 +37,6 @@ public:
   virtual void run_consume() = 0;
   //! Function that will be run in its own thread and sends periodic timesync messages by pushing them to the connection
   virtual void run_timesync() = 0;
-  //! Function that will be run in its own thread and consumes new incoming requests and handles them
-  virtual void run_requests() = 0;
 };
 
 } // namespace readoutlibs
