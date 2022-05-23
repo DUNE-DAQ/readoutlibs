@@ -462,6 +462,10 @@ protected:
 
   void check_waiting_requests()
   {
+    // At run stop, we wait until all waiting requests have either:
+    //
+    // 1. been serviced because an item past the end of the window arrived in the buffer
+    // 2. timed out by going past m_retry_count, and returned a partial fragment
     while (m_run_marker.load() || m_waiting_requests.size() > 0) {
       {
         std::lock_guard<std::mutex> lock_guard(m_waiting_requests_lock);
@@ -471,9 +475,10 @@ protected:
                                                    : last_frame->get_first_timestamp();
 
         size_t size = m_waiting_requests.size();
+
         for (size_t i = 0; i < size;) {
           if (m_waiting_requests[i].request.request_information.window_end < newest_ts) {
-              issue_request(m_waiting_requests[i].request, false);
+            issue_request(m_waiting_requests[i].request, false);
             std::swap(m_waiting_requests[i], m_waiting_requests.back());
             m_waiting_requests.pop_back();
             size--;
@@ -484,24 +489,6 @@ protected:
             m_num_requests_bad++;
             m_num_requests_timed_out++;
 
-            std::swap(m_waiting_requests[i], m_waiting_requests.back());
-            m_waiting_requests.pop_back();
-            size--;
-          } else if (!m_run_marker.load()) {
-            auto fragment = create_empty_fragment(m_waiting_requests[i].request);
-
-            ers::warning(dunedaq::readoutlibs::EndOfRunEmptyFragment(ERS_HERE, m_geoid));
-            m_num_requests_bad++;
-            try { // Push to Fragment queue
-              TLOG_DEBUG(TLVL_QUEUE_PUSH)
-                << "Sending fragment with trigger_number " << fragment->get_trigger_number() << ", run number "
-                << fragment->get_run_number() << ", and GeoID " << fragment->get_element_id();
-              get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(m_waiting_requests[i].request.data_destination)->send(std::move(fragment),
-                                                        iomanager::Sender::s_no_block);
-
-            } catch (const ers::Issue& excpt) {
-              ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue"));
-            }
             std::swap(m_waiting_requests[i], m_waiting_requests.back());
             m_waiting_requests.pop_back();
             size--;
