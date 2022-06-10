@@ -163,7 +163,7 @@ ERS_DECLARE_ISSUE(readoutlibs,
                   VerboseRequestTimedOut,
                   "GeoID[" << geoid << "] Request timed out for trig/seq_num " << trignum << "." << seqnum
                            << ", run_num " << runnum << ", window begin/end " << window_begin << "/" << window_end
-                           << ", data_destination " << dest,
+                           << ", data_destination: " << dest,
                   ((daqdataformats::GeoID)geoid)((daqdataformats::trigger_number_t)trignum)((daqdataformats::sequence_number_t)seqnum)((daqdataformats::run_number_t)runnum)((daqdataformats::timestamp_t)window_begin)((daqdataformats::timestamp_t)window_end)((std::string)dest))
 
 ERS_DECLARE_ISSUE(readoutlibs,

@@ -380,7 +380,7 @@ private:
                                << ", GeoID: " << data_request.request_information.component
                                << ", window begin/end " << data_request.request_information.window_begin
                                << "/" << data_request.request_information.window_end
-                               << ", dest " << data_request.data_destination;
+                               << ", dest: " << data_request.data_destination;
     m_request_handler_impl->issue_request(data_request, false);
     ++m_num_requests;
     ++m_sum_requests;
