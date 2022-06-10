@@ -356,7 +356,13 @@ private:
       } catch (const iomanager::TimeoutExpired& excpt) {
         // ++m_timesyncqueue_timeout;
       }
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      // Split up the 100ms sleep into 10 sleeps of 10ms, so we respond to "stop" quicker
+      for (size_t i=0; i<10; ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        if (!m_run_marker.load()) {
+          break;
+        }
+      }
     }
     once_per_run = true;
     TLOG_DEBUG(TLVL_WORK_STEPS) << "TimeSync thread joins...";
