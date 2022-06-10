@@ -309,11 +309,16 @@ private:
     m_num_requests = 0;
     m_sum_requests = 0;
     uint64_t msg_seqno = 0;
+    timestamp_t prev_timestamp = 0;
     auto once_per_run = true;
     while (m_run_marker.load()) {
       try {
         auto timesyncmsg = dfmessages::TimeSync(m_raw_processor_impl->get_last_daq_time());
-        if (timesyncmsg.daq_time != 0) {
+        // daq_time is zero for the first received timesync, and may
+        // be the same as the previous daq_time if the data has
+        // stopped flowing. In both cases we don't send the TimeSync
+        if (timesyncmsg.daq_time != 0 && timesyncmsg.daq_time != prev_timestamp) {
+          prev_timestamp = timesyncmsg.daq_time;
           timesyncmsg.run_number = m_run_number;
           timesyncmsg.sequence_number = ++msg_seqno;
           timesyncmsg.source_pid = m_pid_of_current_process;

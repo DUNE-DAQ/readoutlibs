@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(readoutlibs VERSION 1.1.0)
+project(readoutlibs VERSION 1.1.1)
 
 find_package(daq-cmake REQUIRED)
 
