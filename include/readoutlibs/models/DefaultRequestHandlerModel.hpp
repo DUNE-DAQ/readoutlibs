@@ -300,8 +300,9 @@ public:
       m_cv.notify_all();
       if (result.result_code == ResultCode::kFound || result.result_code == ResultCode::kNotFound) {
         try { // Send to fragment connection
-          TLOG_DEBUG(TLVL_QUEUE_PUSH) << "Sending fragment with trigger_number "
-                                      << result.fragment->get_trigger_number() << ", run number "
+          TLOG_DEBUG(TLVL_QUEUE_PUSH) << "Sending fragment with trigger/sequence_number "
+                                      << result.fragment->get_trigger_number() << "."
+                                      << result.fragment->get_sequence_number() << ", run number "
                                       << result.fragment->get_run_number() << ", and GeoID "
                                       << result.fragment->get_element_id();
 	  get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)->send(std::move(result.fragment), std::chrono::milliseconds(10));
@@ -485,7 +486,13 @@ protected:
           } else if (m_waiting_requests[i].retry_count >= m_retry_count) {
             issue_request(m_waiting_requests[i].request, true);
 
-            ers::warning(dunedaq::readoutlibs::RequestTimedOut(ERS_HERE, m_geoid));
+            ers::warning(dunedaq::readoutlibs::VerboseRequestTimedOut(ERS_HERE, m_geoid,
+                                                                      m_waiting_requests[i].request.trigger_number,
+                                                                      m_waiting_requests[i].request.sequence_number,
+                                                                      m_waiting_requests[i].request.run_number,
+                                                                      m_waiting_requests[i].request.request_information.window_begin,
+                                                                      m_waiting_requests[i].request.request_information.window_end,
+                                                                      m_waiting_requests[i].request.data_destination));
             m_num_requests_bad++;
             m_num_requests_timed_out++;
 

@@ -373,12 +373,17 @@ private:
        ers::error(RequestGeoIDMismatch(ERS_HERE, m_geoid, data_request.request_information.component));
        return;
     }
+    TLOG_DEBUG(TLVL_QUEUE_POP) << "Received DataRequest for trig/seq_number "
+                               << data_request.trigger_number << "." << data_request.sequence_number
+                               << ", runno " << data_request.run_number
+                               << ", trig timestamp " << data_request.trigger_timestamp
+                               << ", GeoID: " << data_request.request_information.component
+                               << ", window begin/end " << data_request.request_information.window_begin
+                               << "/" << data_request.request_information.window_end
+                               << ", dest: " << data_request.data_destination;
     m_request_handler_impl->issue_request(data_request, false);
     ++m_num_requests;
     ++m_sum_requests;
-    TLOG_DEBUG(TLVL_QUEUE_POP) << "Received DataRequest for trigger_number " << data_request.trigger_number
-                               << ", run number " << data_request.run_number << " (APA number "
-                               << m_geoid.region_id << ", link number " << m_geoid.element_id << ")";
   }
 
   // Constuctor params
