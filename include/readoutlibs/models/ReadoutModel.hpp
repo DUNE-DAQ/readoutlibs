@@ -27,7 +27,6 @@
 
 #include "dfmessages/DataRequest.hpp"
 #include "dfmessages/TimeSync.hpp"
-#include "networkmanager/NetworkManager.hpp"
 
 #include "readoutlibs/ReadoutLogging.hpp"
 #include "readoutlibs/concepts/ReadoutConcept.hpp"
