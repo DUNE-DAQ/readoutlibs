@@ -62,6 +62,10 @@ namespace readoutlibs {
  * IterableQueueModel is a one producer and one consumer queue without locks.
  * Modified version of the folly::ProducerConsumerQueue via adding a readPtr function.
  * Requires  well defined and followed constraints on the consumer side.
+ *
+ * Also, note that the number of usable slots in the queue at any
+ * given time is actually (size-1), so if you start with an empty queue,
+ * isFull() will return true after size-1 insertions.
  */
 template<class T>
 struct IterableQueueModel : public LatencyBufferConcept<T>
@@ -71,6 +75,7 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
   IterableQueueModel(const IterableQueueModel&) = delete;
   IterableQueueModel& operator=(const IterableQueueModel&) = delete;
 
+  // Default constructor
   IterableQueueModel()
     : LatencyBufferConcept<T>()
     , numa_aware_(false)
@@ -84,12 +89,8 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
     , writeIndex_(0)
   {}
 
-  // size must be >= 2.
-  //
-  // Also, note that the number of usable slots in the queue at any
-  // given time is actually (size-1), so if you start with an empty queue,
-  // isFull() will return true after size-1 insertions.
-  explicit IterableQueueModel(std::size_t size)
+  // Explicit constructor with size
+  explicit IterableQueueModel(std::size_t size) // size must be >= 2
     : LatencyBufferConcept<T>() // NOLINT(build/unsigned)
     , numa_aware_(false)
     , numa_node_(0)
@@ -106,22 +107,21 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
       throw std::bad_alloc();
     }
 #if 0
-        ptrlogger = std::thread([&](){
-          while(true) {
-            auto const currentRead = readIndex_.load(std::memory_order_relaxed);
-            auto const currentWrite = writeIndex_.load(std::memory_order_relaxed);
-            TLOG() << "BEG:" << std::hex << &records_[0] << " END:" << &records_[size] << std::dec
-                      << " R:" << currentRead << " - W:" << currentWrite
-                      << " OFLOW:" << overflow_ctr;
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-          }
-        });
+    ptrlogger = std::thread([&](){
+      while(true) {
+        auto const currentRead = readIndex_.load(std::memory_order_relaxed);
+        auto const currentWrite = writeIndex_.load(std::memory_order_relaxed);
+        TLOG() << "BEG:" << std::hex << &records_[0] << " END:" << &records_[size] << std::dec
+                  << " R:" << currentRead << " - W:" << currentWrite
+                  << " OFLOW:" << overflow_ctr;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+    });
 #endif
   }
 
-  // size must be >= 2.
-  // Aligned strategies
-  IterableQueueModel(std::size_t size,
+  // Constructor with alignment strategies
+  IterableQueueModel(std::size_t size, // size must be >= 2
                      bool numa_aware = false,
                      uint8_t numa_node = 0, // NOLINT (build/unsigned)
                      bool intrinsic_allocator = false,
@@ -143,190 +143,89 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
       throw std::bad_alloc();
     }
 #if 0
-        ptrlogger = std::thread([&](){
-          while(true) {
-            auto const currentRead = readIndex_.load(std::memory_order_relaxed);
-            auto const currentWrite = writeIndex_.load(std::memory_order_relaxed);
-            TLOG() << "BEG:" << std::hex << &records_[0] << " END:" << &records_[size] << std::dec
-                      << " R:" << currentRead << " - W:" << currentWrite
-                      << " OFLOW:" << overflow_ctr;
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-          }
-        });
+    ptrlogger = std::thread([&](){
+      while(true) {
+        auto const currentRead = readIndex_.load(std::memory_order_relaxed);
+        auto const currentWrite = writeIndex_.load(std::memory_order_relaxed);
+        TLOG() << "BEG:" << std::hex << &records_[0] << " END:" << &records_[size] << std::dec
+                  << " R:" << currentRead << " - W:" << currentWrite
+                  << " OFLOW:" << overflow_ctr;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+    });
 #endif
   }
 
+  // Destructor
   ~IterableQueueModel() { free_memory(); }
 
-  void free_memory()
-  {
-    // We need to destruct anything that may still exist in our queue.
-    // (No real synchronization needed at destructor time: only one
-    // thread can be doing this.)
-    if (!std::is_trivially_destructible<T>::value) {
-      std::size_t readIndex = readIndex_;
-      std::size_t endIndex = writeIndex_;
-      while (readIndex != endIndex) {
-        records_[readIndex].~T();
-        if (++readIndex == size_) { // NOLINT(runtime/increment_decrement)
-          readIndex = 0;
-        }
-      }
-    }
+  // Free allocated memory that is different for alignment strategies and allocation policies
+  void free_memory();
 
-    if (intrinsic_allocator_) {
-      _mm_free(records_);
-    } else if (numa_aware_) {
-#ifdef WITH_LIBNUMA_SUPPORT
-      numa_free(records_, sizeof(T) * size_);
-#endif
-    } else {
-      std::free(records_);
-    }
-  }
-
+  // Allocate memory based on different alignment strategies and allocation policies
   void allocate_memory(std::size_t size,
                        bool numa_aware = false,
                        uint8_t numa_node = 0, // NOLINT (build/unsigned)
                        bool intrinsic_allocator = false,
-                       std::size_t alignment_size = 0)
-  {
-    assert(size >= 2);
-    // TODO: check for valid alignment sizes! | July-21-2021 | Roland Sipos | rsipos@cern.ch
+                       std::size_t alignment_size = 0);
 
-    if (intrinsic_allocator && alignment_size > 0) { // _mm allocator
-      records_ = static_cast<T*>(_mm_malloc(sizeof(T) * size, alignment_size));
+  // Write element into the queue
+  bool write(T&& record) override;
 
-    } else if (!intrinsic_allocator && alignment_size > 0) { // std aligned allocator
-      records_ = static_cast<T*>(std::aligned_alloc(alignment_size, sizeof(T) * size));
+  // Read element from a queue (move or copy the value at the front of the queue to given variable)
+  bool read(T& record) override;
 
-    } else if (numa_aware && numa_node >= 0 && numa_node < 8) { // numa allocator from libnuma
-#ifdef WITH_LIBNUMA_SUPPORT
-      records_ = static_cast<T*>(numa_alloc_onnode(sizeof(T) * size, numa_node));
-#else
-      throw GenericConfigurationError(ERS_HERE,
-                                      "NUMA allocation was requested but program was built without USE_LIBNUMA");
-#endif
+  // Pop element on front of queue
+  void popFront();
 
-    } else if (!numa_aware && !intrinsic_allocator && alignment_size == 0) {
-      // Standard allocator
-      records_ = static_cast<T*>(std::malloc(sizeof(T) * size));
+  // Pop number of elements (X) from the front of the queue
+  void pop(std::size_t x);
 
-    } else {
-      // Let it fail, as expected combination might be invalid
-      // records_ = static_cast<T*>(std::malloc(sizeof(T) * size_);
-    }
+  // Returns true if the queue is empty
+  bool isEmpty() const;
 
-    size_ = size;
-    numa_aware_ = numa_aware;
-    numa_node_ = numa_node;
-    intrinsic_allocator_ = intrinsic_allocator;
-    alignment_size_ = alignment_size;
-  }
+  // Returns true if write index reached read index
+  bool isFull() const;
 
-  // bool put(T& record) { return write(record); }
-
-  bool write(T&& record) override
-  {
-    auto const currentWrite = writeIndex_.load(std::memory_order_relaxed);
-    auto nextRecord = currentWrite + 1;
-    if (nextRecord == size_) {
-      nextRecord = 0;
-    }
-
-    if (nextRecord != readIndex_.load(std::memory_order_acquire)) {
-      new (&records_[currentWrite]) T(std::move(record));
-      writeIndex_.store(nextRecord, std::memory_order_release);
-      return true;
-    }
-    // queue is full
-
-    ++overflow_ctr;
-
-    return false;
-  }
-
-  // move (or copy) the value at the front of the queue to given variable
-  bool read(T& record) override
-  {
-    auto const currentRead = readIndex_.load(std::memory_order_relaxed);
-    if (currentRead == writeIndex_.load(std::memory_order_acquire)) {
-      // queue is empty
-      return false;
-    }
-
-    auto nextRecord = currentRead + 1;
-    if (nextRecord == size_) {
-      nextRecord = 0;
-    }
-    record = std::move(records_[currentRead]);
-    records_[currentRead].~T();
-    readIndex_.store(nextRecord, std::memory_order_release);
-    return true;
-  }
-
-  // queue must not be empty
-  void popFront()
-  {
-    auto const currentRead = readIndex_.load(std::memory_order_relaxed);
-    assert(currentRead != writeIndex_.load(std::memory_order_acquire));
-
-    auto nextRecord = currentRead + 1;
-    if (nextRecord == size_) {
-      nextRecord = 0;
-    }
-
-    records_[currentRead].~T();
-    readIndex_.store(nextRecord, std::memory_order_release);
-  }
-
-  // RS: Will this work?
-  void pop(std::size_t x)
-  {
-    for (std::size_t i = 0; i < x; i++) {
-      popFront();
-    }
-  }
-
-  bool isEmpty() const
-  {
-    return readIndex_.load(std::memory_order_acquire) == writeIndex_.load(std::memory_order_acquire);
-  }
-
-  bool isFull() const
-  {
-    auto nextRecord = writeIndex_.load(std::memory_order_acquire) + 1;
-    if (nextRecord == size_) {
-      nextRecord = 0;
-    }
-    if (nextRecord != readIndex_.load(std::memory_order_acquire)) {
-      return false;
-    }
-    // queue is full
-    return true;
-  }
-
+  // Returns a good-enough guess on current occupancy:
   // * If called by consumer, then true size may be more (because producer may
   //   be adding items concurrently).
   // * If called by producer, then true size may be less (because consumer may
   //   be removing items concurrently).
   // * It is undefined to call this from any other thread.
-  std::size_t occupancy() const override
-  {
-    int ret = static_cast<int>(writeIndex_.load(std::memory_order_acquire)) -
-              static_cast<int>(readIndex_.load(std::memory_order_acquire));
-    if (ret < 0) {
-      ret += static_cast<int>(size_);
-    }
-    return static_cast<std::size_t>(ret);
-  }
+  std::size_t occupancy() const override;
 
   // The size of the underlying buffer, not the amount of usable slots
   std::size_t get_size() const { return size_; }
 
-  // maximum number of items in the queue.
+  // Maximum number of items in the queue.
   std::size_t capacity() const { return size_ - 1; }
 
+  // Gives a pointer to the current read index
+  const T* front() override;
+
+  // Gives a pointer to the current write index
+  const T* back() override;
+
+  // Gives a pointer to the first available slot of the queue
+  T* start_of_buffer() { return &records_[0]; }
+
+  // Gives a pointer to the last available slot of the queue
+  T* end_of_buffer() { return &records_[size_]; }
+
+  // Configures the model
+  void conf(const nlohmann::json& cfg) override;
+
+  // Unconfigures the model
+  void scrap(const nlohmann::json& /*cfg*/) override;
+
+  // Flushes the elements from the queue
+  void flush() override { pop(occupancy()); }
+
+  // Returns the current memory alignment size
+  std::size_t get_alignment_size() { return alignment_size_; }
+
+  // Iterator for elements in the queue
   struct Iterator
   {
     using iterator_category = std::forward_iterator_tag;
@@ -393,139 +292,46 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
     return Iterator(*this, currentRead);
   }
 
-  const T* front() override
-  {
-    auto const currentRead = readIndex_.load(std::memory_order_relaxed);
-    if (currentRead == writeIndex_.load(std::memory_order_acquire)) {
-      return nullptr;
-    }
-    return &records_[currentRead];
-  }
-
-  const T* back() override
-  {
-    auto const currentWrite = writeIndex_.load(std::memory_order_relaxed);
-    if (currentWrite == readIndex_.load(std::memory_order_acquire)) {
-      return nullptr;
-    }
-    int currentLast = currentWrite;
-    if (currentLast == 0) {
-      currentLast = size_ - 1;
-    } else {
-      currentLast--;
-    }
-    return &records_[currentLast];
-  };
-
-  T* start_of_buffer() { return &records_[0]; }
-
-  T* end_of_buffer() { return &records_[size_]; }
-
   Iterator end()
   {
     return Iterator(*this, std::numeric_limits<uint32_t>::max()); // NOLINT(build/unsigned)
   }
 
-  void conf(const nlohmann::json& cfg) override
-  {
-    auto conf = cfg["latencybufferconf"].get<readoutconfig::LatencyBufferConf>();
-    assert(conf.latency_buffer_size >= 2);
-    free_memory();
-
-    allocate_memory(conf.latency_buffer_size,
-                    conf.latency_buffer_numa_aware,
-                    conf.latency_buffer_numa_node,
-                    conf.latency_buffer_intrinsic_allocator,
-                    conf.latency_buffer_alignment_size);
-    readIndex_ = 0;
-    writeIndex_ = 0;
-
-    if (!records_) {
-      throw std::bad_alloc();
-    }
-
-    if (conf.latency_buffer_preallocation) {
-      for (size_t i = 0; i < size_ - 1; ++i) {
-        T element;
-        write_(std::move(element));
-      }
-      flush();
-    }
-  }
-
-  void scrap(const nlohmann::json& /*cfg*/) override
-  {
-    free_memory();
-    numa_aware_ = false;
-    numa_node_ = 0;
-    intrinsic_allocator_ = false;
-    alignment_size_ = 0;
-    invalid_configuration_requested_ = false;
-    size_ = 2;
-    records_ = static_cast<T*>(std::malloc(sizeof(T) * 2));
-    readIndex_ = 0;
-    writeIndex_ = 0;
-  }
-
-  void flush() override { pop(occupancy()); }
-
-  std::size_t get_alignment_size() { return alignment_size_; }
-
 protected:
+  // Hidden original write implementation with signature difference. Only used for pre-allocation
   template<class... Args>
-  bool write_(Args&&... recordArgs)
-  {
-    // const std::lock_guard<std::mutex> lock(m_mutex);
-    auto const currentWrite = writeIndex_.load(std::memory_order_relaxed);
-    auto nextRecord = currentWrite + 1;
-    if (nextRecord == size_) {
-      nextRecord = 0;
-    }
-    // if (nextRecord == readIndex_.load(std::memory_order_acquire)) {
-    // std::cout << "SPSC WARNING -> Queue is full! WRITE PASSES READ!!! \n";
-    //}
-    //    new (&records_[currentWrite]) T(std::forward<Args>(recordArgs)...);
-    // writeIndex_.store(nextRecord, std::memory_order_release);
-    // return true;
+  bool write_(Args&&... recordArgs);
 
-    // ORIGINAL:
-    if (nextRecord != readIndex_.load(std::memory_order_acquire)) {
-      new (&records_[currentWrite]) T(std::forward<Args>(recordArgs)...);
-      writeIndex_.store(nextRecord, std::memory_order_release);
-      return true;
-    }
-    // queue is full
-
-    ++overflow_ctr;
-
-    return false;
-  }
-
-  // hardware_destructive_interference_size is set to 128.
-  // (Assuming cache line size of 64, so we use a cache line pair size of 128 )
+  // Counter for failed writes, due to the fact the queue is full
   std::atomic<int> overflow_ctr{ 0 };
 
-  // NUMA awareness and aligned allocator usage
+  // NUMA awareness and aligned allocator usage configuration
   bool numa_aware_;
   uint8_t numa_node_; // NOLINT (build/unsigned)
   bool intrinsic_allocator_;
   std::size_t alignment_size_;
   bool invalid_configuration_requested_;
 
+  // Ptr logger for debugging
   std::thread ptrlogger;
 
+  // Underlying buffer with padding:
+  //  * hardware_destructive_interference_size is set to 128.
+  //  * (Assuming cache line size of 64, so we use a cache line pair size of 128)
   char pad0_[folly::hardware_destructive_interference_size]; // NOLINT(runtime/arrays)
   uint32_t size_;                                            // NOLINT(build/unsigned)
   T* records_;
-
-  alignas(folly::hardware_destructive_interference_size) std::atomic<unsigned int> readIndex_; // NOLINT(build/unsigned)
+  alignas(
+    folly::hardware_destructive_interference_size) std::atomic<unsigned int> readIndex_; // NOLINT(build/unsigned)
   alignas(
     folly::hardware_destructive_interference_size) std::atomic<unsigned int> writeIndex_; // NOLINT(build/unsigned)
-
   char pad1_[folly::hardware_destructive_interference_size - sizeof(writeIndex_)]; // NOLINT(runtime/arrays)
 };
 
 } // namespace readoutlibs
 } // namespace dunedaq
+
+// Declarations
+#include "detail/IterableQueueModel.hxx"
 
 #endif // READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_ITERABLEQUEUEMODEL_HPP_
