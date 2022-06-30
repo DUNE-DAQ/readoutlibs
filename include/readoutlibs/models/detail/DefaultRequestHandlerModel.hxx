@@ -464,12 +464,14 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
 
     uint64_t start_win_ts = dr.request_information.window_begin; // NOLINT(build/unsigned)
     uint64_t end_win_ts = dr.request_information.window_end;     // NOLINT(build/unsigned)
-    TLOG_DEBUG(TLVL_WORK_STEPS) << "Data request for"
+    TLOG_DEBUG(TLVL_WORK_STEPS) << "Data request for trig/seq_num=" << dr.trigger_number
+      << "." << dr.sequence_number << " with"
       << " Trigger TS=" << dr.trigger_timestamp
       << " Oldest stored TS=" << last_ts
       << " Newest stored TS=" << newest_ts
       << " Start of window TS=" << start_win_ts
-      << " End of window TS=" << end_win_ts;
+      << " End of window TS=" << end_win_ts
+      << " Latency buffer occupancy=" << m_latency_buffer->occupancy();
 
     // List of safe-extraction conditions
     if (last_ts <= start_win_ts && end_win_ts <= newest_ts) { // data is there
@@ -484,7 +486,7 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
         // We've been asked to send the partial fragment if we don't
         // have an object past the end of the window, so fill the
         // fragment with what we have so far
-        TLOG() << "Returning partial fragment for trigger number " << dr.trigger_number 
+        TLOG() << "Returning partial fragment for trig/seq number " << dr.trigger_number << "." << dr.sequence_number
           << " with TS " << dr.trigger_timestamp 
           << ". Component " << dr.request_information.component 
           << " with type " << daqdataformats::fragment_type_to_string(daqdataformats::FragmentType(frag_header.fragment_type));
