@@ -1,5 +1,6 @@
 /**
- * @file EmptyFragmentRequestHandlerModel.hpp Request handler that always returns empty fragments
+ * @file EmptyFragmentRequestHandlerModel.hpp Request handler that always returns 
+ * empty fragments, mainly used for debugging purposes.
  *
  * This is part of the DUNE DAQ , copyright 2020.
  * Licensing/copyright details are in the COPYING file that you should have
@@ -25,8 +26,15 @@ template<class ReadoutType, class LatencyBufferType>
 class EmptyFragmentRequestHandlerModel : public DefaultRequestHandlerModel<ReadoutType, LatencyBufferType>
 {
 public:
+  // Using inherited typenames
   using inherited = DefaultRequestHandlerModel<ReadoutType, LatencyBufferType>;
+  using RequestResult =
+    typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::RequestResult;
+  using ResultCode =
+    typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::ResultCode;
 
+
+  // Explicit constructor to bind LB and error registry
   explicit EmptyFragmentRequestHandlerModel(std::unique_ptr<LatencyBufferType>& latency_buffer,
                                             std::unique_ptr<FrameErrorRegistry>& error_registry)
     : DefaultRequestHandlerModel<ReadoutType, LatencyBufferType>(latency_buffer, error_registry)
@@ -34,36 +42,17 @@ public:
     TLOG_DEBUG(TLVL_WORK_STEPS) << "EmptyFragmentRequestHandlerModel created...";
   }
 
-  using RequestResult =
-    typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::RequestResult;
-  using ResultCode = typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::ResultCode;
-
+  // Override the issue_request implementation of the DefaultRequestHandlerModel
+  // in order to always respond with empty fragments. 
   void issue_request(dfmessages::DataRequest datarequest,
-                     bool /*send_partial_fragment_if_not_yet*/
-                     ) override
-  {
-    auto frag_header = inherited::create_fragment_header(datarequest);
-    frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
-    auto fragment = std::make_unique<daqdataformats::Fragment>(std::vector<std::pair<void*, size_t>>());
-    fragment->set_header_fields(frag_header);
+                     bool /*send_partial_fragment_if_not_yet*/) override;
 
-    // ers::warning(dunedaq::readoutlibs::TrmWithEmptyFragment(ERS_HERE, "DLH is configured to send empty fragment"));
-    TLOG_DEBUG(TLVL_WORK_STEPS) << "DLH is configured to send empty fragment";
-
-    try { // Push to Fragment queue
-      TLOG_DEBUG(TLVL_QUEUE_PUSH) << "Sending fragment with trigger_number " << fragment->get_trigger_number()
-                                  << ", run number " << fragment->get_run_number() << ", and GeoID "
-                                  << fragment->get_element_id();
-      //auto frag = std::make_pair(std::move(fragment), datarequest.data_destination);
-      get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)->send(std::move(fragment), std::chrono::milliseconds(10));
-    } catch (const ers::Issue& excpt) {
-      ers::warning(CannotWriteToQueue(
-        ERS_HERE, DefaultRequestHandlerModel<ReadoutType, LatencyBufferType>::m_geoid, "fragment queue", excpt));
-    }
-  }
 };
 
 } // namespace readoutlibs
 } // namespace dunedaq
+
+// Declarations
+#include "detail/EmptyFragmentRequestHandlerModel.hxx"
 
 #endif // READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_EMPTYFRAGMENTREQUESTHANDLERMODEL_HPP_
