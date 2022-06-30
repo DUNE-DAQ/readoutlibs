@@ -249,7 +249,7 @@ DefaultRequestHandlerModel<RDT, LBT>::get_info(opmonlib::InfoCollector& ci, int 
   info.num_requests_timed_out = m_num_requests_timed_out.exchange(0);
   info.is_recording = m_recording;
   info.num_payloads_written = m_payloads_written.exchange(0);
-  info.recording_status = m_recording ? "⏺" : "⏸";
+  info.recording_status = m_recording ? "Y" : "N";
 
   int new_pop_reqs = 0;
   int new_pop_count = 0;
