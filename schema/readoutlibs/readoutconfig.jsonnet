@@ -114,7 +114,9 @@ local readoutconfig = {
             s.field("region_id", self.region_id, 0,
                             doc="The region id of this link"),
             s.field("element_id", self.element_id, 0,
-                            doc="The element id of this link")],
+                            doc="The element id of this link"),
+            s.field("warn_on_timeout", self.choice, true,
+                            doc="Whether to emit a warning when a request times out")],
             doc="Request Handler Config"),
 
     readoutmodelconf : s.record("ReadoutModelConf", [

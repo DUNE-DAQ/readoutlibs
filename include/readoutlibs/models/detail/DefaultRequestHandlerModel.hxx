@@ -18,6 +18,7 @@ DefaultRequestHandlerModel<RDT, LBT>::conf(const nlohmann::json& args)
   m_geoid.region_id = conf.region_id;
   m_geoid.system_type = RDT::system_type;
   m_stream_buffer_size = conf.stream_buffer_size;
+  m_warn_on_timeout = conf.warn_on_timeout;
   // if (m_configured) {
   //  ers::error(ConfigurationError(ERS_HERE, "This object is already configured!"));
   if (m_pop_limit_pct < 0.0f || m_pop_limit_pct > 1.0f || m_pop_size_pct < 0.0f || m_pop_size_pct > 1.0f) {
@@ -369,13 +370,15 @@ DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests()
         } else if (m_waiting_requests[i].retry_count >= m_retry_count) {
           issue_request(m_waiting_requests[i].request, true);
 
-          ers::warning(dunedaq::readoutlibs::VerboseRequestTimedOut(ERS_HERE, m_geoid,
-             m_waiting_requests[i].request.trigger_number,
-             m_waiting_requests[i].request.sequence_number,
-             m_waiting_requests[i].request.run_number,
-             m_waiting_requests[i].request.request_information.window_begin,
-             m_waiting_requests[i].request.request_information.window_end,
-             m_waiting_requests[i].request.data_destination));
+          if (m_warn_on_timeout) {
+            ers::warning(dunedaq::readoutlibs::VerboseRequestTimedOut(ERS_HERE, m_geoid,
+                                                                      m_waiting_requests[i].request.trigger_number,
+                                                                      m_waiting_requests[i].request.sequence_number,
+                                                                      m_waiting_requests[i].request.run_number,
+                                                                      m_waiting_requests[i].request.request_information.window_begin,
+                                                                      m_waiting_requests[i].request.request_information.window_end,
+                                                                      m_waiting_requests[i].request.data_destination));
+          }
 
           m_num_requests_bad++;
           m_num_requests_timed_out++;
