@@ -187,7 +187,7 @@ void
 DefaultRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest datarequest,
                                                     bool send_partial_fragment_if_not_yet)
 {
-  boost::asio::post(*m_request_handler_thread_pool, [&, datarequest]() { // start a thread from pool
+  boost::asio::post(*m_request_handler_thread_pool, [&, send_partial_fragment_if_not_yet, datarequest]() { // start a thread from pool
     auto t_req_begin = std::chrono::high_resolution_clock::now();
     {
       std::unique_lock<std::mutex> lock(m_cv_mutex);
