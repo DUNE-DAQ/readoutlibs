@@ -489,10 +489,19 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
         // We've been asked to send the partial fragment if we don't
         // have an object past the end of the window, so fill the
         // fragment with what we have so far
-        TLOG() << "Returning partial fragment for trig/seq number " << dr.trigger_number << "." << dr.sequence_number
-          << " with TS " << dr.trigger_timestamp 
-          << ". Component " << dr.request_information.component 
-          << " with type " << daqdataformats::fragment_type_to_string(daqdataformats::FragmentType(frag_header.fragment_type));
+        if (m_warn_on_timeout) {
+          TLOG()
+            << "Returning partial fragment for trig/seq number " << dr.trigger_number << "." << dr.sequence_number
+            << " with TS " << dr.trigger_timestamp 
+            << ". Component " << dr.request_information.component 
+            << " with type " << daqdataformats::fragment_type_to_string(daqdataformats::FragmentType(frag_header.fragment_type));
+        } else {
+          TLOG_DEBUG(TLVL_WORK_STEPS)
+            << "Returning partial fragment for trig/seq number " << dr.trigger_number << "." << dr.sequence_number
+            << " with TS " << dr.trigger_timestamp 
+            << ". Component " << dr.request_information.component 
+            << " with type " << daqdataformats::fragment_type_to_string(daqdataformats::FragmentType(frag_header.fragment_type));
+        }
         frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kIncomplete));
         frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
       } else {
