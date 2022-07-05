@@ -109,14 +109,14 @@ public:
   // A struct that combines a data request, with the number of times it was issued internally
   struct RequestElement
   {
-    RequestElement(dfmessages::DataRequest data_request,
-                   size_t retries)
+    RequestElement(const dfmessages::DataRequest& data_request,
+                   const std::chrono::time_point<std::chrono::high_resolution_clock>& tp_value)
       : request(data_request)
-      , retry_count(retries)
+      , start_time(tp_value)
     {}
 
     dfmessages::DataRequest request;
-    size_t retry_count;
+    std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
   };
 
   // Default init mechanism (no-op impl)
@@ -245,7 +245,7 @@ protected:
   float m_pop_limit_pct;     // buffer occupancy percentage to issue a pop request
   float m_pop_size_pct;      // buffer percentage to pop
   unsigned m_pop_limit_size; // pop_limit_pct * buffer_capacity
-  size_t m_retry_count;
+  int m_request_timeout_ms;
   size_t m_buffer_capacity;
   daqdataformats::GeoID m_geoid;
   static const constexpr uint32_t m_min_delay_us = 30000; // NOLINT(build/unsigned)
