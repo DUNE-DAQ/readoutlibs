@@ -252,7 +252,7 @@ protected:
   std::string m_output_file;
   size_t m_stream_buffer_size = 0;
   bool m_recording_configured = false;
-
+  bool m_warn_on_timeout = true; // Whether to warn when a request times out
   // Stats
   std::atomic<int> m_pop_counter;
   std::atomic<int> m_num_buffer_cleanups{ 0 };

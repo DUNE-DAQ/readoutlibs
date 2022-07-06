@@ -18,6 +18,7 @@ DefaultRequestHandlerModel<RDT, LBT>::conf(const nlohmann::json& args)
   m_geoid.region_id = conf.region_id;
   m_geoid.system_type = RDT::system_type;
   m_stream_buffer_size = conf.stream_buffer_size;
+  m_warn_on_timeout = conf.warn_on_timeout;
   // if (m_configured) {
   //  ers::error(ConfigurationError(ERS_HERE, "This object is already configured!"));
   if (m_pop_limit_pct < 0.0f || m_pop_limit_pct > 1.0f || m_pop_size_pct < 0.0f || m_pop_size_pct > 1.0f) {
@@ -187,7 +188,7 @@ void
 DefaultRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest datarequest,
                                                     bool send_partial_fragment_if_not_yet)
 {
-  boost::asio::post(*m_request_handler_thread_pool, [&, datarequest]() { // start a thread from pool
+  boost::asio::post(*m_request_handler_thread_pool, [&, send_partial_fragment_if_not_yet, datarequest]() { // start a thread from pool
     auto t_req_begin = std::chrono::high_resolution_clock::now();
     {
       std::unique_lock<std::mutex> lock(m_cv_mutex);
@@ -369,13 +370,15 @@ DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests()
         } else if (m_waiting_requests[i].retry_count >= m_retry_count) {
           issue_request(m_waiting_requests[i].request, true);
 
-          ers::warning(dunedaq::readoutlibs::VerboseRequestTimedOut(ERS_HERE, m_geoid,
-             m_waiting_requests[i].request.trigger_number,
-             m_waiting_requests[i].request.sequence_number,
-             m_waiting_requests[i].request.run_number,
-             m_waiting_requests[i].request.request_information.window_begin,
-             m_waiting_requests[i].request.request_information.window_end,
-             m_waiting_requests[i].request.data_destination));
+          if (m_warn_on_timeout) {
+            ers::warning(dunedaq::readoutlibs::VerboseRequestTimedOut(ERS_HERE, m_geoid,
+                                                                      m_waiting_requests[i].request.trigger_number,
+                                                                      m_waiting_requests[i].request.sequence_number,
+                                                                      m_waiting_requests[i].request.run_number,
+                                                                      m_waiting_requests[i].request.request_information.window_begin,
+                                                                      m_waiting_requests[i].request.request_information.window_end,
+                                                                      m_waiting_requests[i].request.data_destination));
+          }
 
           m_num_requests_bad++;
           m_num_requests_timed_out++;
@@ -486,10 +489,19 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
         // We've been asked to send the partial fragment if we don't
         // have an object past the end of the window, so fill the
         // fragment with what we have so far
-        TLOG() << "Returning partial fragment for trig/seq number " << dr.trigger_number << "." << dr.sequence_number
-          << " with TS " << dr.trigger_timestamp 
-          << ". Component " << dr.request_information.component 
-          << " with type " << daqdataformats::fragment_type_to_string(daqdataformats::FragmentType(frag_header.fragment_type));
+        if (m_warn_on_timeout) {
+          TLOG()
+            << "Returning partial fragment for trig/seq number " << dr.trigger_number << "." << dr.sequence_number
+            << " with TS " << dr.trigger_timestamp 
+            << ". Component " << dr.request_information.component 
+            << " with type " << daqdataformats::fragment_type_to_string(daqdataformats::FragmentType(frag_header.fragment_type));
+        } else {
+          TLOG_DEBUG(TLVL_WORK_STEPS)
+            << "Returning partial fragment for trig/seq number " << dr.trigger_number << "." << dr.sequence_number
+            << " with TS " << dr.trigger_timestamp 
+            << ". Component " << dr.request_information.component 
+            << " with type " << daqdataformats::fragment_type_to_string(daqdataformats::FragmentType(frag_header.fragment_type));
+        }
         frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kIncomplete));
         frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
       } else {
