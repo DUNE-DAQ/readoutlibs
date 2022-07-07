@@ -512,6 +512,8 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
         // this situation is long-window-readout in which a given trigger is split into a sequence
         // of TriggerRecords and the 2..Nth DataRequest find nothing useful in the TriggerCandidate
         // (TCBuffer) latency buffer (and no data later than the request window end time).
+        // In those cases, get_fragment_pieces() returns kNotYet, and we need to change that
+        // kFound in order to not keep looping.
         if (rres.result_code == ResultCode::kNotYet) {rres.result_code = ResultCode::kFound;}
       } else {
         ++m_num_requests_delayed;
