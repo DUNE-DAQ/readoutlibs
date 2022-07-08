@@ -12,7 +12,7 @@ DefaultRequestHandlerModel<RDT, LBT>::conf(const nlohmann::json& args)
   m_pop_size_pct = conf.pop_size_pct;
   m_buffer_capacity = conf.latency_buffer_size;
   m_num_request_handling_threads = conf.num_request_handling_threads;
-  m_retry_count = conf.retry_count;
+  m_request_timeout_ms = conf.request_timeout_ms;
   m_output_file = conf.output_file;
   m_geoid.element_id = conf.element_id;
   m_geoid.region_id = conf.region_id;
@@ -220,7 +220,7 @@ DefaultRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest data
       TLOG_DEBUG(TLVL_WORK_STEPS) << "Re-queue request. "
                                   << "With timestamp=" << result.data_request.trigger_timestamp;
       std::lock_guard<std::mutex> wait_lock_guard(m_waiting_requests_lock);
-      m_waiting_requests.push_back(RequestElement(datarequest, 0));
+      m_waiting_requests.push_back(RequestElement(datarequest, std::chrono::high_resolution_clock::now()));
     }
     auto t_req_end = std::chrono::high_resolution_clock::now();
     auto us_req_took = std::chrono::duration_cast<std::chrono::microseconds>(t_req_end - t_req_begin);
@@ -350,7 +350,7 @@ DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests()
   // At run stop, we wait until all waiting requests have either:
   //
   // 1. been serviced because an item past the end of the window arrived in the buffer
-  // 2. timed out by going past m_retry_count, and returned a partial fragment
+  // 2. timed out by going past m_request_timeout_ms, and returned a partial fragment
   while (m_run_marker.load() || m_waiting_requests.size() > 0) {
     {
       std::lock_guard<std::mutex> lock_guard(m_waiting_requests_lock);
@@ -367,7 +367,7 @@ DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests()
           std::swap(m_waiting_requests[i], m_waiting_requests.back());
           m_waiting_requests.pop_back();
           size--;
-        } else if (m_waiting_requests[i].retry_count >= m_retry_count) {
+        } else if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - m_waiting_requests[i].start_time).count() >= m_request_timeout_ms) {
           issue_request(m_waiting_requests[i].request, true);
 
           if (m_warn_on_timeout) {
@@ -387,7 +387,6 @@ DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests()
           m_waiting_requests.pop_back();
           size--;
         } else {
-          m_waiting_requests[i].retry_count++;
           i++;
         }
       }

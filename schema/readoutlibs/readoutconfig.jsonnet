@@ -91,8 +91,8 @@ local readoutconfig = {
     requesthandlerconf : s.record("RequestHandlerConf", [
             s.field("num_request_handling_threads", self.count, 4,
                             doc="Number of threads to use for data request handling"),
-            s.field("retry_count", self.count, 100,
-                            doc="Number of times to recheck a request before sending an empty fragment"),
+            s.field("request_timeout_ms", self.count, 1000,
+                            doc="Timeout for checking for valid data in response to a request before sending an empty fragment"),
             s.field("output_file", self.file_name, "output.out",
                             doc="Name of the output file to write to"),
             s.field("stream_buffer_size", self.size, 8388608,
