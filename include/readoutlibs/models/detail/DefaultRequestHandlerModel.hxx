@@ -503,6 +503,17 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
         }
         frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kIncomplete));
         frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
+        // 06-Jul-2022, KAB: added the following line to translate a kNotYet status code from
+        // get_fragment_pieces() to kFound. The reasoning behind this addition is that when
+        // send_partial_fragment_if_not_yet is set to true, we should accept whatever we've got
+        // in the buffer and *not* retry any longer. So, we force that behavior with the
+        // following line. The data-taking scenario which illustrates
+        // this situation is long-window-readout in which a given trigger is split into a sequence
+        // of TriggerRecords and the 2..Nth DataRequest find nothing useful in the TriggerCandidate
+        // (TCBuffer) latency buffer (and no data later than the request window end time).
+        // In those cases, get_fragment_pieces() returns kNotYet, and we need to change that
+        // kFound in order to not keep looping.
+        if (rres.result_code == ResultCode::kNotYet) {rres.result_code = ResultCode::kFound;}
       } else {
         ++m_num_requests_delayed;
         rres.result_code = ResultCode::kNotYet; // give it another chance
