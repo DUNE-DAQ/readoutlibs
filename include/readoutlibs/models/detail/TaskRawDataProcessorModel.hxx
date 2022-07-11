@@ -10,7 +10,7 @@ TaskRawDataProcessorModel<ReadoutType>::conf(const nlohmann::json& cfg)
   auto config = cfg["rawdataprocessorconf"].get<readoutconfig::RawDataProcessorConf>();
   m_emulator_mode = config.emulator_mode;
   m_postprocess_queue_sizes = config.postprocess_queue_sizes;
-  m_this_link_number = config.element_id;
+  m_this_link_number = config.source_id;
 
   for (size_t i = 0; i < m_post_process_functions.size(); ++i) {
     m_items_to_postprocess_queues.push_back(
@@ -18,9 +18,8 @@ TaskRawDataProcessorModel<ReadoutType>::conf(const nlohmann::json& cfg)
     m_post_process_threads.back()->set_name("postprocess-" + std::to_string(i), m_this_link_number);
   }
 
-  m_geoid.element_id = config.element_id;
-  m_geoid.region_id = config.region_id;
-  m_geoid.system_type = ReadoutType::system_type;
+  m_sourceid.id = config.source_id;
+  m_sourceid.subsystem = ReadoutType::subsystem;
 }
 
 template<class ReadoutType>
@@ -66,7 +65,7 @@ TaskRawDataProcessorModel<ReadoutType>::postprocess_item(const ReadoutType* item
 {
   for (size_t i = 0; i < m_items_to_postprocess_queues.size(); ++i) {
     if (!m_items_to_postprocess_queues[i]->write(item)) {
-      ers::warning(PostprocessingNotKeepingUp(ERS_HERE, m_geoid, i));
+      ers::warning(PostprocessingNotKeepingUp(ERS_HERE, m_sourceid, i));
     }
   }
 }

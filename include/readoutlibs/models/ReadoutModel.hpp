@@ -137,7 +137,7 @@ private:
   appfwk::app::ModInit m_queue_config;
   bool m_fake_trigger;
   int m_current_fake_trigger_id;
-  daqdataformats::GeoID m_geoid;
+  daqdataformats::SourceID m_sourceid;
   daqdataformats::run_number_t m_run_number;
  
   // STATS

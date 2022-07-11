@@ -8,7 +8,7 @@
 #ifndef READOUTLIBS_INCLUDE_READOUTLIBS_READOUTISSUES_HPP_
 #define READOUTLIBS_INCLUDE_READOUTLIBS_READOUTISSUES_HPP_
 
-#include "daqdataformats/GeoID.hpp"
+#include "daqdataformats/SourceID.hpp"
 #include "daqdataformats/Types.hpp"
 
 #include <ers/Issue.hpp>
@@ -18,13 +18,13 @@
 namespace dunedaq {
 ERS_DECLARE_ISSUE(readoutlibs,
                   InternalError,
-                  "GeoID[" << geoid << "] Internal Error: " << error,
-                  ((daqdataformats::GeoID)geoid)((std::string)error))
+                  "SourceID[" << sourceid << "] Internal Error: " << error,
+                  ((daqdataformats::SourceID)sourceid)((std::string)error))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   CommandError,
-                  "GeoID[" << geoid << "] Command Error: " << commanderror,
-                  ((daqdataformats::GeoID)geoid)((std::string)commanderror))
+                  "SourceID[" << sourceid << "] Command Error: " << commanderror,
+                  ((daqdataformats::SourceID)sourceid)((std::string)commanderror))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   InitializationError,
@@ -33,8 +33,8 @@ ERS_DECLARE_ISSUE(readoutlibs,
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   ConfigurationError,
-                  "GeoID[" << geoid << "] Readout Configuration Error: " << conferror,
-                  ((daqdataformats::GeoID)geoid)((std::string)conferror))
+                  "SourceID[" << sourceid << "] Readout Configuration Error: " << conferror,
+                  ((daqdataformats::SourceID)sourceid)((std::string)conferror))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   BufferedReaderWriterConfigurationError,
@@ -54,9 +54,9 @@ ERS_DECLARE_ISSUE(readoutlibs,
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   TimeSyncTransmissionFailed,
-                  "GeoID " << geoid << " failed to send send TimeSync message to " << dest << " with topic " << topic
+                  "SourceID " << sourceid << " failed to send send TimeSync message to " << dest << " with topic " << topic
                            << ".",
-                  ((daqdataformats::GeoID)geoid)((std::string)dest)((std::string)topic))
+                  ((daqdataformats::SourceID)sourceid)((std::string)dest)((std::string)topic))
 
 ERS_DECLARE_ISSUE(readoutlibs, CannotOpenFile, "Couldn't open binary file: " << filename, ((std::string)filename))
 
@@ -69,47 +69,47 @@ ERS_DECLARE_ISSUE_BASE(readoutlibs,
                        CannotReadFile,
                        readoutlibs::ConfigurationError,
                        " Couldn't read properly the binary file: " << filename << " Cause: " << errorstr,
-                       ((daqdataformats::GeoID)geoid)((std::string)filename),
+                       ((daqdataformats::SourceID)sourceid)((std::string)filename),
                        ((std::string)errorstr))
 
 ERS_DECLARE_ISSUE(readoutlibs, CannotWriteToFile, "Could not write to file: " << filename, ((std::string)filename))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   PostprocessingNotKeepingUp,
-                  "GeoID[" << geoid << "] Postprocessing has too much backlog, thread: " << i,
-                  ((daqdataformats::GeoID)geoid)((size_t)i))
+                  "SourceID[" << sourceid << "] Postprocessing has too much backlog, thread: " << i,
+                  ((daqdataformats::SourceID)sourceid)((size_t)i))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   EmptySourceBuffer,
-                  "GeoID[" << geoid << "] Source Buffer is empty, check file: " << filename,
-                  ((daqdataformats::GeoID)geoid)((std::string)filename))
+                  "SourceID[" << sourceid << "] Source Buffer is empty, check file: " << filename,
+                  ((daqdataformats::SourceID)sourceid)((std::string)filename))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   CannotReadFromQueue,
-                  "GeoID[" << geoid << "] Failed attempt to read from the queue: " << queuename,
-                  ((daqdataformats::GeoID)geoid)((std::string)queuename))
+                  "SourceID[" << sourceid << "] Failed attempt to read from the queue: " << queuename,
+                  ((daqdataformats::SourceID)sourceid)((std::string)queuename))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   CannotWriteToQueue,
-                  "GeoID[" << geoid << "] Failed attempt to write to the queue: " << queuename
+                  "SourceID[" << sourceid << "] Failed attempt to write to the queue: " << queuename
                            << ". Data will be lost!",
-                  ((daqdataformats::GeoID)geoid)((std::string)queuename))
+                  ((daqdataformats::SourceID)sourceid)((std::string)queuename))
 
 ERS_DECLARE_ISSUE(readoutlibs,
-                  RequestGeoIDMismatch,
-                  "GeoID[" << geoid << "] Got request for GeoID: " << request_geoid,
-                  ((daqdataformats::GeoID)geoid)((daqdataformats::GeoID)request_geoid))
+                  RequestSourceIDMismatch,
+                  "SourceID[" << sourceid << "] Got request for SourceID: " << request_sourceid,
+                  ((daqdataformats::SourceID)sourceid)((daqdataformats::SourceID)request_sourceid))
 
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   TrmWithEmptyFragment,
-                  "GeoID[" << geoid << "] Trigger Matching result with empty fragment: " << trmdetails,
-                  ((daqdataformats::GeoID)geoid)((std::string)trmdetails))
+                  "SourceID[" << sourceid << "] Trigger Matching result with empty fragment: " << trmdetails,
+                  ((daqdataformats::SourceID)sourceid)((std::string)trmdetails))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   RequestOnEmptyBuffer,
-                  "GeoID[" << geoid << "] Request on empty buffer: " << trmdetails,
-                  ((daqdataformats::GeoID)geoid)((std::string)trmdetails))
+                  "SourceID[" << sourceid << "] Request on empty buffer: " << trmdetails,
+                  ((daqdataformats::SourceID)sourceid)((std::string)trmdetails))
 
 ERS_DECLARE_ISSUE_BASE(readoutlibs,
                        FailedReadoutInitialization,
@@ -127,7 +127,7 @@ ERS_DECLARE_ISSUE_BASE(readoutlibs,
                        NoImplementationAvailableError,
                        readoutlibs::ConfigurationError,
                        " No " << impl << " implementation available for raw type: " << rawt << ' ',
-                       ((daqdataformats::GeoID)geoid)((std::string)impl),
+                       ((daqdataformats::SourceID)sourceid)((std::string)impl),
                        ((std::string)rawt))
 
 ERS_DECLARE_ISSUE(readoutlibs,
@@ -151,25 +151,25 @@ ERS_DECLARE_ISSUE(readoutlibs, ConfigurationNote, "ConfigurationNote: " << text,
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   ConfigurationProblem,
-                  "GeoID[" << geoid << "] Configuration problem: " << text,
-                  ((daqdataformats::GeoID)geoid)((std::string)text))
+                  "SourceID[" << sourceid << "] Configuration problem: " << text,
+                  ((daqdataformats::SourceID)sourceid)((std::string)text))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   RequestTimedOut,
-                  "GeoID[" << geoid << "] Request timed out",
-                  ((daqdataformats::GeoID)geoid))
+                  "SourceID[" << sourceid << "] Request timed out",
+                  ((daqdataformats::SourceID)sourceid))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   VerboseRequestTimedOut,
-                  "GeoID[" << geoid << "] Request timed out for trig/seq_num " << trignum << "." << seqnum
+                  "SourceID[" << sourceid << "] Request timed out for trig/seq_num " << trignum << "." << seqnum
                            << ", run_num " << runnum << ", window begin/end " << window_begin << "/" << window_end
                            << ", data_destination: " << dest,
-                  ((daqdataformats::GeoID)geoid)((daqdataformats::trigger_number_t)trignum)((daqdataformats::sequence_number_t)seqnum)((daqdataformats::run_number_t)runnum)((daqdataformats::timestamp_t)window_begin)((daqdataformats::timestamp_t)window_end)((std::string)dest))
+                  ((daqdataformats::SourceID)sourceid)((daqdataformats::trigger_number_t)trignum)((daqdataformats::sequence_number_t)seqnum)((daqdataformats::run_number_t)runnum)((daqdataformats::timestamp_t)window_begin)((daqdataformats::timestamp_t)window_end)((std::string)dest))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   EndOfRunEmptyFragment,
-                  "GeoID[" << geoid << "] Empty fragment at the end of the run",
-                  ((daqdataformats::GeoID)geoid))
+                  "SourceID[" << sourceid << "] Empty fragment at the end of the run",
+                  ((daqdataformats::SourceID)sourceid))
 
 } // namespace dunedaq
 

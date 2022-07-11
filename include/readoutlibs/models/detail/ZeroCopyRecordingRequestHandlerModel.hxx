@@ -10,14 +10,13 @@ ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::conf(const
 {
   auto conf = args["requesthandlerconf"].get<readoutconfig::RequestHandlerConf>();
   if (conf.enable_raw_recording) {
-    inherited::m_geoid.element_id = conf.element_id;
-    inherited::m_geoid.region_id = conf.region_id;
-    inherited::m_geoid.system_type = ReadoutType::system_type;
+    inherited::m_sourceid.id = conf.source_id;
+    inherited::m_sourceid.subsystem = ReadoutType::subsystem;
 
     // Check for alignment restrictions
     if (inherited::m_latency_buffer->get_alignment_size() == 0 ||
         sizeof(ReadoutType) * inherited::m_latency_buffer->get_size() % 4096) {
-      ers::error(ConfigurationError(ERS_HERE, inherited::m_geoid, "Latency buffer is not 4k aligned"));
+      ers::error(ConfigurationError(ERS_HERE, inherited::m_sourceid, "Latency buffer is not 4k aligned"));
     }
 
     // RS: This will need to go away with the SNB store handler!
@@ -42,7 +41,7 @@ ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::record(con
 {
   if (inherited::m_recording.load()) {
     ers::error(
-      CommandError(ERS_HERE, inherited::m_geoid, "A recording is still running, no new recording was started!"));
+      CommandError(ERS_HERE, inherited::m_sourceid, "A recording is still running, no new recording was started!"));
     return;
   }
   inherited::m_recording_thread.set_work(

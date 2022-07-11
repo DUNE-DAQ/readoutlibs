@@ -28,7 +28,7 @@ EmptyFragmentRequestHandlerModel<ReadoutType, LatencyBufferType>::issue_request(
       ->send(std::move(fragment), std::chrono::milliseconds(10));
   } catch (const ers::Issue& excpt) {
     ers::warning(CannotWriteToQueue(
-      ERS_HERE, DefaultRequestHandlerModel<ReadoutType, LatencyBufferType>::m_geoid, "fragment queue", excpt));
+      ERS_HERE, DefaultRequestHandlerModel<ReadoutType, LatencyBufferType>::m_sourceid, "fragment queue", excpt));
   }
 }
 
