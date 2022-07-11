@@ -28,7 +28,7 @@ local sourceemulatorconfig = {
     slowdown_t : s.number("slowdown_t", "f8",
                      doc="Slowdown factor"),
   
-    source_id: s.number("source_id", "u4")
+    source_id: s.number("source_id", "u4"),
 
     string : s.string("FilePath", moo.re.hierpath,
                   doc="A string field"),
