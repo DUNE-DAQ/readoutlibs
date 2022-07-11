@@ -11,9 +11,6 @@ local moo = import "moo.jsonnet";
 local ns = "dunedaq.readoutlibs.sourceemulatorconfig";
 local s = moo.oschema.schema(ns);
 
-local s_sourceid = import "daqdataformats/sourceid.jsonnet";
-local sourceid = moo.oschema.hier(s_sourceid).dunedaq.daqdataformats.sourceid;
-
 // Object structure used by the test/fake producer module
 local sourceemulatorconfig = {
     uint4  : s.number("uint4", "u4",
@@ -31,7 +28,7 @@ local sourceemulatorconfig = {
     slowdown_t : s.number("slowdown_t", "f8",
                      doc="Slowdown factor"),
   
-    linkvec : s.sequence("link_vec", sourceid.SourceID),
+    source_id: s.number("source_id", "u4")
 
     string : s.string("FilePath", moo.re.hierpath,
                   doc="A string field"),
@@ -42,7 +39,7 @@ local sourceemulatorconfig = {
                   doc="A true or false flag for enabling raw WIB TP link"),
 
     link_conf : s.record("LinkConfiguration", [
-        s.field("source_id", sourceid.SourceID, doc="SourceID of the link"),
+        s.field("source_id", self.source_id, doc="SourceID of the link"),
         s.field("input_limit", self.uint4, 10485100,
             doc="Maximum allowed file size"),
         s.field("slowdown", self.slowdown_t, 1,
@@ -75,4 +72,4 @@ local sourceemulatorconfig = {
 
 };
 
-s_sourceid + moo.oschema.sort_select(sourceemulatorconfig, ns)
+moo.oschema.sort_select(sourceemulatorconfig, ns)
