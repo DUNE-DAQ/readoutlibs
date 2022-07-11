@@ -33,7 +33,7 @@ SourceEmulatorModel<ReadoutType>::conf(const nlohmann::json& args,
     std::mt19937 mt(rand()); // NOLINT(runtime/threadsafe_fn)
     std::uniform_real_distribution<double> dis(0.0, 1.0);
 
-    m_sourceid.id = m_link_conf.source_id.id;
+    m_sourceid.id = m_link_conf.source_id;
     m_sourceid.subsystem = ReadoutType::subsystem;
 
     m_file_source = std::make_unique<FileSourceBuffer>(m_link_conf.input_limit, sizeof(ReadoutType));
@@ -61,7 +61,7 @@ SourceEmulatorModel<ReadoutType>::conf(const nlohmann::json& args,
     m_is_configured = true;
   }
   // Configure thread:
-  m_producer_thread.set_name("fakeprod", m_link_conf.source_id.id);
+  m_producer_thread.set_name("fakeprod", m_link_conf.source_id);
 } 
 
 template<class ReadoutType>
