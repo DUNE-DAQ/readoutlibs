@@ -72,6 +72,8 @@ local readoutconfig = {
                             doc="Enable software TPG"),
             s.field("enable_firmware_tpg", self.choice, false,
                             doc="Enable firmware TPG"),
+            s.field("fwtp_stitch_constant", self.size, 2000,
+                            doc="Number of ticks between WIB-to-TP packets"),
             s.field("channel_map_name", self.string, default="None",
                             doc="Name of channel map"),
             s.field("emulator_mode", self.choice, false,
