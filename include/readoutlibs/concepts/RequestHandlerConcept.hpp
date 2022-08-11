@@ -27,6 +27,9 @@ class RequestHandlerConcept
 
 public:
   RequestHandlerConcept() {}
+
+  virtual ~RequestHandlerConcept() {}
+  
   RequestHandlerConcept(const RequestHandlerConcept&) = delete; ///< RequestHandlerConcept is not copy-constructible
   RequestHandlerConcept& operator=(const RequestHandlerConcept&) =
     delete;                                                ///< RequestHandlerConcept is not copy-assginable
