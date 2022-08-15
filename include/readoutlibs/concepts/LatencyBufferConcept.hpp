@@ -27,6 +27,9 @@ class LatencyBufferConcept
 
 public:
   LatencyBufferConcept() {}
+
+  virtual ~LatencyBufferConcept() {}
+  
   LatencyBufferConcept(const LatencyBufferConcept&) = delete; ///< LatencyBufferConcept is not copy-constructible
   LatencyBufferConcept& operator=(const LatencyBufferConcept&) =
     delete;                                                         ///< LatencyBufferConcept is not copy-assginable
