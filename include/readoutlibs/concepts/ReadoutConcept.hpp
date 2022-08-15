@@ -18,7 +18,7 @@ class ReadoutConcept
 {
 public:
   ReadoutConcept() {}
-  ~ReadoutConcept() {}
+  virtual ~ReadoutConcept() {}
   ReadoutConcept(const ReadoutConcept&) = delete;            ///< ReadoutConcept is not copy-constructible
   ReadoutConcept& operator=(const ReadoutConcept&) = delete; ///< ReadoutConcept is not copy-assginable
   ReadoutConcept(ReadoutConcept&&) = delete;                 ///< ReadoutConcept is not move-constructible

@@ -25,7 +25,7 @@ class SourceEmulatorConcept
 public:
   SourceEmulatorConcept() {}
 
-  ~SourceEmulatorConcept() {}
+  virtual ~SourceEmulatorConcept() {}
   SourceEmulatorConcept(const SourceEmulatorConcept&) = delete; ///< SourceEmulatorConcept is not copy-constructible
   SourceEmulatorConcept& operator=(const SourceEmulatorConcept&) =
     delete;                                                ///< SourceEmulatorConcept is not copy-assginable

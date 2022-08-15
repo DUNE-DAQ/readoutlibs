@@ -29,7 +29,7 @@ class RecorderConcept
 {
 public:
   RecorderConcept() {}
-  ~RecorderConcept() {}
+  virtual ~RecorderConcept() {}
   RecorderConcept(const RecorderConcept&) = delete;
   RecorderConcept& operator=(const RecorderConcept&) = delete;
   RecorderConcept(RecorderConcept&&) = delete;
