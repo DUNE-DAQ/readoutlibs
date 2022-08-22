@@ -56,7 +56,7 @@ daq_add_application(readoutlibs_test_lb_allocation test_lb_allocation_app.cxx TE
 daq_add_application(readoutlibs_test_bufferedfilewriter test_bufferedfilewriter_app.cxx TEST LINK_LIBRARIES readoutlibs ${BOOST_LIBS})
 daq_add_application(readoutlibs_test_bufferedfilereader test_bufferedfilereader_app.cxx TEST LINK_LIBRARIES readoutlibs ${BOOST_LIBS})
 daq_add_application(readoutlibs_test_skiplist test_skiplist_app.cxx TEST LINK_LIBRARIES readoutlibs ${BOOST_LIBS})
-
+daq_add_application(readoutlibs_test_composite_key test_composite_key_app.cxx TEST LINK_LIBRARIES readoutlibs ${BOOST_LIBS})
 
 ##############################################################################
 # Unit Tests
