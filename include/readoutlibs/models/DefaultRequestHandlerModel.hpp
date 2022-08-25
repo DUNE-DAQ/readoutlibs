@@ -159,9 +159,10 @@ protected:
     fh.window_begin = dr.request_information.window_begin;
     fh.window_end = dr.request_information.window_end;
     fh.run_number = dr.run_number;
-    fh.sequence_number = dr.sequence_number;
-    fh.element_id = { m_sourceid.subsystem, m_sourceid.id };
     fh.fragment_type = static_cast<daqdataformats::fragment_type_t>(ReadoutType::fragment_type);
+    fh.sequence_number = dr.sequence_number;
+    fh.detector_id = m_detid;
+    fh.element_id = { m_sourceid.subsystem, m_sourceid.id };
     return fh;
   }
 
@@ -247,6 +248,7 @@ protected:
   unsigned m_pop_limit_size; // pop_limit_pct * buffer_capacity
   size_t m_buffer_capacity;
   daqdataformats::SourceID m_sourceid;
+  uint16_t m_detid;
   static const constexpr uint32_t m_min_delay_us = 30000; // NOLINT(build/unsigned)
   std::string m_output_file;
   size_t m_stream_buffer_size = 0;

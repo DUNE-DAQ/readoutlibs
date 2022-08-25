@@ -19,6 +19,9 @@ local readoutconfig = {
     source_id: s.number("SourceID_t", "u4",
                          doc="A source id (as part of a SourceID)"),
 
+    det_id: s.number("DetID_t", "u2",
+                         doc="A detector id"),
+
     count : s.number("Count", "i4",
                      doc="A count of not too many things"),
 
@@ -108,6 +111,8 @@ local readoutconfig = {
                             doc="Size of latency buffer"),
             s.field("source_id", self.source_id, 0,
                             doc="The source id of this link"),
+            s.field("det_id", self.det_id, 1,
+                            doc="The det id of data carried by this link"),
             s.field("warn_on_timeout", self.choice, true,
                             doc="Whether to emit a warning when a request times out")],
             doc="Request Handler Config"),

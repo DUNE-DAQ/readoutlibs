@@ -16,6 +16,7 @@ DefaultRequestHandlerModel<RDT, LBT>::conf(const nlohmann::json& args)
   m_output_file = conf.output_file;
   m_sourceid.id = conf.source_id;
   m_sourceid.subsystem = RDT::subsystem;
+  m_detid = conf.det_id;
   m_stream_buffer_size = conf.stream_buffer_size;
   m_warn_on_timeout = conf.warn_on_timeout;
   // if (m_configured) {
