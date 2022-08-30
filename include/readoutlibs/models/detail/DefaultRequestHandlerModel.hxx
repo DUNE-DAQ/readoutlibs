@@ -14,15 +14,15 @@ DefaultRequestHandlerModel<RDT, LBT>::conf(const nlohmann::json& args)
   m_num_request_handling_threads = conf.num_request_handling_threads;
   m_request_timeout_ms = conf.request_timeout_ms;
   m_output_file = conf.output_file;
-  m_geoid.element_id = conf.element_id;
-  m_geoid.region_id = conf.region_id;
-  m_geoid.system_type = RDT::system_type;
+  m_sourceid.id = conf.source_id;
+  m_sourceid.subsystem = RDT::subsystem;
+  m_detid = conf.det_id;
   m_stream_buffer_size = conf.stream_buffer_size;
   m_warn_on_timeout = conf.warn_on_timeout;
   // if (m_configured) {
   //  ers::error(ConfigurationError(ERS_HERE, "This object is already configured!"));
   if (m_pop_limit_pct < 0.0f || m_pop_limit_pct > 1.0f || m_pop_size_pct < 0.0f || m_pop_size_pct > 1.0f) {
-    ers::error(ConfigurationError(ERS_HERE, m_geoid, "Auto-pop percentage out of range."));
+    ers::error(ConfigurationError(ERS_HERE, m_sourceid, "Auto-pop percentage out of range."));
   } else {
     m_pop_limit_size = m_pop_limit_pct * m_buffer_capacity;
     m_max_requested_elements = m_pop_limit_size - m_pop_limit_size * m_pop_size_pct;
@@ -38,8 +38,8 @@ DefaultRequestHandlerModel<RDT, LBT>::conf(const nlohmann::json& args)
     m_recording_configured = true;
   }
 
-  m_recording_thread.set_name("recording", conf.element_id);
-  m_cleanup_thread.set_name("cleanup", conf.element_id);
+  m_recording_thread.set_name("recording", conf.source_id);
+  m_cleanup_thread.set_name("cleanup", conf.source_id);
 
   std::ostringstream oss;
   oss << "RequestHandler configured. " << std::fixed << std::setprecision(2)
@@ -108,10 +108,10 @@ DefaultRequestHandlerModel<RDT, LBT>::record(const nlohmann::json& args)
 {
   auto conf = args.get<readoutconfig::RecordingParams>();
   if (m_recording.load()) {
-    ers::error(CommandError(ERS_HERE, m_geoid, "A recording is still running, no new recording was started!"));
+    ers::error(CommandError(ERS_HERE, m_sourceid, "A recording is still running, no new recording was started!"));
     return;
   } else if (!m_buffered_writer.is_open()) {
-    ers::error(CommandError(ERS_HERE, m_geoid, "DLH is not configured for recording"));
+    ers::error(CommandError(ERS_HERE, m_sourceid, "DLH is not configured for recording"));
     return;
   }
   m_recording_thread.set_work(
@@ -214,7 +214,7 @@ DefaultRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest data
           ->send(std::move(result.fragment), std::chrono::milliseconds(10));
 
       } catch (const ers::Issue& excpt) {
-        ers::warning(CannotWriteToQueue(ERS_HERE, m_geoid, "fragment queue", excpt));
+        ers::warning(CannotWriteToQueue(ERS_HERE, m_sourceid, "fragment queue", excpt));
       }
     } else if (result.result_code == ResultCode::kNotYet) {
       TLOG_DEBUG(TLVL_WORK_STEPS) << "Re-queue request. "
@@ -371,7 +371,7 @@ DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests()
           issue_request(m_waiting_requests[i].request, true);
 
           if (m_warn_on_timeout) {
-            ers::warning(dunedaq::readoutlibs::VerboseRequestTimedOut(ERS_HERE, m_geoid,
+            ers::warning(dunedaq::readoutlibs::VerboseRequestTimedOut(ERS_HERE, m_sourceid,
                                                                       m_waiting_requests[i].request.trigger_number,
                                                                       m_waiting_requests[i].request.sequence_number,
                                                                       m_waiting_requests[i].request.run_number,
@@ -538,7 +538,7 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
     }
 
     // Build fragment
-    oss << "TS match result on link " << m_geoid.element_id << ": " 
+    oss << "TS match result on link " << m_sourceid.id << ": "
         << " Trigger number=" << dr.trigger_number
         << " Oldest stored TS=" << last_ts
         << " Start of window TS=" << start_win_ts
@@ -547,14 +547,14 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
         << " Requestor=" << dr.data_destination;
     TLOG_DEBUG(TLVL_WORK_STEPS) << oss.str();
   } else {
-    ers::warning(RequestOnEmptyBuffer(ERS_HERE, m_geoid, "Data not found"));
+    ers::warning(RequestOnEmptyBuffer(ERS_HERE, m_sourceid, "Data not found"));
     frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
     rres.result_code = ResultCode::kNotFound;
     ++m_num_requests_bad;
   }
 
   if (rres.result_code != ResultCode::kFound) {
-    ers::warning(dunedaq::readoutlibs::TrmWithEmptyFragment(ERS_HERE, m_geoid, oss.str()));
+    ers::warning(dunedaq::readoutlibs::TrmWithEmptyFragment(ERS_HERE, m_sourceid, oss.str()));
   }
 
   // Create fragment from pieces

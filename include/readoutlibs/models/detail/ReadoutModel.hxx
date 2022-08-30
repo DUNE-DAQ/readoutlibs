@@ -73,9 +73,8 @@ ReadoutModel<RDT, RHT, LBT, RPT>::conf(const nlohmann::json& args)
   m_raw_receiver_timeout_ms = std::chrono::milliseconds(conf.source_queue_timeout_ms);
   TLOG_DEBUG(TLVL_WORK_STEPS) << "ReadoutModel creation";
 
-  m_geoid.element_id = conf.element_id;
-  m_geoid.region_id = conf.region_id;
-  m_geoid.system_type = RDT::system_type;
+  m_sourceid.id = conf.source_id;
+  m_sourceid.subsystem = RDT::subsystem;
 
   m_timesync_connection_name = conf.timesync_connection_name;
   m_timesync_topic_name = conf.timesync_topic_name;
@@ -87,14 +86,14 @@ ReadoutModel<RDT, RHT, LBT, RPT>::conf(const nlohmann::json& args)
   try {
     m_latency_buffer_impl->conf(args);
   } catch (const std::bad_alloc& be) {
-    ers::error(ConfigurationError(ERS_HERE, m_geoid, "Latency Buffer can't be allocated with size!"));
+    ers::error(ConfigurationError(ERS_HERE, m_sourceid, "Latency Buffer can't be allocated with size!"));
   }
 
   m_request_handler_impl->conf(args);
 
   // Configure threads:
-  m_consumer_thread.set_name("consumer", conf.element_id);
-  m_timesync_thread.set_name("timesync", conf.element_id);
+  m_consumer_thread.set_name("consumer", conf.source_id);
+  m_timesync_thread.set_name("timesync", conf.source_id);
 }
 
 
@@ -258,7 +257,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
           m_timesync_sender->send(std::move(timesyncmsg_copy), std::chrono::milliseconds(500), m_timesync_topic_name);
         } catch (ers::Issue& excpt) {
           ers::warning(
-            TimeSyncTransmissionFailed(ERS_HERE, m_geoid, m_timesync_connection_name, m_timesync_topic_name, excpt));
+            TimeSyncTransmissionFailed(ERS_HERE, m_sourceid, m_timesync_connection_name, m_timesync_topic_name, excpt));
         }
           
         if (m_fake_trigger) {
@@ -270,7 +269,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
           uint offset = 100;
           dr.request_information.window_begin = dr.trigger_timestamp > offset ? dr.trigger_timestamp - offset : 0;
           dr.request_information.window_end = dr.request_information.window_begin + width;
-          dr.request_information.component = m_geoid;
+          dr.request_information.component = m_sourceid;
           dr.data_destination = "data_fragments_q";
           TLOG_DEBUG(TLVL_WORK_STEPS) << "Issuing fake trigger based on timesync. "
             << " ts=" << dr.trigger_timestamp 
@@ -306,8 +305,8 @@ template<class RDT, class RHT, class LBT, class RPT>
 void 
 ReadoutModel<RDT, RHT, LBT, RPT>::dispatch_requests(dfmessages::DataRequest& data_request)
 {
-  if (data_request.request_information.component != m_geoid) {
-     ers::error(RequestGeoIDMismatch(ERS_HERE, m_geoid, data_request.request_information.component));
+  if (data_request.request_information.component != m_sourceid) {
+     ers::error(RequestSourceIDMismatch(ERS_HERE, m_sourceid, data_request.request_information.component));
      return;
   }
   TLOG_DEBUG(TLVL_QUEUE_POP) << "Received DataRequest" 

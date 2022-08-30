@@ -16,12 +16,6 @@ local recorderconfig = {
     size: s.number("Size", "u8",
                    doc="A count of very many things"),
 
-    apa_number: s.number("APANumber", "u4",
-                         doc="An APA number"),
-
-    link_number: s.number("LinkNumber", "u4",
-                        doc="A link number"),
-
     count : s.number("Count", "i4",
                      doc="A count of not too many things"),
 

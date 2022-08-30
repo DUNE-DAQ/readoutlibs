@@ -9,7 +9,7 @@
 #ifndef READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_TASKRAWDATAPROCESSORMODEL_HPP_
 #define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_TASKRAWDATAPROCESSORMODEL_HPP_
 
-#include "daqdataformats/GeoID.hpp"
+#include "daqdataformats/SourceID.hpp"
 #include "logging/Logging.hpp"
 #include "readoutlibs/FrameErrorRegistry.hpp"
 #include "readoutlibs/ReadoutIssues.hpp"
@@ -110,7 +110,7 @@ protected:
   // Internals
   size_t m_postprocess_queue_sizes;
   uint32_t m_this_link_number; // NOLINT(build/unsigned)
-  daqdataformats::GeoID m_geoid;
+  daqdataformats::SourceID m_sourceid;
   bool m_emulator_mode{ false };
   std::atomic<std::uint64_t> m_last_processed_daq_ts{ 0 }; // NOLINT(build/unsigned)
 
