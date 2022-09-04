@@ -70,7 +70,7 @@ local readoutconfig = {
                             doc="Enable software TPG"),
             s.field("enable_firmware_tpg", self.choice, false,
                             doc="Enable firmware TPG"),
-            s.field("fwtp_stitch_constant", self.size, 2000,
+            s.field("fwtp_stitch_constant", self.size, 2048,
                             doc="Number of ticks between WIB-to-TP packets"),
             s.field("fwtp_format_version", self.size, 1,
                             doc="Format version of raw TP frames from firmware TPG"),
