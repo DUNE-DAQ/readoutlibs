@@ -46,7 +46,7 @@ public:
   // Destructor
   ~TaskRawDataProcessorModel() {}
 
-  // Configures the element pointer queue for the post-processors, and the GeoID
+  // Configures the element pointer queue for the post-processors, and the SourceID
   void conf(const nlohmann::json& cfg) override;
 
   // Clears elements to process, pre-proc pipeline, and post-proc functions

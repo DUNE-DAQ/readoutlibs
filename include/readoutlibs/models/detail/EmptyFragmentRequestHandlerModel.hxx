@@ -21,7 +21,7 @@ EmptyFragmentRequestHandlerModel<ReadoutType, LatencyBufferType>::issue_request(
 
   try { // Push to Fragment queue
     TLOG_DEBUG(TLVL_QUEUE_PUSH) << "Sending fragment with trigger_number " << fragment->get_trigger_number()
-                                << ", run number " << fragment->get_run_number() << ", and GeoID "
+                                << ", run number " << fragment->get_run_number() << ", and SourceID "
                                 << fragment->get_element_id();
     //auto frag = std::make_pair(std::move(fragment), datarequest.data_destination);
     get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)
