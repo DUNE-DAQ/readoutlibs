@@ -207,7 +207,7 @@ DefaultRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest data
         TLOG_DEBUG(TLVL_QUEUE_PUSH) << "Sending fragment with trigger/sequence_number "
           << result.fragment->get_trigger_number() << "."
           << result.fragment->get_sequence_number() << ", run number "
-          << result.fragment->get_run_number() << ", and GeoID "
+          << result.fragment->get_run_number() << ", and SourceID "
           << result.fragment->get_element_id();
         // Send fragment
         get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)

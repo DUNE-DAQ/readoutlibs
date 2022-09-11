@@ -313,7 +313,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::dispatch_requests(dfmessages::DataRequest& dat
     << " for trig/seq_number " << data_request.trigger_number << "." << data_request.sequence_number
     << ", runno " << data_request.run_number
     << ", trig timestamp " << data_request.trigger_timestamp
-    << ", GeoID: " << data_request.request_information.component
+    << ", SourceID: " << data_request.request_information.component
     << ", window begin/end " << data_request.request_information.window_begin
     << "/" << data_request.request_information.window_end
     << ", dest: " << data_request.data_destination;
