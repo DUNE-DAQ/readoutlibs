@@ -142,7 +142,7 @@ public:
 
   // Implementation of default request handling. (boost::asio post to a thread pool)
   void issue_request(dfmessages::DataRequest datarequest,
-                     bool send_partial_fragment_if_not_yet) override;
+                     bool send_partial_fragment_if_available) override;
 
   // Opmon get_info implementation
   void get_info(opmonlib::InfoCollector& ci, int /*level*/) override;
@@ -203,7 +203,7 @@ protected:
 
   // Override data_request functionality
   RequestResult data_request(dfmessages::DataRequest dr, 
-                             bool send_partial_fragment_if_not_yet) override;
+                             bool send_partial_fragment_if_available) override;
 
   // Data access (LB)
   std::unique_ptr<LatencyBufferType>& m_latency_buffer;

@@ -79,6 +79,8 @@ ReadoutModel<RDT, RHT, LBT, RPT>::conf(const nlohmann::json& args)
   m_timesync_connection_name = conf.timesync_connection_name;
   m_timesync_topic_name = conf.timesync_topic_name;
 
+  m_send_partial_fragment_if_available = conf.send_partial_fragment_if_available;
+
   // Configure implementations:
   m_raw_processor_impl->conf(args);
   // Configure the latency buffer before the request handler so the request handler can check for alignment
@@ -317,7 +319,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::dispatch_requests(dfmessages::DataRequest& dat
     << ", window begin/end " << data_request.request_information.window_begin
     << "/" << data_request.request_information.window_end
     << ", dest: " << data_request.data_destination;
-  m_request_handler_impl->issue_request(data_request, false);
+  m_request_handler_impl->issue_request(data_request, m_send_partial_fragment_if_available);
   ++m_num_requests;
   ++m_sum_requests;
 }
