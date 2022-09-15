@@ -110,13 +110,16 @@ public:
   struct RequestElement
   {
     RequestElement(const dfmessages::DataRequest& data_request,
-                   const std::chrono::time_point<std::chrono::high_resolution_clock>& tp_value)
+                   const std::chrono::time_point<std::chrono::high_resolution_clock>& tp_value,
+                   bool partial_fragment_flag = false)
       : request(data_request)
       , start_time(tp_value)
+      , send_partial_fragment_if_available(partial_fragment_flag)
     {}
 
     dfmessages::DataRequest request;
     std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
+    bool send_partial_fragment_if_available;
   };
 
   // Default init mechanism (no-op impl)

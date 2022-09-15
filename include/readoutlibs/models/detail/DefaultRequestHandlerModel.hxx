@@ -221,7 +221,8 @@ DefaultRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest data
       TLOG_DEBUG(TLVL_WORK_STEPS) << "Re-queue request. "
                                   << "With timestamp=" << result.data_request.trigger_timestamp;
       std::lock_guard<std::mutex> wait_lock_guard(m_waiting_requests_lock);
-      m_waiting_requests.push_back(RequestElement(datarequest, std::chrono::high_resolution_clock::now()));
+      m_waiting_requests.push_back(RequestElement(datarequest, std::chrono::high_resolution_clock::now(),
+                                                  send_partial_fragment_if_available));
     }
     auto t_req_end = std::chrono::high_resolution_clock::now();
     auto us_req_took = std::chrono::duration_cast<std::chrono::microseconds>(t_req_end - t_req_begin);
@@ -364,7 +365,7 @@ DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests()
 
       for (size_t i = 0; i < size;) {
         if (m_waiting_requests[i].request.request_information.window_end < newest_ts) {
-          issue_request(m_waiting_requests[i].request, false);
+          issue_request(m_waiting_requests[i].request, m_waiting_requests[i].send_partial_fragment_if_available);
           std::swap(m_waiting_requests[i], m_waiting_requests.back());
           m_waiting_requests.pop_back();
           size--;
@@ -482,6 +483,14 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
       frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
     } else if (send_partial_fragment_if_available && last_ts <= end_win_ts && end_win_ts <= newest_ts) { // partial data is there
       frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
+      if (rres.result_code == ResultCode::kNotYet) {
+        // 15-Sep-2022, KAB: this is really ugly.  I'm not sure why get_fragment_pieces occasionally
+        // returns kNotYet when running with long readout windows, but I suspect that it has something
+        // to do with that code assuming that the readout window is fully contained within the data
+        // that exists in the latency buffer.  In any case, this code simply bails out when that happens.
+        local_data_not_found_flag = true;
+        rres.result_code = ResultCode::kNotFound;
+      }
     } else if ((! send_partial_fragment_if_available) && last_ts > start_win_ts) { // data at the start of the window is missing
       frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
       rres.result_code = ResultCode::kNotFound;
