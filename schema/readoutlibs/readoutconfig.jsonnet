@@ -85,7 +85,8 @@ local readoutconfig = {
             s.field("error_reset_freq", self.size, 10000,
                             doc="Number of processed frames to allow errored frames pushed to queue"),
             s.field("tpset_topic", self.string, default="None",
-                            doc="Topic to use for TPSet sending")],
+                            doc="Topic to use for TPSet sending"),
+            s.field("tpset_sourceid", self.source_id, 0, doc="The source id of TPSets from this link")],
             doc="RawDataProcessor Config"),
 
     requesthandlerconf : s.record("RequestHandlerConf", [
