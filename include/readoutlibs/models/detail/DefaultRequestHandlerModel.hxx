@@ -19,6 +19,7 @@ DefaultRequestHandlerModel<RDT, LBT>::conf(const nlohmann::json& args)
   m_detid = conf.det_id;
   m_stream_buffer_size = conf.stream_buffer_size;
   m_warn_on_timeout = conf.warn_on_timeout;
+  m_warn_about_empty_buffer = conf.warn_about_empty_buffer;
   // if (m_configured) {
   //  ers::error(ConfigurationError(ERS_HERE, "This object is already configured!"));
   if (m_pop_limit_pct < 0.0f || m_pop_limit_pct > 1.0f || m_pop_size_pct < 0.0f || m_pop_size_pct > 1.0f) {
@@ -457,6 +458,7 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
   std::vector<std::pair<void*, size_t>> frag_pieces;
   std::ostringstream oss;
 
+  bool local_data_not_found_flag = false;
   if (m_latency_buffer->occupancy() != 0) {
     // Data availability is calculated here
     auto front_element = m_latency_buffer->front();           // NOLINT
@@ -486,6 +488,7 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
       ++m_num_requests_old_window;
       ++m_num_requests_bad;
     } else if (send_partial_fragment_if_available && last_ts > end_win_ts) { // data is completely gone
+      local_data_not_found_flag = true;
       frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
       rres.result_code = ResultCode::kNotFound;
       ++m_num_requests_old_window;
@@ -554,14 +557,23 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
         << " Requestor=" << dr.data_destination;
     TLOG_DEBUG(TLVL_WORK_STEPS) << oss.str();
   } else {
-    ers::warning(RequestOnEmptyBuffer(ERS_HERE, m_sourceid, "Data not found"));
+    local_data_not_found_flag = true;
+    if (m_warn_about_empty_buffer) {
+      ers::warning(RequestOnEmptyBuffer(ERS_HERE, m_sourceid, "Data not found"));
+    } else {
+      TLOG_DEBUG(TLVL_WORK_STEPS) << "SourceID[" << m_sourceid << "] Request on empty buffer: Data not found";
+    }
     frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
     rres.result_code = ResultCode::kNotFound;
     ++m_num_requests_bad;
   }
 
   if (rres.result_code != ResultCode::kFound) {
-    ers::warning(dunedaq::readoutlibs::TrmWithEmptyFragment(ERS_HERE, m_sourceid, oss.str()));
+    if (m_warn_about_empty_buffer || (! local_data_not_found_flag)) {
+      ers::warning(dunedaq::readoutlibs::TrmWithEmptyFragment(ERS_HERE, m_sourceid, oss.str()));
+    } else {
+      TLOG_DEBUG(TLVL_WORK_STEPS) << "SourceID[" << m_sourceid << "] Trigger Matching result with empty fragment: " << oss.str();
+    }
   }
 
   // Create fragment from pieces

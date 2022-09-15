@@ -116,7 +116,9 @@ local readoutconfig = {
             s.field("det_id", self.det_id, 1,
                             doc="The det id of data carried by this link"),
             s.field("warn_on_timeout", self.choice, true,
-                            doc="Whether to emit a warning when a request times out")],
+                            doc="Whether to emit a warning when a request times out"),
+            s.field("warn_about_empty_buffer", self.choice, true,
+                            doc="Whether to emit a warning when there is no data in the buffer when a request is processed")],
             doc="Request Handler Config"),
 
     readoutmodelconf : s.record("ReadoutModelConf", [
