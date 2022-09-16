@@ -117,7 +117,9 @@ local readoutconfig = {
             s.field("det_id", self.det_id, 1,
                             doc="The det id of data carried by this link"),
             s.field("warn_on_timeout", self.choice, true,
-                            doc="Whether to emit a warning when a request times out")],
+                            doc="Whether to emit a warning when a request times out"),
+            s.field("warn_about_empty_buffer", self.choice, true,
+                            doc="Whether to emit a warning when there is no data in the buffer when a request is processed")],
             doc="Request Handler Config"),
 
     readoutmodelconf : s.record("ReadoutModelConf", [
@@ -128,7 +130,9 @@ local readoutconfig = {
             s.field("source_id", self.source_id, 0,
                             doc="The source id of this link"),
             s.field("timesync_connection_name", self.netmgr_name, "", doc="Connection name for sending timesyncs"),
-            s.field("timesync_topic_name", self.netmgr_name, "Timesync", doc="Topic for sending timesyncs")
+            s.field("timesync_topic_name", self.netmgr_name, "Timesync", doc="Topic for sending timesyncs"),
+            s.field("send_partial_fragment_if_available", self.choice, false,
+                            doc="Whether to send a partial fragment if one is available")
     ], doc="Readout Model Config"),
 
     conf: s.record("Conf", [

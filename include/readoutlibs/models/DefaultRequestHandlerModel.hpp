@@ -110,13 +110,16 @@ public:
   struct RequestElement
   {
     RequestElement(const dfmessages::DataRequest& data_request,
-                   const std::chrono::time_point<std::chrono::high_resolution_clock>& tp_value)
+                   const std::chrono::time_point<std::chrono::high_resolution_clock>& tp_value,
+                   bool partial_fragment_flag = false)
       : request(data_request)
       , start_time(tp_value)
+      , send_partial_fragment_if_available(partial_fragment_flag)
     {}
 
     dfmessages::DataRequest request;
     std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
+    bool send_partial_fragment_if_available;
   };
 
   // Default init mechanism (no-op impl)
@@ -142,7 +145,7 @@ public:
 
   // Implementation of default request handling. (boost::asio post to a thread pool)
   void issue_request(dfmessages::DataRequest datarequest,
-                     bool send_partial_fragment_if_not_yet) override;
+                     bool send_partial_fragment_if_available) override;
 
   // Opmon get_info implementation
   void get_info(opmonlib::InfoCollector& ci, int /*level*/) override;
@@ -203,7 +206,7 @@ protected:
 
   // Override data_request functionality
   RequestResult data_request(dfmessages::DataRequest dr, 
-                             bool send_partial_fragment_if_not_yet) override;
+                             bool send_partial_fragment_if_available) override;
 
   // Data access (LB)
   std::unique_ptr<LatencyBufferType>& m_latency_buffer;
@@ -254,6 +257,7 @@ protected:
   size_t m_stream_buffer_size = 0;
   bool m_recording_configured = false;
   bool m_warn_on_timeout = true; // Whether to warn when a request times out
+  bool m_warn_about_empty_buffer = true; // Whether to warn about an empty buffer when processing a request
   // Stats
   std::atomic<int> m_pop_counter;
   std::atomic<int> m_num_buffer_cleanups{ 0 };

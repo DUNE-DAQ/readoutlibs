@@ -19,6 +19,7 @@ DefaultRequestHandlerModel<RDT, LBT>::conf(const nlohmann::json& args)
   m_detid = conf.det_id;
   m_stream_buffer_size = conf.stream_buffer_size;
   m_warn_on_timeout = conf.warn_on_timeout;
+  m_warn_about_empty_buffer = conf.warn_about_empty_buffer;
   // if (m_configured) {
   //  ers::error(ConfigurationError(ERS_HERE, "This object is already configured!"));
   if (m_pop_limit_pct < 0.0f || m_pop_limit_pct > 1.0f || m_pop_size_pct < 0.0f || m_pop_size_pct > 1.0f) {
@@ -186,9 +187,9 @@ DefaultRequestHandlerModel<RDT, LBT>::cleanup_check()
 template<class RDT, class LBT>
 void 
 DefaultRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest datarequest,
-                                                    bool send_partial_fragment_if_not_yet)
+                                                    bool send_partial_fragment_if_available)
 {
-  boost::asio::post(*m_request_handler_thread_pool, [&, send_partial_fragment_if_not_yet, datarequest]() { // start a thread from pool
+  boost::asio::post(*m_request_handler_thread_pool, [&, send_partial_fragment_if_available, datarequest]() { // start a thread from pool
     auto t_req_begin = std::chrono::high_resolution_clock::now();
     {
       std::unique_lock<std::mutex> lock(m_cv_mutex);
@@ -196,7 +197,7 @@ DefaultRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest data
       m_requests_running++;
     }
     m_cv.notify_all();
-    auto result = data_request(datarequest, send_partial_fragment_if_not_yet);
+    auto result = data_request(datarequest, send_partial_fragment_if_available);
     {
       std::lock_guard<std::mutex> lock(m_cv_mutex);
       m_requests_running--;
@@ -220,7 +221,8 @@ DefaultRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest data
       TLOG_DEBUG(TLVL_WORK_STEPS) << "Re-queue request. "
                                   << "With timestamp=" << result.data_request.trigger_timestamp;
       std::lock_guard<std::mutex> wait_lock_guard(m_waiting_requests_lock);
-      m_waiting_requests.push_back(RequestElement(datarequest, std::chrono::high_resolution_clock::now()));
+      m_waiting_requests.push_back(RequestElement(datarequest, std::chrono::high_resolution_clock::now(),
+                                                  send_partial_fragment_if_available));
     }
     auto t_req_end = std::chrono::high_resolution_clock::now();
     auto us_req_took = std::chrono::duration_cast<std::chrono::microseconds>(t_req_end - t_req_begin);
@@ -363,7 +365,7 @@ DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests()
 
       for (size_t i = 0; i < size;) {
         if (m_waiting_requests[i].request.request_information.window_end < newest_ts) {
-          issue_request(m_waiting_requests[i].request, false);
+          issue_request(m_waiting_requests[i].request, m_waiting_requests[i].send_partial_fragment_if_available);
           std::swap(m_waiting_requests[i], m_waiting_requests.back());
           m_waiting_requests.pop_back();
           size--;
@@ -447,7 +449,7 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
 template<class RDT, class LBT>
 typename DefaultRequestHandlerModel<RDT, LBT>::RequestResult 
 DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr, 
-                                                   bool send_partial_fragment_if_not_yet)
+                                                   bool send_partial_fragment_if_available)
 {
   // Prepare response
   RequestResult rres(ResultCode::kUnknown, dr);
@@ -457,6 +459,7 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
   std::vector<std::pair<void*, size_t>> frag_pieces;
   std::ostringstream oss;
 
+  bool local_data_not_found_flag = false;
   if (m_latency_buffer->occupancy() != 0) {
     // Data availability is calculated here
     auto front_element = m_latency_buffer->front();           // NOLINT
@@ -476,15 +479,31 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
       << " Latency buffer occupancy=" << m_latency_buffer->occupancy();
 
     // List of safe-extraction conditions
-    if (last_ts <= start_win_ts && end_win_ts <= newest_ts) { // data is there
+    if (last_ts <= start_win_ts && end_win_ts <= newest_ts) { // the full window of data is there
       frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
-    } else if (last_ts > start_win_ts) { // data is gone.
+    } else if (send_partial_fragment_if_available && last_ts <= end_win_ts && end_win_ts <= newest_ts) { // partial data is there
+      frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
+      if (rres.result_code == ResultCode::kNotYet) {
+        // 15-Sep-2022, KAB: this is really ugly.  I'm not sure why get_fragment_pieces occasionally
+        // returns kNotYet when running with long readout windows, but I suspect that it has something
+        // to do with that code assuming that the readout window is fully contained within the data
+        // that exists in the latency buffer.  In any case, this code simply bails out when that happens.
+        local_data_not_found_flag = true;
+        rres.result_code = ResultCode::kNotFound;
+      }
+    } else if ((! send_partial_fragment_if_available) && last_ts > start_win_ts) { // data at the start of the window is missing
       frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
       rres.result_code = ResultCode::kNotFound;
       ++m_num_requests_old_window;
       ++m_num_requests_bad;
-    } else if (newest_ts < end_win_ts) {
-      if (send_partial_fragment_if_not_yet) {
+    } else if (send_partial_fragment_if_available && last_ts > end_win_ts) { // data is completely gone
+      local_data_not_found_flag = true;
+      frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
+      rres.result_code = ResultCode::kNotFound;
+      ++m_num_requests_old_window;
+      ++m_num_requests_bad;
+    } else if (newest_ts < end_win_ts) { // data at the end of the window is missing (more could still arrive)
+      if (send_partial_fragment_if_available) {
         // We've been asked to send the partial fragment if we don't
         // have an object past the end of the window, so fill the
         // fragment with what we have so far
@@ -505,7 +524,7 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
         frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
         // 06-Jul-2022, KAB: added the following line to translate a kNotYet status code from
         // get_fragment_pieces() to kFound. The reasoning behind this addition is that when
-        // send_partial_fragment_if_not_yet is set to true, we should accept whatever we've got
+        // send_partial_fragment_if_available is set to true, we should accept whatever we've got
         // in the buffer and *not* retry any longer. So, we force that behavior with the
         // following line. The data-taking scenario which illustrates
         // this situation is long-window-readout in which a given trigger is split into a sequence
@@ -547,14 +566,23 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
         << " Requestor=" << dr.data_destination;
     TLOG_DEBUG(TLVL_WORK_STEPS) << oss.str();
   } else {
-    ers::warning(RequestOnEmptyBuffer(ERS_HERE, m_sourceid, "Data not found"));
+    local_data_not_found_flag = true;
+    if (m_warn_about_empty_buffer) {
+      ers::warning(RequestOnEmptyBuffer(ERS_HERE, m_sourceid, "Data not found"));
+    } else {
+      TLOG_DEBUG(TLVL_WORK_STEPS) << "SourceID[" << m_sourceid << "] Request on empty buffer: Data not found";
+    }
     frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
     rres.result_code = ResultCode::kNotFound;
     ++m_num_requests_bad;
   }
 
   if (rres.result_code != ResultCode::kFound) {
-    ers::warning(dunedaq::readoutlibs::TrmWithEmptyFragment(ERS_HERE, m_sourceid, oss.str()));
+    if (m_warn_about_empty_buffer || (! local_data_not_found_flag)) {
+      ers::warning(dunedaq::readoutlibs::TrmWithEmptyFragment(ERS_HERE, m_sourceid, oss.str()));
+    } else {
+      TLOG_DEBUG(TLVL_WORK_STEPS) << "SourceID[" << m_sourceid << "] Trigger Matching result with empty fragment: " << oss.str();
+    }
   }
 
   // Create fragment from pieces
