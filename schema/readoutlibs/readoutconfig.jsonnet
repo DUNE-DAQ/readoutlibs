@@ -74,6 +74,8 @@ local readoutconfig = {
                             doc="Number ticks over which a firmware TP frame spans"),
             s.field("fwtp_tick_length", self.size, 32,
                             doc="Tick length as defined by DUNE WIB"),
+            s.field("fwtp_fake_timestamp", self.choice, false,
+                            doc="calculate a fake timestamp when processing firmware tps"),
             s.field("fwtp_format_version", self.size, 1,
                             doc="Format version of raw TP frames from firmware TPG"),
             s.field("channel_map_name", self.string, default="None",
