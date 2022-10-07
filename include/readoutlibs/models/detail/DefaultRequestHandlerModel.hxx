@@ -421,7 +421,12 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
 
     RDT* element = &(*start_iter);
     while (start_iter.good() && element->get_first_timestamp() < end_win_ts) {
-      if (element->get_first_timestamp() < start_win_ts ||
+      if ( element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference < start_win_ts) {
+        // skip processing for current element, out of readout window.
+      } else if (
+         (element->get_first_timestamp() < start_win_ts &&
+          element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference >= start_win_ts) 
+         ||
           element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference >=
             end_win_ts) {
         // We don't need the whole aggregated object (e.g.: superchunk)
