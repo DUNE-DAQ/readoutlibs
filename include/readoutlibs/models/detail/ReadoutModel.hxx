@@ -15,10 +15,10 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
     for (const auto &cr : ini.conn_refs) {
       if (cr.name == "raw_input") {
         TLOG() << "Create raw_input receiver";
-  	    m_raw_data_receiver = get_iom_receiver<RDT>(cr);
+  	    m_raw_data_receiver = get_iom_receiver<RDT>(cr.uid);
       } else if (cr.name == "timesync_output") {
   	    TLOG() << "Create timesync sender";
-  	    m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(cr);
+  	    m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(cr.uid);
       }
     }
     //iomanager::ConnectionRef raw_input_ref = iomanager::ConnectionRef{ "input", "raw_input", iomanager::Direction::kInput };
@@ -77,7 +77,6 @@ ReadoutModel<RDT, RHT, LBT, RPT>::conf(const nlohmann::json& args)
   m_sourceid.subsystem = RDT::subsystem;
 
   m_timesync_connection_name = conf.timesync_connection_name;
-  m_timesync_topic_name = conf.timesync_topic_name;
 
   m_send_partial_fragment_if_available = conf.send_partial_fragment_if_available;
 
@@ -187,7 +186,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::setup_request_queues(const nlohmann::json& arg
   auto ini = args.get<appfwk::app::ModInit>();	  
   for (const auto& cr : ini.conn_refs) {
     if(cr.name == "request_input") {
-      m_data_request_receiver = get_iom_receiver<dfmessages::DataRequest>(cr) ;
+      m_data_request_receiver = get_iom_receiver<dfmessages::DataRequest>(cr.uid) ;
     }
   }
   //int index = 0;
@@ -256,10 +255,10 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
           << " seqno=" << timesyncmsg.sequence_number << " pid=" << timesyncmsg.source_pid;
         try {
             dfmessages::TimeSync timesyncmsg_copy(timesyncmsg);
-          m_timesync_sender->send(std::move(timesyncmsg_copy), std::chrono::milliseconds(500), m_timesync_topic_name);
+          m_timesync_sender->send(std::move(timesyncmsg_copy), std::chrono::milliseconds(500));
         } catch (ers::Issue& excpt) {
           ers::warning(
-            TimeSyncTransmissionFailed(ERS_HERE, m_sourceid, m_timesync_connection_name, m_timesync_topic_name, excpt));
+            TimeSyncTransmissionFailed(ERS_HERE, m_sourceid, m_timesync_connection_name, excpt));
         }
           
         if (m_fake_trigger) {

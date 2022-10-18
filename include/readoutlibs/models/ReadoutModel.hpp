@@ -173,7 +173,6 @@ private:
   std::shared_ptr<timesync_sender_ct> m_timesync_sender;
   ReusableThread m_timesync_thread;
   std::string m_timesync_connection_name;
-  std::string m_timesync_topic_name;
   uint32_t m_pid_of_current_process;
 
   // LATENCY BUFFER

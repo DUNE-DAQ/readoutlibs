@@ -88,8 +88,6 @@ local readoutconfig = {
                             doc="Maximum number of frames queued per error type"),
             s.field("error_reset_freq", self.size, 10000,
                             doc="Number of processed frames to allow errored frames pushed to queue"),
-            s.field("tpset_topic", self.string, default="None",
-                            doc="Topic to use for TPSet sending"),
             s.field("tpset_sourceid", self.source_id, 0, doc="The source id of TPSets from this link")],
             doc="RawDataProcessor Config"),
 
@@ -134,7 +132,6 @@ local readoutconfig = {
             s.field("source_id", self.source_id, 0,
                             doc="The source id of this link"),
             s.field("timesync_connection_name", self.netmgr_name, "", doc="Connection name for sending timesyncs"),
-            s.field("timesync_topic_name", self.netmgr_name, "Timesync", doc="Topic for sending timesyncs"),
             s.field("send_partial_fragment_if_available", self.choice, false,
                             doc="Whether to send a partial fragment if one is available")
     ], doc="Readout Model Config"),
