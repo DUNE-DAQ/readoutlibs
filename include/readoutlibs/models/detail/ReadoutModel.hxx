@@ -1,5 +1,7 @@
 // Declarations for ReadoutModel
 
+#include <typeinfo>
+
 namespace dunedaq {
 namespace readoutlibs {
 
@@ -213,6 +215,20 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
     // Try to acquire data
     try {
       RDT payload = m_raw_data_receiver->receive(m_raw_receiver_timeout_ms);
+
+      // 31-Oct-2022, KAB: The following TLOG_DEBUG line should probably remain commented-out
+      // during production running, but it can be useful during debugging and when we are adding
+      // new readout types. It may consume too many resources to be left enabled all of the time
+      // even though TRACE messages are very efficient. The issue is that it could be called very
+      // often, so it is safer to leave it commented out so that is doesn't affect performance.
+      // In addition, it is a bit of a stop-gap measure. It is better to have TLOG_DEBUG
+      // messages that give more details about the data payload that has been received (for
+      // example, the timestamp of the payload), but such DEBUG messages need to be included
+      // in places like fdreadoutlibs/<xyz>/<XYZ>FrameProcessor where the type of the payload
+      // is fully known. In many cases, such DEBUG messages exist, but when a new readout type
+      // is being added, those messages may not exist yet, and this message could be helpful.
+      //TLOG_DEBUG(19) << "Received payload of type " << typeid(payload).name();
+
       m_raw_processor_impl->preprocess_item(&payload);
       if (!m_latency_buffer_impl->write(std::move(payload))) {
         TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Latency buffer is full and data was overwritten!";
