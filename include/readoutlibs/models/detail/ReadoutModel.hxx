@@ -256,9 +256,13 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
   uint64_t msg_seqno = 0;
   timestamp_t prev_timestamp = 0;
   auto once_per_run = true;
+  size_t zero_timestamp_count = 0;
+  size_t duplicate_timestamp_count = 0;
+  size_t total_timestamp_count = 0;
   while (m_run_marker.load()) {
     try {
       auto timesyncmsg = dfmessages::TimeSync(m_raw_processor_impl->get_last_daq_time());
+      ++total_timestamp_count;
       // daq_time is zero for the first received timesync, and may
       // be the same as the previous daq_time if the data has
       // stopped flowing. In both cases we don't send the TimeSync
@@ -299,6 +303,8 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
           ++m_sum_requests;
         }
       } else {
+        if (timesyncmsg.daq_time == 0) {++zero_timestamp_count;}
+        if (timesyncmsg.daq_time == prev_timestamp) {++duplicate_timestamp_count;}
         if (once_per_run) {
           TLOG() << "Timesync with DAQ time 0 won't be sent out as it's an invalid sync.";
           once_per_run = false;
@@ -316,7 +322,9 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
     }
   }
   once_per_run = true;
-  TLOG_DEBUG(TLVL_WORK_STEPS) << "TimeSync thread joins...";
+  TLOG_DEBUG(TLVL_WORK_STEPS) << "TimeSync thread joins... (timestamp count, zero/same/total  = "
+                              << zero_timestamp_count << "/" << duplicate_timestamp_count << "/"
+                              << total_timestamp_count << ")";
 }
 
 template<class RDT, class RHT, class LBT, class RPT>
