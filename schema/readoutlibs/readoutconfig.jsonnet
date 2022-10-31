@@ -82,6 +82,8 @@ local readoutconfig = {
                             doc="Name of channel map"),
             s.field("emulator_mode", self.choice, false,
                             doc="If the input data is from an emulator."),
+            s.field("clock_speed_hz", self.size, 62500000,
+                            doc="Clock frequency in Hz (for debug wall-clock calculations)"),
             s.field("source_id", self.source_id, 0,
                             doc="The source id of this link"),
             s.field("error_counter_threshold", self.size, 100,
