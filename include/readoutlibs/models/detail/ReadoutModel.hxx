@@ -227,7 +227,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
       // in places like fdreadoutlibs/<xyz>/<XYZ>FrameProcessor where the type of the payload
       // is fully known. In many cases, such DEBUG messages exist, but when a new readout type
       // is being added, those messages may not exist yet, and this message could be helpful.
-      //TLOG_DEBUG(19) << "Received payload of type " << typeid(payload).name();
+      //TLOG_DEBUG(TLVL_FRAME_RECEIVED) << "Received payload of type " << typeid(payload).name();
 
       m_raw_processor_impl->preprocess_item(&payload);
       if (!m_latency_buffer_impl->write(std::move(payload))) {
