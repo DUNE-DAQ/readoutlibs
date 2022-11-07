@@ -15,7 +15,7 @@ TaskRawDataProcessorModel<ReadoutType>::conf(const nlohmann::json& cfg)
   for (size_t i = 0; i < m_post_process_functions.size(); ++i) {
     m_items_to_postprocess_queues.push_back(
       std::make_unique<folly::ProducerConsumerQueue<const ReadoutType*>>(m_postprocess_queue_sizes));
-    m_post_process_threads[i]->set_name("postprocess-" + std::to_string(i), m_this_link_number);
+    m_post_process_threads[i]->set_name("postproc-" + std::to_string(i), m_this_link_number);
   }
 
   m_sourceid.id = config.source_id;
