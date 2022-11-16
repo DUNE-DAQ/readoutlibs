@@ -281,6 +281,7 @@ protected:
 
 private:
     int m_request_timeout_ms;
+    int m_fragment_send_timeout_ms;
 };
 
 } // namespace readoutlibs
