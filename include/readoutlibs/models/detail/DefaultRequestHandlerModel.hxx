@@ -405,7 +405,7 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
                                                           RequestResult& rres)
 {
   std::vector<std::pair<void*, size_t>> frag_pieces;
-  RDT request_element;
+  RDT request_element = RDT();
   request_element.set_first_timestamp(start_win_ts);
   auto start_iter = m_error_registry->has_error("MISSING_FRAMES")
                       ? m_latency_buffer->lower_bound(request_element, true)

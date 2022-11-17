@@ -51,7 +51,7 @@ IterableQueueModel<T>::allocate_memory(std::size_t size,
   } else if (!intrinsic_allocator && alignment_size > 0) { // std aligned allocator
     records_ = static_cast<T*>(std::aligned_alloc(alignment_size, sizeof(T) * size));
 
-  } else if (numa_aware && numa_node >= 0 && numa_node < 8) { // numa allocator from libnuma
+  } else if (numa_aware && numa_node < 8) { // numa allocator from libnuma; we get "numa_node >= 0" for free, given its datatype
 #ifdef WITH_LIBNUMA_SUPPORT
     records_ = static_cast<T*>(numa_alloc_onnode(sizeof(T) * size, numa_node));
 #else
@@ -239,7 +239,7 @@ IterableQueueModel<T>::conf(const nlohmann::json& cfg)
 
   if (conf.latency_buffer_preallocation) {
     for (size_t i = 0; i < size_ - 1; ++i) {
-      T element;
+      T element = T();
       write_(std::move(element));
     }
     flush();
