@@ -100,6 +100,8 @@ local readoutconfig = {
                             doc="Number of threads to use for data request handling"),
             s.field("request_timeout_ms", self.count, 1000,
                             doc="Timeout for checking for valid data in response to a request before sending an empty fragment"),
+            s.field("fragment_send_timeout_ms", self.count, 10,
+                            doc="Timeout for sending a fragment downstream"),
             s.field("output_file", self.file_name, "output.out",
                             doc="Name of the output file to write to"),
             s.field("stream_buffer_size", self.size, 8388608,
