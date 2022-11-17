@@ -13,6 +13,7 @@ DefaultRequestHandlerModel<RDT, LBT>::conf(const nlohmann::json& args)
   m_buffer_capacity = conf.latency_buffer_size;
   m_num_request_handling_threads = conf.num_request_handling_threads;
   m_request_timeout_ms = conf.request_timeout_ms;
+  m_fragment_send_timeout_ms = conf.fragment_send_timeout_ms;
   m_output_file = conf.output_file;
   m_sourceid.id = conf.source_id;
   m_sourceid.subsystem = RDT::subsystem;
@@ -212,10 +213,10 @@ DefaultRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest data
           << result.fragment->get_element_id();
         // Send fragment
         get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)
-          ->send(std::move(result.fragment), std::chrono::milliseconds(10));
+          ->send(std::move(result.fragment), std::chrono::milliseconds(m_fragment_send_timeout_ms));
 
       } catch (const ers::Issue& excpt) {
-        ers::warning(CannotWriteToQueue(ERS_HERE, m_sourceid, "fragment queue", excpt));
+        ers::warning(CannotWriteToQueue(ERS_HERE, m_sourceid, datarequest.data_destination, excpt));
       }
     } else if (result.result_code == ResultCode::kNotYet) {
       TLOG_DEBUG(TLVL_WORK_STEPS) << "Re-queue request. "
