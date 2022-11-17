@@ -233,6 +233,10 @@ DefaultRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest data
     //   us_req_took.count()) );
     // }
     m_response_time_acc.fetch_add(us_req_took.count());
+    if ( us_req_took.count() > m_response_time_max.load() )
+      m_response_time_max.store(us_req_took.count());
+    if ( us_req_took.count() < m_response_time_min.load() )
+      m_response_time_min.store(us_req_took.count());
     m_handled_requests++;
   });
 }
@@ -254,11 +258,14 @@ DefaultRequestHandlerModel<RDT, LBT>::get_info(opmonlib::InfoCollector& ci, int 
   info.num_payloads_written = m_payloads_written.exchange(0);
   info.recording_status = m_recording ? "Y" : "N";
 
+
   int new_pop_reqs = 0;
   int new_pop_count = 0;
   int new_occupancy = 0;
-  int handled_requests = m_handled_requests.exchange(0);
-  int response_time_total = m_response_time_acc.exchange(0);
+  info.num_requests_handled = m_handled_requests.exchange(0);
+  info.tot_request_response_time = m_response_time_acc.exchange(0);
+  info.max_request_response_time = m_response_time_max.exchange(0);
+  info.min_request_response_time = m_response_time_min.exchange(std::numeric_limits<int>::max());
   auto now = std::chrono::high_resolution_clock::now();
   new_pop_reqs = m_pop_reqs.exchange(0);
   new_pop_count = m_pops_count.exchange(0);
@@ -266,6 +273,7 @@ DefaultRequestHandlerModel<RDT, LBT>::get_info(opmonlib::InfoCollector& ci, int 
   double seconds = std::chrono::duration_cast<std::chrono::microseconds>(now - m_t0).count() / 1000000.;
   TLOG_DEBUG(TLVL_HOUSEKEEPING) << "Cleanup request rate: " << new_pop_reqs / seconds / 1. << " [Hz]"
                                 << " Dropped: " << new_pop_count << " Occupancy: " << new_occupancy;
+
 
   // std::unique_lock<std::mutex> time_lorunck_guard(m_response_time_log_lock);
   // if (!m_response_time_log.empty()) {
@@ -285,10 +293,11 @@ DefaultRequestHandlerModel<RDT, LBT>::get_info(opmonlib::InfoCollector& ci, int 
   //                                "[us]";
   //}
   // time_lock_guard.unlock();
-  if (handled_requests > 0) {
-    TLOG_DEBUG(TLVL_HOUSEKEEPING) << "Completed requests: " << handled_requests
-                                  << " | Avarage response time: " << response_time_total / handled_requests << "[us]";
-    info.avg_request_response_time = response_time_total / handled_requests;
+  if (info.num_requests_handled > 0) {
+
+    info.avg_request_response_time = info.tot_request_response_time / info.num_requests_handled;
+    TLOG_DEBUG(TLVL_HOUSEKEEPING) << "Completed requests: " << info.num_requests_handled
+                                  << " | Avarage response time: " << info.avg_request_response_time << "[us]";
   }
 
   m_t0 = now;
