@@ -272,6 +272,8 @@ protected:
   std::atomic<int> m_num_requests_timed_out{ 0 };
   std::atomic<int> m_handled_requests{ 0 };
   std::atomic<int> m_response_time_acc{ 0 };
+  std::atomic<int> m_response_time_min{ std::numeric_limits<int>::max() };
+  std::atomic<int> m_response_time_max{ 0 };
   std::atomic<int> m_payloads_written{ 0 };
   // std::atomic<int> m_avg_req_count{ 0 }; // for opmon, later
   // std::atomic<int> m_avg_resp_time{ 0 };
