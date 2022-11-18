@@ -24,7 +24,8 @@ enum
   TLVL_QUEUE_PUSH = 11,
   TLVL_QUEUE_POP = 12,
   TLVL_BOOKKEEPING = 15,
-  TLVL_TIME_SYNCS = 17
+  TLVL_TIME_SYNCS = 17,
+  TLVL_FRAME_RECEIVED = 19
 };
 
 } // namespace logging
