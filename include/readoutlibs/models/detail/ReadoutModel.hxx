@@ -1,5 +1,7 @@
 // Declarations for ReadoutModel
 
+#include <typeinfo>
+
 namespace dunedaq {
 namespace readoutlibs {
 
@@ -212,6 +214,20 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
     // Try to acquire data
     try {
       RDT payload = m_raw_data_receiver->receive(m_raw_receiver_timeout_ms);
+
+      // 31-Oct-2022, KAB: The following TLOG_DEBUG line should probably remain commented-out
+      // during production running, but it can be useful during debugging and when we are adding
+      // new readout types. It may consume too many resources to be left enabled all of the time
+      // even though TRACE messages are very efficient. The issue is that it could be called very
+      // often, so it is safer to leave it commented out so that is doesn't affect performance.
+      // In addition, it is a bit of a stop-gap measure. It is better to have TLOG_DEBUG
+      // messages that give more details about the data payload that has been received (for
+      // example, the timestamp of the payload), but such DEBUG messages need to be included
+      // in places like fdreadoutlibs/<xyz>/<XYZ>FrameProcessor where the type of the payload
+      // is fully known. In many cases, such DEBUG messages exist, but when a new readout type
+      // is being added, those messages may not exist yet, and this message could be helpful.
+      //TLOG_DEBUG(TLVL_FRAME_RECEIVED) << "Received payload of type " << typeid(payload).name();
+
       m_raw_processor_impl->preprocess_item(&payload);
       if (!m_latency_buffer_impl->write(std::move(payload))) {
         TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Latency buffer is full and data was overwritten!";
@@ -239,9 +255,13 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
   uint64_t msg_seqno = 0;
   timestamp_t prev_timestamp = 0;
   auto once_per_run = true;
+  size_t zero_timestamp_count = 0;
+  size_t duplicate_timestamp_count = 0;
+  size_t total_timestamp_count = 0;
   while (m_run_marker.load()) {
     try {
       auto timesyncmsg = dfmessages::TimeSync(m_raw_processor_impl->get_last_daq_time());
+      ++total_timestamp_count;
       // daq_time is zero for the first received timesync, and may
       // be the same as the previous daq_time if the data has
       // stopped flowing. In both cases we don't send the TimeSync
@@ -282,6 +302,8 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
           ++m_sum_requests;
         }
       } else {
+        if (timesyncmsg.daq_time == 0) {++zero_timestamp_count;}
+        if (timesyncmsg.daq_time == prev_timestamp) {++duplicate_timestamp_count;}
         if (once_per_run) {
           TLOG() << "Timesync with DAQ time 0 won't be sent out as it's an invalid sync.";
           once_per_run = false;
@@ -299,7 +321,9 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
     }
   }
   once_per_run = true;
-  TLOG_DEBUG(TLVL_WORK_STEPS) << "TimeSync thread joins...";
+  TLOG_DEBUG(TLVL_WORK_STEPS) << "TimeSync thread joins... (timestamp count, zero/same/total  = "
+                              << zero_timestamp_count << "/" << duplicate_timestamp_count << "/"
+                              << total_timestamp_count << ")";
 }
 
 template<class RDT, class RHT, class LBT, class RPT>
