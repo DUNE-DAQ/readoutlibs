@@ -54,9 +54,8 @@ ERS_DECLARE_ISSUE(readoutlibs,
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   TimeSyncTransmissionFailed,
-                  "SourceID " << sourceid << " failed to send send TimeSync message to " << dest << " with topic " << topic
-                           << ".",
-                  ((daqdataformats::SourceID)sourceid)((std::string)dest)((std::string)topic))
+                  "SourceID " << sourceid << " failed to send send TimeSync message to " << dest << ".",
+                  ((daqdataformats::SourceID)sourceid)((std::string)dest))
 
 ERS_DECLARE_ISSUE(readoutlibs, CannotOpenFile, "Couldn't open binary file: " << filename, ((std::string)filename))
 
