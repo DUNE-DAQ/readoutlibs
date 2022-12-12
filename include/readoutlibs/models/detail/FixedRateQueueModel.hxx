@@ -4,7 +4,7 @@ namespace dunedaq {
 namespace readoutlibs {
 
 template<typename T>
-typename IterableQueueModel<T>::Iterator
+typename IterableQueueModel<T>::Iterator 
 FixedRateQueueModel<T>::lower_bound(T& element, bool with_errors)
 {
   if (with_errors) {

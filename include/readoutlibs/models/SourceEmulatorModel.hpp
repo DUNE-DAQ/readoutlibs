@@ -60,8 +60,7 @@ public:
     , m_producer_thread(0)
     , m_name(name)
     , m_rate_khz(rate_khz)
-  {
-  }
+  {}
 
   void init(const nlohmann::json& /*args*/) {}
   void set_sender(const std::string& conn_name);

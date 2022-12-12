@@ -4,7 +4,7 @@ namespace dunedaq {
 namespace readoutlibs {
 
 template<class ReadoutType>
-void
+void 
 RecorderModel<ReadoutType>::init(const nlohmann::json& args)
 {
   try {
@@ -16,14 +16,14 @@ RecorderModel<ReadoutType>::init(const nlohmann::json& args)
 }
 
 template<class ReadoutType>
-void
+void 
 RecorderModel<ReadoutType>::get_info(opmonlib::InfoCollector& ci, int /* level */)
 {
   recorderinfo::Info info;
   info.packets_processed = m_packets_processed_total;
-  double time_diff =
-    std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() - m_time_point_last_info)
-      .count();
+  double time_diff = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now() -
+                                                                               m_time_point_last_info)
+                       .count();
   info.throughput_processed_packets = m_packets_processed_since_last_info / time_diff;
 
   ci.add(info);
@@ -33,7 +33,7 @@ RecorderModel<ReadoutType>::get_info(opmonlib::InfoCollector& ci, int /* level *
 }
 
 template<class ReadoutType>
-void
+void 
 RecorderModel<ReadoutType>::do_conf(const nlohmann::json& args)
 {
   m_conf = args.get<recorderconfig::Conf>();
@@ -48,7 +48,7 @@ RecorderModel<ReadoutType>::do_conf(const nlohmann::json& args)
 }
 
 template<class ReadoutType>
-void
+void 
 RecorderModel<ReadoutType>::do_start(const nlohmann::json& /* args */)
 {
   m_packets_processed_total = 0;
@@ -57,7 +57,7 @@ RecorderModel<ReadoutType>::do_start(const nlohmann::json& /* args */)
 }
 
 template<class ReadoutType>
-void
+void 
 RecorderModel<ReadoutType>::do_stop(const nlohmann::json& /* args */)
 {
   m_run_marker.store(false);
@@ -67,7 +67,7 @@ RecorderModel<ReadoutType>::do_stop(const nlohmann::json& /* args */)
 }
 
 template<class ReadoutType>
-void
+void 
 RecorderModel<ReadoutType>::do_work()
 {
   m_time_point_last_info = std::chrono::steady_clock::now();

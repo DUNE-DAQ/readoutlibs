@@ -11,8 +11,8 @@
 #include <cstdint> // uint_t types
 #include <map>
 #include <mutex>
-#include <string>
 #include <utility>
+#include <string>
 
 namespace dunedaq {
 namespace readoutlibs {
@@ -26,8 +26,7 @@ public:
     ErrorInterval(uint64_t start_ts, uint64_t end_ts) // NOLINT(build/unsigned)
       : start_ts(start_ts)
       , end_ts(end_ts)
-    {
-    }
+    {}
 
     uint64_t start_ts; // NOLINT(build/unsigned)
     uint64_t end_ts;   // NOLINT(build/unsigned)
@@ -39,8 +38,7 @@ public:
 
   FrameErrorRegistry()
     : m_errors()
-  {
-  }
+  {}
 
   void add_error(std::string error_name, ErrorInterval error)
   {

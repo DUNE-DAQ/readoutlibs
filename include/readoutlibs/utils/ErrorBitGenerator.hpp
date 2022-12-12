@@ -33,8 +33,7 @@ public:
     , m_current_occurrence(0)
     , m_occurrence_count(0)
     , m_set_error_bits(true)
-  {
-  }
+  {}
   uint16_t next() // NOLINT(build/unsigned)
   {
     if (m_occurrence_count >= m_current_occurrence) {

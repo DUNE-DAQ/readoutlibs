@@ -8,12 +8,12 @@
 #ifndef READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_RECORDERCONCEPT_HPP_
 #define READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_RECORDERCONCEPT_HPP_
 
+#include "utilities/WorkerThread.hpp"
 #include "opmonlib/InfoCollector.hpp"
 #include "readoutlibs/ReadoutTypes.hpp"
 #include "readoutlibs/recorderconfig/Structs.hpp"
 #include "readoutlibs/utils/BufferedFileWriter.hpp"
 #include "readoutlibs/utils/ReusableThread.hpp"
-#include "utilities/WorkerThread.hpp"
 
 #include <atomic>
 #include <fstream>
