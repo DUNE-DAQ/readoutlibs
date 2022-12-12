@@ -11,7 +11,6 @@
 #include "appfwk/DAQModuleHelper.hpp"
 #include "iomanager/IOManager.hpp"
 #include "iomanager/Receiver.hpp"
-#include "utilities/WorkerThread.hpp"
 #include "readoutlibs/ReadoutTypes.hpp"
 #include "readoutlibs/concepts/RecorderConcept.hpp"
 #include "readoutlibs/recorderconfig/Nljs.hpp"
@@ -19,6 +18,7 @@
 #include "readoutlibs/recorderinfo/InfoStructs.hpp"
 #include "readoutlibs/utils/BufferedFileWriter.hpp"
 #include "readoutlibs/utils/ReusableThread.hpp"
+#include "utilities/WorkerThread.hpp"
 
 #include <atomic>
 #include <fstream>
@@ -36,7 +36,8 @@ public:
   explicit RecorderModel(std::string name)
     : m_work_thread(0)
     , m_name(name)
-  {}
+  {
+  }
 
   void init(const nlohmann::json& args) override;
   void get_info(opmonlib::InfoCollector& ci, int /* level */) override;

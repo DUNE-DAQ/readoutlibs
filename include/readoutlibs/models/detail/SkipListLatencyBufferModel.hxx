@@ -4,7 +4,7 @@ namespace dunedaq {
 namespace readoutlibs {
 
 template<class T>
-size_t 
+size_t
 SkipListLatencyBufferModel<T>::occupancy() const
 {
   auto occupancy = 0;
@@ -16,7 +16,7 @@ SkipListLatencyBufferModel<T>::occupancy() const
 }
 
 template<class T>
-bool 
+bool
 SkipListLatencyBufferModel<T>::write(T&& new_element)
 {
   bool success = false;
@@ -29,7 +29,7 @@ SkipListLatencyBufferModel<T>::write(T&& new_element)
 }
 
 template<class T>
-bool 
+bool
 SkipListLatencyBufferModel<T>::put(T& new_element)
 {
   bool success = false;
@@ -42,7 +42,7 @@ SkipListLatencyBufferModel<T>::put(T& new_element)
 }
 
 template<class T>
-bool 
+bool
 SkipListLatencyBufferModel<T>::read(T& element)
 {
   bool found = false;
@@ -58,7 +58,7 @@ SkipListLatencyBufferModel<T>::read(T& element)
 }
 
 template<class T>
-typename SkipListLatencyBufferModel<T>::Iterator 
+typename SkipListLatencyBufferModel<T>::Iterator
 SkipListLatencyBufferModel<T>::begin()
 {
   SkipListTAcc acc = SkipListTAcc(m_skip_list);
@@ -67,7 +67,7 @@ SkipListLatencyBufferModel<T>::begin()
 }
 
 template<class T>
-typename SkipListLatencyBufferModel<T>::Iterator 
+typename SkipListLatencyBufferModel<T>::Iterator
 SkipListLatencyBufferModel<T>::end()
 {
   SkipListTAcc acc = SkipListTAcc(m_skip_list);
@@ -76,7 +76,7 @@ SkipListLatencyBufferModel<T>::end()
 }
 
 template<class T>
-typename SkipListLatencyBufferModel<T>::Iterator 
+typename SkipListLatencyBufferModel<T>::Iterator
 SkipListLatencyBufferModel<T>::lower_bound(T& element, bool /*with_errors=false*/)
 {
   SkipListTAcc acc = SkipListTAcc(m_skip_list);
@@ -85,7 +85,7 @@ SkipListLatencyBufferModel<T>::lower_bound(T& element, bool /*with_errors=false*
 }
 
 template<class T>
-const T* 
+const T*
 SkipListLatencyBufferModel<T>::front()
 {
   SkipListTAcc acc(m_skip_list);
@@ -93,7 +93,7 @@ SkipListLatencyBufferModel<T>::front()
 }
 
 template<class T>
-const T* 
+const T*
 SkipListLatencyBufferModel<T>::back()
 {
   SkipListTAcc acc(m_skip_list);
@@ -101,7 +101,7 @@ SkipListLatencyBufferModel<T>::back()
 }
 
 template<class T>
-void 
+void
 SkipListLatencyBufferModel<T>::pop(size_t num) // NOLINT(build/unsigned)
 {
   {

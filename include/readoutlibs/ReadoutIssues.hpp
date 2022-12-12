@@ -51,7 +51,6 @@ ERS_DECLARE_ISSUE(readoutlibs,
                   "Configuration Error: " << conferror,
                   ((std::string)conferror))
 
-
 ERS_DECLARE_ISSUE(readoutlibs,
                   TimeSyncTransmissionFailed,
                   "SourceID " << sourceid << " failed to send send TimeSync message to " << dest << ".",
@@ -91,14 +90,13 @@ ERS_DECLARE_ISSUE(readoutlibs,
 ERS_DECLARE_ISSUE(readoutlibs,
                   CannotWriteToQueue,
                   "SourceID[" << sourceid << "] Failed attempt to write to the queue: " << queuename
-                           << ". Data will be lost!",
+                              << ". Data will be lost!",
                   ((daqdataformats::SourceID)sourceid)((std::string)queuename))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   RequestSourceIDMismatch,
                   "SourceID[" << sourceid << "] Got request for SourceID: " << request_sourceid,
                   ((daqdataformats::SourceID)sourceid)((daqdataformats::SourceID)request_sourceid))
-
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   TrmWithEmptyFragment,
@@ -158,12 +156,14 @@ ERS_DECLARE_ISSUE(readoutlibs,
                   "SourceID[" << sourceid << "] Request timed out",
                   ((daqdataformats::SourceID)sourceid))
 
-ERS_DECLARE_ISSUE(readoutlibs,
-                  VerboseRequestTimedOut,
-                  "SourceID[" << sourceid << "] Request timed out for trig/seq_num " << trignum << "." << seqnum
-                           << ", run_num " << runnum << ", window begin/end " << window_begin << "/" << window_end
-                           << ", data_destination: " << dest,
-                  ((daqdataformats::SourceID)sourceid)((daqdataformats::trigger_number_t)trignum)((daqdataformats::sequence_number_t)seqnum)((daqdataformats::run_number_t)runnum)((daqdataformats::timestamp_t)window_begin)((daqdataformats::timestamp_t)window_end)((std::string)dest))
+ERS_DECLARE_ISSUE(
+  readoutlibs,
+  VerboseRequestTimedOut,
+  "SourceID[" << sourceid << "] Request timed out for trig/seq_num " << trignum << "." << seqnum << ", run_num "
+              << runnum << ", window begin/end " << window_begin << "/" << window_end << ", data_destination: " << dest,
+  ((daqdataformats::SourceID)sourceid)((daqdataformats::trigger_number_t)trignum)(
+    (daqdataformats::sequence_number_t)seqnum)((daqdataformats::run_number_t)runnum)(
+    (daqdataformats::timestamp_t)window_begin)((daqdataformats::timestamp_t)window_end)((std::string)dest))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   EndOfRunEmptyFragment,

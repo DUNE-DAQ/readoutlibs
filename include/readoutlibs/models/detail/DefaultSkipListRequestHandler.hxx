@@ -4,7 +4,7 @@ namespace dunedaq {
 namespace readoutlibs {
 
 template<class T>
-void 
+void
 DefaultSkipListRequestHandler<T>::skip_list_cleanup_request()
 {
   // size_t occupancy_guess = m_latency_buffer->occupancy();

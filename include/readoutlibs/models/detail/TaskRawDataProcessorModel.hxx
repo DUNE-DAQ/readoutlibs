@@ -4,7 +4,7 @@ namespace dunedaq {
 namespace readoutlibs {
 
 template<class ReadoutType>
-void 
+void
 TaskRawDataProcessorModel<ReadoutType>::conf(const nlohmann::json& cfg)
 {
   auto config = cfg["rawdataprocessorconf"].get<readoutconfig::RawDataProcessorConf>();
@@ -23,7 +23,7 @@ TaskRawDataProcessorModel<ReadoutType>::conf(const nlohmann::json& cfg)
 }
 
 template<class ReadoutType>
-void 
+void
 TaskRawDataProcessorModel<ReadoutType>::scrap(const nlohmann::json& /*cfg*/)
 {
   m_items_to_postprocess_queues.clear();
@@ -33,7 +33,7 @@ TaskRawDataProcessorModel<ReadoutType>::scrap(const nlohmann::json& /*cfg*/)
 }
 
 template<class ReadoutType>
-void 
+void
 TaskRawDataProcessorModel<ReadoutType>::start(const nlohmann::json& /*args*/)
 {
   // m_last_processed_daq_ts =
@@ -48,7 +48,7 @@ TaskRawDataProcessorModel<ReadoutType>::start(const nlohmann::json& /*args*/)
 }
 
 template<class ReadoutType>
-void 
+void
 TaskRawDataProcessorModel<ReadoutType>::stop(const nlohmann::json& /*args*/)
 {
   m_run_marker.store(false);
@@ -60,7 +60,7 @@ TaskRawDataProcessorModel<ReadoutType>::stop(const nlohmann::json& /*args*/)
 }
 
 template<class ReadoutType>
-void 
+void
 TaskRawDataProcessorModel<ReadoutType>::postprocess_item(const ReadoutType* item)
 {
   for (size_t i = 0; i < m_items_to_postprocess_queues.size(); ++i) {
@@ -72,7 +72,7 @@ TaskRawDataProcessorModel<ReadoutType>::postprocess_item(const ReadoutType* item
 
 template<class ReadoutType>
 template<typename Task>
-void 
+void
 TaskRawDataProcessorModel<ReadoutType>::add_preprocess_task(Task&& task)
 {
   m_preprocess_functions.push_back(std::forward<Task>(task));
@@ -80,7 +80,7 @@ TaskRawDataProcessorModel<ReadoutType>::add_preprocess_task(Task&& task)
 
 template<class ReadoutType>
 template<typename Task>
-void 
+void
 TaskRawDataProcessorModel<ReadoutType>::add_postprocess_task(Task&& task)
 {
   m_post_process_threads.emplace_back(std::make_unique<ReusableThread>(0));
@@ -88,7 +88,7 @@ TaskRawDataProcessorModel<ReadoutType>::add_postprocess_task(Task&& task)
 }
 
 template<class ReadoutType>
-void 
+void
 TaskRawDataProcessorModel<ReadoutType>::invoke_all_preprocess_functions(ReadoutType* item)
 {
   for (auto&& task : m_preprocess_functions) {
@@ -97,7 +97,7 @@ TaskRawDataProcessorModel<ReadoutType>::invoke_all_preprocess_functions(ReadoutT
 }
 
 template<class ReadoutType>
-void 
+void
 TaskRawDataProcessorModel<ReadoutType>::launch_all_preprocess_functions(ReadoutType* item)
 {
   for (auto&& task : m_preprocess_functions) {
@@ -106,7 +106,7 @@ TaskRawDataProcessorModel<ReadoutType>::launch_all_preprocess_functions(ReadoutT
 }
 
 template<class ReadoutType>
-void 
+void
 TaskRawDataProcessorModel<ReadoutType>::run_post_processing_thread(
   std::function<void(const ReadoutType*)>& function,
   folly::ProducerConsumerQueue<const ReadoutType*>& queue)

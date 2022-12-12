@@ -18,9 +18,9 @@
 #include "readoutlibs/readoutinfo/InfoNljs.hpp"
 
 #include "appfwk/Issues.hpp"
-#include "dfmessages/Fragment_serialization.hpp"
 #include "daqdataformats/Types.hpp"
 #include "dfmessages/DataRequest.hpp"
+#include "dfmessages/Fragment_serialization.hpp"
 #include "logging/Logging.hpp"
 #include "readoutlibs/FrameErrorRegistry.hpp"
 #include "readoutlibs/ReadoutLogging.hpp"
@@ -80,8 +80,7 @@ public:
 
   using RequestResult =
     typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::RequestResult;
-  using ResultCode = 
-    typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::ResultCode;
+  using ResultCode = typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::ResultCode;
 
   // Explicit constructor with binding LB and error registry
   explicit DefaultRequestHandlerModel(std::unique_ptr<LatencyBufferType>& latency_buffer,
@@ -115,7 +114,8 @@ public:
       : request(data_request)
       , start_time(tp_value)
       , send_partial_fragment_if_available(partial_fragment_flag)
-    {}
+    {
+    }
 
     dfmessages::DataRequest request;
     std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
@@ -123,7 +123,7 @@ public:
   };
 
   // Default init mechanism (no-op impl)
-  void init(const nlohmann::json& /*args*/) override { }
+  void init(const nlohmann::json& /*args*/) override {}
 
   // Default configuration mechanism
   void conf(const nlohmann::json& args);
@@ -144,16 +144,14 @@ public:
   void cleanup_check() override;
 
   // Implementation of default request handling. (boost::asio post to a thread pool)
-  void issue_request(dfmessages::DataRequest datarequest,
-                     bool send_partial_fragment_if_available) override;
+  void issue_request(dfmessages::DataRequest datarequest, bool send_partial_fragment_if_available) override;
 
   // Opmon get_info implementation
   void get_info(opmonlib::InfoCollector& ci, int /*level*/) override;
 
 protected:
   // An inline helper function that creates a fragment header based on a data request
-  inline 
-  daqdataformats::FragmentHeader create_fragment_header(const dfmessages::DataRequest& dr)
+  inline daqdataformats::FragmentHeader create_fragment_header(const dfmessages::DataRequest& dr)
   {
     daqdataformats::FragmentHeader fh;
     fh.size = sizeof(fh);
@@ -173,10 +171,11 @@ protected:
   std::unique_ptr<daqdataformats::Fragment> create_empty_fragment(const dfmessages::DataRequest& dr);
 
   // An inline helper function that merges a set of byte arrays into a destination array
-  inline 
-  void dump_to_buffer(const void* data, std::size_t size,
-                      void* buffer, uint32_t buffer_pos,  // NOLINT(build/unsigned)
-                      const std::size_t& buffer_size)
+  inline void dump_to_buffer(const void* data,
+                             std::size_t size,
+                             void* buffer,
+                             uint32_t buffer_pos, // NOLINT(build/unsigned)
+                             const std::size_t& buffer_size)
   {
     auto bytes_to_copy = size;
     while (bytes_to_copy > 0) {
@@ -205,8 +204,7 @@ protected:
                                                             RequestResult& rres);
 
   // Override data_request functionality
-  RequestResult data_request(dfmessages::DataRequest dr, 
-                             bool send_partial_fragment_if_available) override;
+  RequestResult data_request(dfmessages::DataRequest dr, bool send_partial_fragment_if_available) override;
 
   // Data access (LB)
   std::unique_ptr<LatencyBufferType>& m_latency_buffer;
@@ -256,7 +254,7 @@ protected:
   std::string m_output_file;
   size_t m_stream_buffer_size = 0;
   bool m_recording_configured = false;
-  bool m_warn_on_timeout = true; // Whether to warn when a request times out
+  bool m_warn_on_timeout = true;         // Whether to warn when a request times out
   bool m_warn_about_empty_buffer = true; // Whether to warn about an empty buffer when processing a request
   // Stats
   std::atomic<int> m_pop_counter;
@@ -282,8 +280,8 @@ protected:
   // std::mutex m_response_time_log_lock;
 
 private:
-    int m_request_timeout_ms;
-    int m_fragment_send_timeout_ms;
+  int m_request_timeout_ms;
+  int m_fragment_send_timeout_ms;
 };
 
 } // namespace readoutlibs

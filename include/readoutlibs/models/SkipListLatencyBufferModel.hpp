@@ -54,7 +54,8 @@ public:
     Iterator(SkipListTAcc&& acc, SkipListTIter iter)
       : m_acc(std::move(acc))
       , m_iter(iter)
-    {}
+    {
+    }
 
     reference operator*() const { return *m_iter; }
     pointer operator->() { return &(*m_iter); }
