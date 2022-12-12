@@ -24,7 +24,7 @@ struct DUMMY_FRAME_STRUCT
   using FrameType = DUMMY_FRAME_STRUCT;
 
   // header
-  uint64_t timestamp;   // NOLINT(build/unsigned)
+  uint64_t timestamp; // NOLINT(build/unsigned)
   uint64_t another_key; // NOLINT(build/unsigned)
 
   // data
@@ -33,8 +33,8 @@ struct DUMMY_FRAME_STRUCT
   // comparable based on composite key (timestamp + other unique keys)
   bool operator<(const DUMMY_FRAME_STRUCT& other) const
   {
-    auto const& f1 = std::tie(this->timestamp, this->another_key);
-    auto const& f2 = std::tie(other.timestamp, other.another_key);
+    auto const & f1 = std::tie(this->timestamp, this->another_key);
+    auto const & f2 = std::tie(other.timestamp, other.another_key);
     return f1 < f2;
   }
 
@@ -43,7 +43,10 @@ struct DUMMY_FRAME_STRUCT
     return timestamp;
   }
 
-  void set_another_key(uint64_t compkey) { another_key = compkey; }
+  void set_another_key(uint64_t compkey)
+  {
+    another_key = compkey; 
+  }
 
   void set_timestamp(uint64_t ts) // NOLINT(build/unsigned)
   {

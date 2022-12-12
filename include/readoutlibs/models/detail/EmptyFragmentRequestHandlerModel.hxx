@@ -6,7 +6,7 @@ namespace readoutlibs {
 // Override the issue_request implementation of the DefaultRequestHandlerModel
 // in order to always respond with empty fragments.
 template<class ReadoutType, class LatencyBufferType>
-void
+void 
 EmptyFragmentRequestHandlerModel<ReadoutType, LatencyBufferType>::issue_request(
   dfmessages::DataRequest datarequest,
   bool /*send_partial_fragment_if_not_yet*/)
@@ -23,7 +23,7 @@ EmptyFragmentRequestHandlerModel<ReadoutType, LatencyBufferType>::issue_request(
     TLOG_DEBUG(TLVL_QUEUE_PUSH) << "Sending fragment with trigger_number " << fragment->get_trigger_number()
                                 << ", run number " << fragment->get_run_number() << ", and SourceID "
                                 << fragment->get_element_id();
-    // auto frag = std::make_pair(std::move(fragment), datarequest.data_destination);
+    //auto frag = std::make_pair(std::move(fragment), datarequest.data_destination);
     get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)
       ->send(std::move(fragment), std::chrono::milliseconds(10));
   } catch (const ers::Issue& excpt) {

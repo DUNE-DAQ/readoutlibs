@@ -22,7 +22,7 @@ class RawDataProcessorConcept
 public:
   RawDataProcessorConcept() {}
   virtual ~RawDataProcessorConcept() {}
-
+  
   RawDataProcessorConcept(const RawDataProcessorConcept&) =
     delete; ///< RawDataProcessorConcept is not copy-constructible
   RawDataProcessorConcept& operator=(const RawDataProcessorConcept&) =

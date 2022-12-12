@@ -5,7 +5,7 @@ namespace readoutlibs {
 
 // Free allocated memory that is different for alignment strategies and allocation policies
 template<class T>
-void
+void 
 IterableQueueModel<T>::free_memory()
 {
   // We need to destruct anything that may still exist in our queue.
@@ -26,7 +26,7 @@ IterableQueueModel<T>::free_memory()
     _mm_free(records_);
   } else if (numa_aware_) {
 #ifdef WITH_LIBNUMA_SUPPORT
-    numa_free(records_, sizeof(T) * size_);
+      numa_free(records_, sizeof(T) * size_);
 #endif
   } else {
     std::free(records_);
@@ -35,7 +35,7 @@ IterableQueueModel<T>::free_memory()
 
 // Allocate memory based on different alignment strategies and allocation policies
 template<class T>
-void
+void 
 IterableQueueModel<T>::allocate_memory(std::size_t size,
                                        bool numa_aware,
                                        uint8_t numa_node, // NOLINT (build/unsigned)
@@ -51,8 +51,7 @@ IterableQueueModel<T>::allocate_memory(std::size_t size,
   } else if (!intrinsic_allocator && alignment_size > 0) { // std aligned allocator
     records_ = static_cast<T*>(std::aligned_alloc(alignment_size, sizeof(T) * size));
 
-  } else if (numa_aware &&
-             numa_node < 8) { // numa allocator from libnuma; we get "numa_node >= 0" for free, given its datatype
+  } else if (numa_aware && numa_node < 8) { // numa allocator from libnuma; we get "numa_node >= 0" for free, given its datatype
 #ifdef WITH_LIBNUMA_SUPPORT
     records_ = static_cast<T*>(numa_alloc_onnode(sizeof(T) * size, numa_node));
 #else
@@ -77,7 +76,7 @@ IterableQueueModel<T>::allocate_memory(std::size_t size,
 
 // Write element into the queue
 template<class T>
-bool
+bool 
 IterableQueueModel<T>::write(T&& record)
 {
   auto const currentWrite = writeIndex_.load(std::memory_order_relaxed);
@@ -120,7 +119,7 @@ IterableQueueModel<T>::read(T& record)
 
 // Pop element on front of queue
 template<class T>
-void
+void 
 IterableQueueModel<T>::popFront()
 {
   auto const currentRead = readIndex_.load(std::memory_order_relaxed);
@@ -137,7 +136,7 @@ IterableQueueModel<T>::popFront()
 
 // Pop number of elements (X) from the front of the queue
 template<class T>
-void
+void 
 IterableQueueModel<T>::pop(std::size_t x)
 {
   for (std::size_t i = 0; i < x; i++) {
@@ -147,7 +146,7 @@ IterableQueueModel<T>::pop(std::size_t x)
 
 // Returns true if the queue is empty
 template<class T>
-bool
+bool 
 IterableQueueModel<T>::isEmpty() const
 {
   return readIndex_.load(std::memory_order_acquire) == writeIndex_.load(std::memory_order_acquire);
@@ -155,7 +154,7 @@ IterableQueueModel<T>::isEmpty() const
 
 // Returns true if write index reached read index
 template<class T>
-bool
+bool 
 IterableQueueModel<T>::isFull() const
 {
   auto nextRecord = writeIndex_.load(std::memory_order_acquire) + 1;
@@ -176,7 +175,7 @@ IterableQueueModel<T>::isFull() const
 //   be removing items concurrently).
 // * It is undefined to call this from any other thread.
 template<class T>
-std::size_t
+std::size_t 
 IterableQueueModel<T>::occupancy() const
 {
   int ret = static_cast<int>(writeIndex_.load(std::memory_order_acquire)) -
@@ -189,7 +188,7 @@ IterableQueueModel<T>::occupancy() const
 
 // Gives a pointer to the current read index
 template<class T>
-const T*
+const T* 
 IterableQueueModel<T>::front()
 {
   auto const currentRead = readIndex_.load(std::memory_order_relaxed);
@@ -201,7 +200,7 @@ IterableQueueModel<T>::front()
 
 // Gives a pointer to the current write index
 template<class T>
-const T*
+const T* 
 IterableQueueModel<T>::back()
 {
   auto const currentWrite = writeIndex_.load(std::memory_order_relaxed);
@@ -219,7 +218,7 @@ IterableQueueModel<T>::back()
 
 // Configures the model
 template<class T>
-void
+void 
 IterableQueueModel<T>::conf(const nlohmann::json& cfg)
 {
   auto conf = cfg["latencybufferconf"].get<readoutconfig::LatencyBufferConf>();
@@ -249,7 +248,7 @@ IterableQueueModel<T>::conf(const nlohmann::json& cfg)
 
 // Unconfigures the model
 template<class T>
-void
+void 
 IterableQueueModel<T>::scrap(const nlohmann::json& /*cfg*/)
 {
   free_memory();
@@ -267,7 +266,7 @@ IterableQueueModel<T>::scrap(const nlohmann::json& /*cfg*/)
 // Hidden original write implementation with signature difference. Only used for pre-allocation
 template<class T>
 template<class... Args>
-bool
+bool 
 IterableQueueModel<T>::write_(Args&&... recordArgs)
 {
   // const std::lock_guard<std::mutex> lock(m_mutex);
@@ -295,6 +294,7 @@ IterableQueueModel<T>::write_(Args&&... recordArgs)
 
   return false;
 }
+
 
 } // namespace readoutlibs
 } // namespace dunedaq

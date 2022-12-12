@@ -41,8 +41,7 @@ public:
   explicit TaskRawDataProcessorModel(std::unique_ptr<FrameErrorRegistry>& error_registry)
     : RawDataProcessorConcept<ReadoutType>()
     , m_error_registry(error_registry)
-  {
-  }
+  {}
 
   // Destructor
   ~TaskRawDataProcessorModel() {}
@@ -114,6 +113,7 @@ protected:
   daqdataformats::SourceID m_sourceid;
   bool m_emulator_mode{ false };
   std::atomic<std::uint64_t> m_last_processed_daq_ts{ 0 }; // NOLINT(build/unsigned)
+
 };
 
 } // namespace readoutlibs

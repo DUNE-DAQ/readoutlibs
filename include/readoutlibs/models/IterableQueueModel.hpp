@@ -87,12 +87,11 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
     , records_(static_cast<T*>(std::malloc(sizeof(T) * 2)))
     , readIndex_(0)
     , writeIndex_(0)
-  {
-  }
+  {}
 
   // Explicit constructor with size
   explicit IterableQueueModel(std::size_t size) // size must be >= 2
-    : LatencyBufferConcept<T>()                 // NOLINT(build/unsigned)
+    : LatencyBufferConcept<T>() // NOLINT(build/unsigned)
     , numa_aware_(false)
     , numa_node_(0)
     , intrinsic_allocator_(false)
@@ -158,10 +157,7 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
   }
 
   // Destructor
-  ~IterableQueueModel()
-  {
-    free_memory();
-  }
+  ~IterableQueueModel() { free_memory(); }
 
   // Free allocated memory that is different for alignment strategies and allocation policies
   void free_memory();
@@ -200,16 +196,10 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
   std::size_t occupancy() const override;
 
   // The size of the underlying buffer, not the amount of usable slots
-  std::size_t get_size() const
-  {
-    return size_;
-  }
+  std::size_t get_size() const { return size_; }
 
   // Maximum number of items in the queue.
-  std::size_t capacity() const
-  {
-    return size_ - 1;
-  }
+  std::size_t capacity() const { return size_ - 1; }
 
   // Gives a pointer to the current read index
   const T* front() override;
@@ -218,16 +208,10 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
   const T* back() override;
 
   // Gives a pointer to the first available slot of the queue
-  T* start_of_buffer()
-  {
-    return &records_[0];
-  }
+  T* start_of_buffer() { return &records_[0]; }
 
   // Gives a pointer to the last available slot of the queue
-  T* end_of_buffer()
-  {
-    return &records_[size_];
-  }
+  T* end_of_buffer() { return &records_[size_]; }
 
   // Configures the model
   void conf(const nlohmann::json& cfg) override;
@@ -236,16 +220,10 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
   void scrap(const nlohmann::json& /*cfg*/) override;
 
   // Flushes the elements from the queue
-  void flush() override
-  {
-    pop(occupancy());
-  }
+  void flush() override { pop(occupancy()); }
 
   // Returns the current memory alignment size
-  std::size_t get_alignment_size()
-  {
-    return alignment_size_;
-  }
+  std::size_t get_alignment_size() { return alignment_size_; }
 
   // Iterator for elements in the queue
   struct Iterator
@@ -259,8 +237,7 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
     Iterator(IterableQueueModel<T>& queue, uint32_t index) // NOLINT(build/unsigned)
       : m_queue(queue)
       , m_index(index)
-    {
-    }
+    {}
 
     reference operator*() const { return m_queue.records_[m_index]; }
     pointer operator->() { return &m_queue.records_[m_index]; }
@@ -344,10 +321,11 @@ protected:
   char pad0_[folly::hardware_destructive_interference_size]; // NOLINT(runtime/arrays)
   uint32_t size_;                                            // NOLINT(build/unsigned)
   T* records_;
-  alignas(folly::hardware_destructive_interference_size) std::atomic<unsigned int> readIndex_; // NOLINT(build/unsigned)
+  alignas(
+    folly::hardware_destructive_interference_size) std::atomic<unsigned int> readIndex_; // NOLINT(build/unsigned)
   alignas(
     folly::hardware_destructive_interference_size) std::atomic<unsigned int> writeIndex_; // NOLINT(build/unsigned)
-  char pad1_[folly::hardware_destructive_interference_size - sizeof(writeIndex_)];        // NOLINT(runtime/arrays)
+  char pad1_[folly::hardware_destructive_interference_size - sizeof(writeIndex_)]; // NOLINT(runtime/arrays)
 };
 
 } // namespace readoutlibs

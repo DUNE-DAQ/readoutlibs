@@ -15,8 +15,8 @@
 
 #include "appfwk/DAQModuleHelper.hpp"
 #include "iomanager/IOManager.hpp"
-#include "iomanager/Receiver.hpp"
 #include "iomanager/Sender.hpp"
+#include "iomanager/Receiver.hpp"
 
 #include "logging/Logging.hpp"
 
@@ -110,7 +110,10 @@ public:
   void stop(const nlohmann::json& args);
 
   // Record function: invokes request handler's record implementation
-  void record(const nlohmann::json& args) override { m_request_handler_impl->record(args); }
+  void record(const nlohmann::json& args) override 
+  { 
+    m_request_handler_impl->record(args); 
+  }
 
   // Opmon get_info call implementation
   void get_info(opmonlib::InfoCollector& ci, int level);
@@ -138,7 +141,7 @@ private:
   daqdataformats::SourceID m_sourceid;
   daqdataformats::run_number_t m_run_number;
   bool m_send_partial_fragment_if_available;
-
+ 
   // STATS
   std::atomic<int> m_num_payloads{ 0 };
   std::atomic<int> m_sum_payloads{ 0 };
@@ -161,9 +164,9 @@ private:
   std::shared_ptr<request_receiver_ct> m_data_request_receiver;
 
   // FRAGMENT SENDER
-  // std::chrono::milliseconds m_fragment_sender_timeout_ms;
-  // using fragment_sender_ct = iomanager::SenderConcept<std::pair<std::unique_ptr<daqdataformats::Fragment>,
-  // std::string>>; std::shared_ptr<fragment_sender_ct> m_fragment_sender;
+  //std::chrono::milliseconds m_fragment_sender_timeout_ms;
+  //using fragment_sender_ct = iomanager::SenderConcept<std::pair<std::unique_ptr<daqdataformats::Fragment>, std::string>>;
+  //std::shared_ptr<fragment_sender_ct> m_fragment_sender;
 
   // TIME-SYNC
   using timesync_sender_ct = iomanager::SenderConcept<dfmessages::TimeSync>; // no timeout -> published

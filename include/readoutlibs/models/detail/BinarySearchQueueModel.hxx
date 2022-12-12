@@ -4,12 +4,13 @@ namespace dunedaq {
 namespace readoutlibs {
 
 template<typename T>
-typename IterableQueueModel<T>::Iterator
+typename IterableQueueModel<T>::Iterator 
 BinarySearchQueueModel<T>::lower_bound(T& element, bool /*with_errors=false*/)
 {
   unsigned int start_index =
-    IterableQueueModel<T>::readIndex_.load(std::memory_order_relaxed);                         // NOLINT(build/unsigned)
-  unsigned int end_index = IterableQueueModel<T>::writeIndex_.load(std::memory_order_acquire); // NOLINT(build/unsigned)
+    IterableQueueModel<T>::readIndex_.load(std::memory_order_relaxed); // NOLINT(build/unsigned)
+  unsigned int end_index =
+    IterableQueueModel<T>::writeIndex_.load(std::memory_order_acquire); // NOLINT(build/unsigned)
 
   if (start_index == end_index) {
     TLOG() << "Queue is empty" << std::endl;

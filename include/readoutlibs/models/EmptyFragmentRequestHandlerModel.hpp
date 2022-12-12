@@ -1,5 +1,5 @@
 /**
- * @file EmptyFragmentRequestHandlerModel.hpp Request handler that always returns
+ * @file EmptyFragmentRequestHandlerModel.hpp Request handler that always returns 
  * empty fragments, mainly used for debugging purposes.
  *
  * This is part of the DUNE DAQ , copyright 2020.
@@ -30,7 +30,9 @@ public:
   using inherited = DefaultRequestHandlerModel<ReadoutType, LatencyBufferType>;
   using RequestResult =
     typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::RequestResult;
-  using ResultCode = typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::ResultCode;
+  using ResultCode =
+    typename dunedaq::readoutlibs::RequestHandlerConcept<ReadoutType, LatencyBufferType>::ResultCode;
+
 
   // Explicit constructor to bind LB and error registry
   explicit EmptyFragmentRequestHandlerModel(std::unique_ptr<LatencyBufferType>& latency_buffer,
@@ -41,8 +43,10 @@ public:
   }
 
   // Override the issue_request implementation of the DefaultRequestHandlerModel
-  // in order to always respond with empty fragments.
-  void issue_request(dfmessages::DataRequest datarequest, bool /*send_partial_fragment_if_not_yet*/) override;
+  // in order to always respond with empty fragments. 
+  void issue_request(dfmessages::DataRequest datarequest,
+                     bool /*send_partial_fragment_if_not_yet*/) override;
+
 };
 
 } // namespace readoutlibs

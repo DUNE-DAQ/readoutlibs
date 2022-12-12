@@ -6,7 +6,7 @@ namespace dunedaq {
 namespace readoutlibs {
 
 template<class RDT, class RHT, class LBT, class RPT>
-void
+void 
 ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
 {
   // Setupo request queues
@@ -14,21 +14,20 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
 
   try {
     auto ini = args.get<appfwk::app::ModInit>();
-    for (const auto& cr : ini.conn_refs) {
+    for (const auto &cr : ini.conn_refs) {
       if (cr.name == "raw_input") {
         TLOG() << "Create raw_input receiver";
-        m_raw_data_receiver = get_iom_receiver<RDT>(cr.uid);
+  	    m_raw_data_receiver = get_iom_receiver<RDT>(cr.uid);
       } else if (cr.name == "timesync_output") {
-        TLOG() << "Create timesync sender";
-        m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(cr.uid);
+  	    TLOG() << "Create timesync sender";
+  	    m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(cr.uid);
       }
     }
-    // iomanager::ConnectionRef raw_input_ref = iomanager::ConnectionRef{ "input", "raw_input",
-    // iomanager::Direction::kInput }; m_raw_data_receiver = get_iom_receiver<RDT>(ini["raw_input"]);
-    // iomanager::ConnectionRef frag_output_ref = iomanager::ConnectionRef{ "output", "frag_output",
-    // iomanager::Direction::kOutput }; iomanager::ConnectionRef timesync_output_ref = iomanager::ConnectionRef{
-    // "output", "timesync_output", iomanager::Direction::kOutput }; m_timesync_sender =
-    // get_iom_sender<dfmessages::TimeSync>("timesync_output");
+    //iomanager::ConnectionRef raw_input_ref = iomanager::ConnectionRef{ "input", "raw_input", iomanager::Direction::kInput };
+    //m_raw_data_receiver = get_iom_receiver<RDT>(ini["raw_input"]);
+    //iomanager::ConnectionRef frag_output_ref = iomanager::ConnectionRef{ "output", "frag_output", iomanager::Direction::kOutput };
+    //iomanager::ConnectionRef timesync_output_ref = iomanager::ConnectionRef{ "output", "timesync_output", iomanager::Direction::kOutput };
+    //m_timesync_sender = get_iom_sender<dfmessages::TimeSync>("timesync_output");
   } catch (const ers::Issue& excpt) {
     throw ResourceQueueError(ERS_HERE, "raw_input or frag_output", "ReadoutModel", excpt);
   }
@@ -38,14 +37,15 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
     errstring = "raw_input";
   }
   if (m_timesync_sender == nullptr) {
-    if (errstring != "") {
-      errstring += ", ";
+    if (errstring != "") { 
+      errstring += ", "; 
     }
     errstring += "timesync_output";
   }
-  if (m_data_request_receiver == nullptr) {
-    if (errstring != "") {
-      errstring += ", ";
+  if (m_data_request_receiver == nullptr)
+  {
+    if (errstring != "") { 
+      errstring += ", "; 
     }
     errstring += "request_input";
   }
@@ -63,7 +63,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
 }
 
 template<class RDT, class RHT, class LBT, class RPT>
-void
+void 
 ReadoutModel<RDT, RHT, LBT, RPT>::conf(const nlohmann::json& args)
 {
   auto conf = args["readoutmodelconf"].get<readoutconfig::ReadoutModelConf>();
@@ -99,8 +99,9 @@ ReadoutModel<RDT, RHT, LBT, RPT>::conf(const nlohmann::json& args)
   m_timesync_thread.set_name("timesync", conf.source_id);
 }
 
+
 template<class RDT, class RHT, class LBT, class RPT>
-void
+void 
 ReadoutModel<RDT, RHT, LBT, RPT>::start(const nlohmann::json& args)
 {
   // Reset opmon variables
@@ -127,7 +128,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::start(const nlohmann::json& args)
 }
 
 template<class RDT, class RHT, class LBT, class RPT>
-void
+void 
 ReadoutModel<RDT, RHT, LBT, RPT>::stop(const nlohmann::json& args)
 {
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Stoppping threads...";
@@ -149,7 +150,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::stop(const nlohmann::json& args)
 }
 
 template<class RDT, class RHT, class LBT, class RPT>
-void
+void 
 ReadoutModel<RDT, RHT, LBT, RPT>::get_info(opmonlib::InfoCollector& ci, int level)
 {
   readoutinfo::ReadoutInfo ri;
@@ -166,7 +167,8 @@ ReadoutModel<RDT, RHT, LBT, RPT>::get_info(opmonlib::InfoCollector& ci, int leve
   TLOG_DEBUG(TLVL_TAKE_NOTE) << "Consumed Packet rate: " << std::to_string(new_packets / seconds / 1000.) << " [kHz]";
   auto rawq_timeouts = m_rawq_timeout_count.exchange(0);
   if (rawq_timeouts > 0) {
-    TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Raw input queue timed out " << std::to_string(rawq_timeouts) << " times!";
+    TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Raw input queue timed out " 
+      << std::to_string(rawq_timeouts) << " times!";
   }
   m_t0 = now;
 
@@ -180,27 +182,26 @@ ReadoutModel<RDT, RHT, LBT, RPT>::get_info(opmonlib::InfoCollector& ci, int leve
 }
 
 template<class RDT, class RHT, class LBT, class RPT>
-void
+void 
 ReadoutModel<RDT, RHT, LBT, RPT>::setup_request_queues(const nlohmann::json& args)
 {
-  auto ini = args.get<appfwk::app::ModInit>();
+  auto ini = args.get<appfwk::app::ModInit>();	  
   for (const auto& cr : ini.conn_refs) {
-    if (cr.name == "request_input") {
-      m_data_request_receiver = get_iom_receiver<dfmessages::DataRequest>(cr.uid);
+    if(cr.name == "request_input") {
+      m_data_request_receiver = get_iom_receiver<dfmessages::DataRequest>(cr.uid) ;
     }
   }
-  // int index = 0;
-  // iomanager::ConnectionRef request_input_ref = iomanager::ConnectionRef{ "input", "request_input_*",
-  // iomanager::Direction::kInput };
-  //  Loop over request_input refs...
-  // while (queue_index.find("data_requests_" + std::to_string(index)) != queue_index.end()) {
-  //   m_data_request_receivers.push_back( get_iom_receiver<dfmessages::DataRequest>(ini.conn_refs["request_input"]) );
-  // index++;
+  //int index = 0;
+  //iomanager::ConnectionRef request_input_ref = iomanager::ConnectionRef{ "input", "request_input_*", iomanager::Direction::kInput };
+  // Loop over request_input refs...
+  //while (queue_index.find("data_requests_" + std::to_string(index)) != queue_index.end()) {
+  //  m_data_request_receivers.push_back( get_iom_receiver<dfmessages::DataRequest>(ini.conn_refs["request_input"]) );
+    //index++;
   //}
 }
 
 template<class RDT, class RHT, class LBT, class RPT>
-void
+void 
 ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
 {
   m_rawq_timeout_count = 0;
@@ -225,7 +226,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
       // in places like fdreadoutlibs/<xyz>/<XYZ>FrameProcessor where the type of the payload
       // is fully known. In many cases, such DEBUG messages exist, but when a new readout type
       // is being added, those messages may not exist yet, and this message could be helpful.
-      // TLOG_DEBUG(TLVL_FRAME_RECEIVED) << "Received payload of type " << typeid(payload).name();
+      //TLOG_DEBUG(TLVL_FRAME_RECEIVED) << "Received payload of type " << typeid(payload).name();
 
       m_raw_processor_impl->preprocess_item(&payload);
       if (!m_latency_buffer_impl->write(std::move(payload))) {
@@ -245,7 +246,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
 }
 
 template<class RDT, class RHT, class LBT, class RPT>
-void
+void 
 ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
 {
   TLOG_DEBUG(TLVL_WORK_STEPS) << "TimeSync thread started...";
@@ -270,15 +271,16 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
         timesyncmsg.sequence_number = ++msg_seqno;
         timesyncmsg.source_pid = m_pid_of_current_process;
         TLOG_DEBUG(TLVL_TIME_SYNCS) << "New timesync: daq=" << timesyncmsg.daq_time
-                                    << " wall=" << timesyncmsg.system_time << " run=" << timesyncmsg.run_number
-                                    << " seqno=" << timesyncmsg.sequence_number << " pid=" << timesyncmsg.source_pid;
+          << " wall=" << timesyncmsg.system_time << " run=" << timesyncmsg.run_number
+          << " seqno=" << timesyncmsg.sequence_number << " pid=" << timesyncmsg.source_pid;
         try {
-          dfmessages::TimeSync timesyncmsg_copy(timesyncmsg);
+            dfmessages::TimeSync timesyncmsg_copy(timesyncmsg);
           m_timesync_sender->send(std::move(timesyncmsg_copy), std::chrono::milliseconds(500));
         } catch (ers::Issue& excpt) {
-          ers::warning(TimeSyncTransmissionFailed(ERS_HERE, m_sourceid, m_timesync_connection_name, excpt));
+          ers::warning(
+            TimeSyncTransmissionFailed(ERS_HERE, m_sourceid, m_timesync_connection_name, excpt));
         }
-
+          
         if (m_fake_trigger) {
           dfmessages::DataRequest dr;
           ++m_current_fake_trigger_id;
@@ -291,21 +293,17 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
           dr.request_information.component = m_sourceid;
           dr.data_destination = "data_fragments_q";
           TLOG_DEBUG(TLVL_WORK_STEPS) << "Issuing fake trigger based on timesync. "
-                                      << " ts=" << dr.trigger_timestamp
-                                      << " window_begin=" << dr.request_information.window_begin
-                                      << " window_end=" << dr.request_information.window_end;
+            << " ts=" << dr.trigger_timestamp 
+            << " window_begin=" << dr.request_information.window_begin
+            << " window_end=" << dr.request_information.window_end;
           m_request_handler_impl->issue_request(dr, false);
 
           ++m_num_requests;
           ++m_sum_requests;
         }
       } else {
-        if (timesyncmsg.daq_time == 0) {
-          ++zero_timestamp_count;
-        }
-        if (timesyncmsg.daq_time == prev_timestamp) {
-          ++duplicate_timestamp_count;
-        }
+        if (timesyncmsg.daq_time == 0) {++zero_timestamp_count;}
+        if (timesyncmsg.daq_time == prev_timestamp) {++duplicate_timestamp_count;}
         if (once_per_run) {
           TLOG() << "Timesync with DAQ time 0 won't be sent out as it's an invalid sync.";
           once_per_run = false;
@@ -315,7 +313,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
       // ++m_timesyncqueue_timeout;
     }
     // Split up the 100ms sleep into 10 sleeps of 10ms, so we respond to "stop" quicker
-    for (size_t i = 0; i < 10; ++i) {
+    for (size_t i=0; i<10; ++i) {
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
       if (!m_run_marker.load()) {
         break;
@@ -329,21 +327,21 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
 }
 
 template<class RDT, class RHT, class LBT, class RPT>
-void
+void 
 ReadoutModel<RDT, RHT, LBT, RPT>::dispatch_requests(dfmessages::DataRequest& data_request)
 {
   if (data_request.request_information.component != m_sourceid) {
-    ers::error(RequestSourceIDMismatch(ERS_HERE, m_sourceid, data_request.request_information.component));
-    return;
+     ers::error(RequestSourceIDMismatch(ERS_HERE, m_sourceid, data_request.request_information.component));
+     return;
   }
-  TLOG_DEBUG(TLVL_QUEUE_POP) << "Received DataRequest"
-                             << " for trig/seq_number " << data_request.trigger_number << "."
-                             << data_request.sequence_number << ", runno " << data_request.run_number
-                             << ", trig timestamp " << data_request.trigger_timestamp
-                             << ", SourceID: " << data_request.request_information.component << ", window begin/end "
-                             << data_request.request_information.window_begin << "/"
-                             << data_request.request_information.window_end
-                             << ", dest: " << data_request.data_destination;
+  TLOG_DEBUG(TLVL_QUEUE_POP) << "Received DataRequest" 
+    << " for trig/seq_number " << data_request.trigger_number << "." << data_request.sequence_number
+    << ", runno " << data_request.run_number
+    << ", trig timestamp " << data_request.trigger_timestamp
+    << ", SourceID: " << data_request.request_information.component
+    << ", window begin/end " << data_request.request_information.window_begin
+    << "/" << data_request.request_information.window_end
+    << ", dest: " << data_request.data_destination;
   m_request_handler_impl->issue_request(data_request, m_send_partial_fragment_if_available);
   ++m_num_requests;
   ++m_sum_requests;
