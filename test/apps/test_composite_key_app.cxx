@@ -68,7 +68,7 @@ main(int /*argc*/, char** /*argv[]*/)
   {
     SkipListTAcc acc(skl);
     auto ret = acc.insert(std::move(payload4));
-    TLOG() << "Payload4 insertion success? -> " << ret.second; 
+    TLOG() << "Payload4 insertion success? -> " << ret.second;
     ret = acc.insert(std::move(payload2));
     TLOG() << "Payload2 insertion success? -> " << ret.second;
     ret = acc.insert(std::move(payload3)); // This payload is equivalent with payload2. Insert fails!
@@ -89,7 +89,7 @@ main(int /*argc*/, char** /*argv[]*/)
     findpayload.set_another_key(2);
 
     SkipListTAcc acc(skl);
-    auto lb  = acc.lower_bound(findpayload);
+    auto lb = acc.lower_bound(findpayload);
     auto foundptr = reinterpret_cast<const types::DUMMY_FRAME_STRUCT*>(&(*lb)); // NOLINT
     auto foundts = foundptr->get_timestamp();
     TLOG() << "Found element 1 lower bound to 12342 in skiplist with timestamp --> " << foundts;
@@ -101,7 +101,7 @@ main(int /*argc*/, char** /*argv[]*/)
 
     TLOG() << "Dumping SkipList content:";
     SkipListTIter node = acc.find(payload1);
-    while(node != acc.end()) {
+    while (node != acc.end()) {
       auto nodeptr = reinterpret_cast<const types::DUMMY_FRAME_STRUCT*>(&(*node)); // NOLINT
       auto nodets = nodeptr->get_timestamp();
       auto nodeck = nodeptr->another_key;

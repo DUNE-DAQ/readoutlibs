@@ -87,7 +87,7 @@ public:
           m_now = gettime();
         }
         while (m_now < m_deadline) {
-            m_now = gettime();
+          m_now = gettime();
         }
       }
       m_deadline += m_period.load();

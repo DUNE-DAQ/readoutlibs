@@ -5,7 +5,7 @@ namespace readoutlibs {
 
 // Special configuration that checks LB alignment and O_DIRECT flag on output file
 template<class ReadoutType, class LatencyBufferType>
-void 
+void
 ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::conf(const nlohmann::json& args)
 {
   auto conf = args["requesthandlerconf"].get<readoutconfig::RequestHandlerConf>();
@@ -36,7 +36,7 @@ ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::conf(const
 
 // Special record command that writes to files from memory aligned LBs
 template<class ReadoutType, class LatencyBufferType>
-void 
+void
 ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::record(const nlohmann::json& args)
 {
   if (inherited::m_recording.load()) {
@@ -58,7 +58,8 @@ ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::record(con
       const char* start_of_buffer_pointer =
         reinterpret_cast<const char*>(inherited::m_latency_buffer->start_of_buffer()); // NOLINT
       const char* current_end_pointer;
-      const char* end_of_buffer_pointer = reinterpret_cast<const char*>(inherited::m_latency_buffer->end_of_buffer()); // NOLINT
+      const char* end_of_buffer_pointer =
+        reinterpret_cast<const char*>(inherited::m_latency_buffer->end_of_buffer()); // NOLINT
 
       size_t bytes_written = 0;
 

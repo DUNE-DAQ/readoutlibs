@@ -1,4 +1,4 @@
-//Declarations for SourceEmulatorModel
+// Declarations for SourceEmulatorModel
 
 using dunedaq::readoutlibs::logging::TLVL_TAKE_NOTE;
 using dunedaq::readoutlibs::logging::TLVL_WORK_STEPS;
@@ -7,7 +7,7 @@ namespace dunedaq {
 namespace readoutlibs {
 
 template<class ReadoutType>
-void 
+void
 SourceEmulatorModel<ReadoutType>::set_sender(const std::string& conn_name)
 {
   if (!m_sender_is_set) {
@@ -19,9 +19,8 @@ SourceEmulatorModel<ReadoutType>::set_sender(const std::string& conn_name)
 }
 
 template<class ReadoutType>
-void 
-SourceEmulatorModel<ReadoutType>::conf(const nlohmann::json& args, 
-                                       const nlohmann::json& link_conf)
+void
+SourceEmulatorModel<ReadoutType>::conf(const nlohmann::json& args, const nlohmann::json& link_conf)
 {
   if (m_is_configured) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "This emulator is already configured!";
@@ -62,10 +61,10 @@ SourceEmulatorModel<ReadoutType>::conf(const nlohmann::json& args,
   }
   // Configure thread:
   m_producer_thread.set_name("fakeprod", m_link_conf.source_id);
-} 
+}
 
 template<class ReadoutType>
-void 
+void
 SourceEmulatorModel<ReadoutType>::start(const nlohmann::json& /*args*/)
 {
   m_packet_count_tot = 0;
@@ -76,7 +75,7 @@ SourceEmulatorModel<ReadoutType>::start(const nlohmann::json& /*args*/)
 }
 
 template<class ReadoutType>
-void 
+void
 SourceEmulatorModel<ReadoutType>::stop(const nlohmann::json& /*args*/)
 {
   while (!m_producer_thread.get_readiness()) {
@@ -85,7 +84,7 @@ SourceEmulatorModel<ReadoutType>::stop(const nlohmann::json& /*args*/)
 }
 
 template<class ReadoutType>
-void 
+void
 SourceEmulatorModel<ReadoutType>::get_info(opmonlib::InfoCollector& ci, int /*level*/)
 {
   sourceemulatorinfo::Info info;
@@ -96,7 +95,7 @@ SourceEmulatorModel<ReadoutType>::get_info(opmonlib::InfoCollector& ci, int /*le
 }
 
 template<class ReadoutType>
-void 
+void
 SourceEmulatorModel<ReadoutType>::run_produce()
 {
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Data generation thread " << m_this_link_number << " started";

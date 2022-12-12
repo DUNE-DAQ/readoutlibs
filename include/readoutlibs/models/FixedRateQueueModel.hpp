@@ -24,14 +24,15 @@ class FixedRateQueueModel : public BinarySearchQueueModel<T>
 public:
   FixedRateQueueModel()
     : BinarySearchQueueModel<T>()
-  {}
+  {
+  }
 
   explicit FixedRateQueueModel(uint32_t size) // NOLINT(build/unsigned)
     : BinarySearchQueueModel<T>(size)
-  {}
+  {
+  }
 
   typename IterableQueueModel<T>::Iterator lower_bound(T& element, bool with_errors = false);
-
 };
 
 } // namespace readoutlibs

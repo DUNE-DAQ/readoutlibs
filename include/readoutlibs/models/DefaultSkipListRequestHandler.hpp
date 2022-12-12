@@ -1,5 +1,5 @@
 /**
- * @file DefaultSkipListRequestHandler.hpp Trigger matching mechanism 
+ * @file DefaultSkipListRequestHandler.hpp Trigger matching mechanism
  * used for skip list based LBs in readout models
  *
  * This is part of the DUNE DAQ , copyright 2020.
@@ -27,7 +27,7 @@ namespace dunedaq {
 namespace readoutlibs {
 
 template<class T>
-class DefaultSkipListRequestHandler 
+class DefaultSkipListRequestHandler
   : public readoutlibs::DefaultRequestHandlerModel<T, readoutlibs::SkipListLatencyBufferModel<T>>
 {
 public:
@@ -38,9 +38,8 @@ public:
   // Constructor that binds LB and error registry
   DefaultSkipListRequestHandler(std::unique_ptr<readoutlibs::SkipListLatencyBufferModel<T>>& latency_buffer,
                                 std::unique_ptr<readoutlibs::FrameErrorRegistry>& error_registry)
-    : readoutlibs::DefaultRequestHandlerModel<T, readoutlibs::SkipListLatencyBufferModel<T>>(
-        latency_buffer,
-        error_registry)
+    : readoutlibs::DefaultRequestHandlerModel<T, readoutlibs::SkipListLatencyBufferModel<T>>(latency_buffer,
+                                                                                             error_registry)
   {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "DefaultSkipListRequestHandler created...";
   }
@@ -50,7 +49,7 @@ protected:
   void cleanup() override { skip_list_cleanup_request(); }
 
   // Cleanup request implementation for skiplist LB
-  void skip_list_cleanup_request(); 
+  void skip_list_cleanup_request();
 
 private:
   // Constants

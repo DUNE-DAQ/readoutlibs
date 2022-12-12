@@ -4,7 +4,7 @@ namespace dunedaq {
 namespace readoutlibs {
 
 template<class RDT, class LBT>
-void 
+void
 DefaultRequestHandlerModel<RDT, LBT>::conf(const nlohmann::json& args)
 {
   auto conf = args["requesthandlerconf"].get<readoutconfig::RequestHandlerConf>();
@@ -52,7 +52,7 @@ DefaultRequestHandlerModel<RDT, LBT>::conf(const nlohmann::json& args)
 }
 
 template<class RDT, class LBT>
-void 
+void
 DefaultRequestHandlerModel<RDT, LBT>::scrap(const nlohmann::json& /*args*/)
 {
   if (m_buffered_writer.is_open()) {
@@ -61,7 +61,7 @@ DefaultRequestHandlerModel<RDT, LBT>::scrap(const nlohmann::json& /*args*/)
 }
 
 template<class RDT, class LBT>
-void 
+void
 DefaultRequestHandlerModel<RDT, LBT>::start(const nlohmann::json& /*args*/)
 {
   // Reset opmon variables
@@ -84,12 +84,11 @@ DefaultRequestHandlerModel<RDT, LBT>::start(const nlohmann::json& /*args*/)
 
   m_run_marker.store(true);
   m_cleanup_thread.set_work(&DefaultRequestHandlerModel<RDT, LBT>::periodic_cleanups, this);
-  m_waiting_queue_thread = 
-    std::thread(&DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests, this);
+  m_waiting_queue_thread = std::thread(&DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests, this);
 }
 
 template<class RDT, class LBT>
-void 
+void
 DefaultRequestHandlerModel<RDT, LBT>::stop(const nlohmann::json& /*args*/)
 {
   m_run_marker.store(false);
@@ -105,7 +104,7 @@ DefaultRequestHandlerModel<RDT, LBT>::stop(const nlohmann::json& /*args*/)
 }
 
 template<class RDT, class LBT>
-void 
+void
 DefaultRequestHandlerModel<RDT, LBT>::record(const nlohmann::json& args)
 {
   auto conf = args.get<readoutconfig::RecordingParams>();
@@ -155,8 +154,8 @@ DefaultRequestHandlerModel<RDT, LBT>::record(const nlohmann::json& args)
               }
               m_payloads_written++;
               processed_chunks_in_loop++;
-              m_next_timestamp_to_record = (*chunk_iter).get_first_timestamp() +
-                                           RDT::expected_tick_difference * (*chunk_iter).get_num_frames();
+              m_next_timestamp_to_record =
+                (*chunk_iter).get_first_timestamp() + RDT::expected_tick_difference * (*chunk_iter).get_num_frames();
             }
             ++chunk_iter;
           }
@@ -173,7 +172,7 @@ DefaultRequestHandlerModel<RDT, LBT>::record(const nlohmann::json& args)
 }
 
 template<class RDT, class LBT>
-void 
+void
 DefaultRequestHandlerModel<RDT, LBT>::cleanup_check()
 {
   std::unique_lock<std::mutex> lock(m_cv_mutex);
@@ -186,64 +185,65 @@ DefaultRequestHandlerModel<RDT, LBT>::cleanup_check()
 }
 
 template<class RDT, class LBT>
-void 
+void
 DefaultRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest datarequest,
                                                     bool send_partial_fragment_if_available)
 {
-  boost::asio::post(*m_request_handler_thread_pool, [&, send_partial_fragment_if_available, datarequest]() { // start a thread from pool
-    auto t_req_begin = std::chrono::high_resolution_clock::now();
-    {
-      std::unique_lock<std::mutex> lock(m_cv_mutex);
-      m_cv.wait(lock, [&] { return !m_cleanup_requested; });
-      m_requests_running++;
-    }
-    m_cv.notify_all();
-    auto result = data_request(datarequest, send_partial_fragment_if_available);
-    {
-      std::lock_guard<std::mutex> lock(m_cv_mutex);
-      m_requests_running--;
-    }
-    m_cv.notify_all();
-    if (result.result_code == ResultCode::kFound || result.result_code == ResultCode::kNotFound) {
-      try { // Send to fragment connection
-        TLOG_DEBUG(TLVL_QUEUE_PUSH) << "Sending fragment with trigger/sequence_number "
-          << result.fragment->get_trigger_number() << "."
-          << result.fragment->get_sequence_number() << ", run number "
-          << result.fragment->get_run_number() << ", and SourceID "
-          << result.fragment->get_element_id();
-        // Send fragment
-        get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)
-          ->send(std::move(result.fragment), std::chrono::milliseconds(m_fragment_send_timeout_ms));
-
-      } catch (const ers::Issue& excpt) {
-        ers::warning(CannotWriteToQueue(ERS_HERE, m_sourceid, datarequest.data_destination, excpt));
+  boost::asio::post(
+    *m_request_handler_thread_pool, [&, send_partial_fragment_if_available, datarequest]() { // start a thread from pool
+      auto t_req_begin = std::chrono::high_resolution_clock::now();
+      {
+        std::unique_lock<std::mutex> lock(m_cv_mutex);
+        m_cv.wait(lock, [&] { return !m_cleanup_requested; });
+        m_requests_running++;
       }
-    } else if (result.result_code == ResultCode::kNotYet) {
-      TLOG_DEBUG(TLVL_WORK_STEPS) << "Re-queue request. "
-                                  << "With timestamp=" << result.data_request.trigger_timestamp;
-      std::lock_guard<std::mutex> wait_lock_guard(m_waiting_requests_lock);
-      m_waiting_requests.push_back(RequestElement(datarequest, std::chrono::high_resolution_clock::now(),
-                                                  send_partial_fragment_if_available));
-    }
-    auto t_req_end = std::chrono::high_resolution_clock::now();
-    auto us_req_took = std::chrono::duration_cast<std::chrono::microseconds>(t_req_end - t_req_begin);
-    TLOG_DEBUG(TLVL_WORK_STEPS) << "Responding to data request took: " << us_req_took.count() << "[us]";
-    // if (result.result_code == ResultCode::kFound) {
-    //   std::lock_guard<std::mutex> time_lock_guard(m_response_time_log_lock);
-    //   m_response_time_log.push_back( std::make_pair<int, int>(result.data_request.trigger_number,
-    //   us_req_took.count()) );
-    // }
-    m_response_time_acc.fetch_add(us_req_took.count());
-    if ( us_req_took.count() > m_response_time_max.load() )
-      m_response_time_max.store(us_req_took.count());
-    if ( us_req_took.count() < m_response_time_min.load() )
-      m_response_time_min.store(us_req_took.count());
-    m_handled_requests++;
-  });
+      m_cv.notify_all();
+      auto result = data_request(datarequest, send_partial_fragment_if_available);
+      {
+        std::lock_guard<std::mutex> lock(m_cv_mutex);
+        m_requests_running--;
+      }
+      m_cv.notify_all();
+      if (result.result_code == ResultCode::kFound || result.result_code == ResultCode::kNotFound) {
+        try { // Send to fragment connection
+          TLOG_DEBUG(TLVL_QUEUE_PUSH) << "Sending fragment with trigger/sequence_number "
+                                      << result.fragment->get_trigger_number() << "."
+                                      << result.fragment->get_sequence_number() << ", run number "
+                                      << result.fragment->get_run_number() << ", and SourceID "
+                                      << result.fragment->get_element_id();
+          // Send fragment
+          get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)
+            ->send(std::move(result.fragment), std::chrono::milliseconds(m_fragment_send_timeout_ms));
+
+        } catch (const ers::Issue& excpt) {
+          ers::warning(CannotWriteToQueue(ERS_HERE, m_sourceid, datarequest.data_destination, excpt));
+        }
+      } else if (result.result_code == ResultCode::kNotYet) {
+        TLOG_DEBUG(TLVL_WORK_STEPS) << "Re-queue request. "
+                                    << "With timestamp=" << result.data_request.trigger_timestamp;
+        std::lock_guard<std::mutex> wait_lock_guard(m_waiting_requests_lock);
+        m_waiting_requests.push_back(
+          RequestElement(datarequest, std::chrono::high_resolution_clock::now(), send_partial_fragment_if_available));
+      }
+      auto t_req_end = std::chrono::high_resolution_clock::now();
+      auto us_req_took = std::chrono::duration_cast<std::chrono::microseconds>(t_req_end - t_req_begin);
+      TLOG_DEBUG(TLVL_WORK_STEPS) << "Responding to data request took: " << us_req_took.count() << "[us]";
+      // if (result.result_code == ResultCode::kFound) {
+      //   std::lock_guard<std::mutex> time_lock_guard(m_response_time_log_lock);
+      //   m_response_time_log.push_back( std::make_pair<int, int>(result.data_request.trigger_number,
+      //   us_req_took.count()) );
+      // }
+      m_response_time_acc.fetch_add(us_req_took.count());
+      if (us_req_took.count() > m_response_time_max.load())
+        m_response_time_max.store(us_req_took.count());
+      if (us_req_took.count() < m_response_time_min.load())
+        m_response_time_min.store(us_req_took.count());
+      m_handled_requests++;
+    });
 }
 
 template<class RDT, class LBT>
-void 
+void
 DefaultRequestHandlerModel<RDT, LBT>::get_info(opmonlib::InfoCollector& ci, int /*level*/)
 {
   readoutinfo::RequestHandlerInfo info;
@@ -259,7 +259,6 @@ DefaultRequestHandlerModel<RDT, LBT>::get_info(opmonlib::InfoCollector& ci, int 
   info.num_payloads_written = m_payloads_written.exchange(0);
   info.recording_status = m_recording ? "Y" : "N";
 
-
   int new_pop_reqs = 0;
   int new_pop_count = 0;
   int new_occupancy = 0;
@@ -274,7 +273,6 @@ DefaultRequestHandlerModel<RDT, LBT>::get_info(opmonlib::InfoCollector& ci, int 
   double seconds = std::chrono::duration_cast<std::chrono::microseconds>(now - m_t0).count() / 1000000.;
   TLOG_DEBUG(TLVL_HOUSEKEEPING) << "Cleanup request rate: " << new_pop_reqs / seconds / 1. << " [Hz]"
                                 << " Dropped: " << new_pop_count << " Occupancy: " << new_occupancy;
-
 
   // std::unique_lock<std::mutex> time_lorunck_guard(m_response_time_log_lock);
   // if (!m_response_time_log.empty()) {
@@ -306,9 +304,8 @@ DefaultRequestHandlerModel<RDT, LBT>::get_info(opmonlib::InfoCollector& ci, int 
   ci.add(info);
 }
 
-
 template<class RDT, class LBT>
-std::unique_ptr<daqdataformats::Fragment> 
+std::unique_ptr<daqdataformats::Fragment>
 DefaultRequestHandlerModel<RDT, LBT>::create_empty_fragment(const dfmessages::DataRequest& dr)
 {
   auto frag_header = create_fragment_header(dr);
@@ -319,7 +316,7 @@ DefaultRequestHandlerModel<RDT, LBT>::create_empty_fragment(const dfmessages::Da
 }
 
 template<class RDT, class LBT>
-void 
+void
 DefaultRequestHandlerModel<RDT, LBT>::periodic_cleanups()
 {
   while (m_run_marker.load()) {
@@ -329,7 +326,7 @@ DefaultRequestHandlerModel<RDT, LBT>::periodic_cleanups()
 }
 
 template<class RDT, class LBT>
-void 
+void
 DefaultRequestHandlerModel<RDT, LBT>::cleanup()
 {
   // auto now_s = time::now_as<std::chrono::seconds>();
@@ -356,7 +353,7 @@ DefaultRequestHandlerModel<RDT, LBT>::cleanup()
 }
 
 template<class RDT, class LBT>
-void 
+void
 DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests()
 {
   // At run stop, we wait until all waiting requests have either:
@@ -379,17 +376,21 @@ DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests()
           std::swap(m_waiting_requests[i], m_waiting_requests.back());
           m_waiting_requests.pop_back();
           size--;
-        } else if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - m_waiting_requests[i].start_time).count() >= m_request_timeout_ms) {
+        } else if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() -
+                                                                         m_waiting_requests[i].start_time)
+                     .count() >= m_request_timeout_ms) {
           issue_request(m_waiting_requests[i].request, true);
 
           if (m_warn_on_timeout) {
-            ers::warning(dunedaq::readoutlibs::VerboseRequestTimedOut(ERS_HERE, m_sourceid,
-                                                                      m_waiting_requests[i].request.trigger_number,
-                                                                      m_waiting_requests[i].request.sequence_number,
-                                                                      m_waiting_requests[i].request.run_number,
-                                                                      m_waiting_requests[i].request.request_information.window_begin,
-                                                                      m_waiting_requests[i].request.request_information.window_end,
-                                                                      m_waiting_requests[i].request.data_destination));
+            ers::warning(dunedaq::readoutlibs::VerboseRequestTimedOut(
+              ERS_HERE,
+              m_sourceid,
+              m_waiting_requests[i].request.trigger_number,
+              m_waiting_requests[i].request.sequence_number,
+              m_waiting_requests[i].request.run_number,
+              m_waiting_requests[i].request.request_information.window_begin,
+              m_waiting_requests[i].request.request_information.window_end,
+              m_waiting_requests[i].request.data_destination));
           }
 
           m_num_requests_bad++;
@@ -408,7 +409,7 @@ DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests()
 }
 
 template<class RDT, class LBT>
-std::vector<std::pair<void*, size_t>> 
+std::vector<std::pair<void*, size_t>>
 DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
                                                           uint64_t end_win_ts,
                                                           RequestResult& rres)
@@ -431,14 +432,14 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
 
     RDT* element = &(*start_iter);
     while (start_iter.good() && element->get_first_timestamp() < end_win_ts) {
-      if ( element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference < start_win_ts) {
+      if (element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference <
+          start_win_ts) {
         // skip processing for current element, out of readout window.
-      } else if (
-         (element->get_first_timestamp() < start_win_ts &&
-          element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference >= start_win_ts) 
-         ||
-          element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference >=
-            end_win_ts) {
+      } else if ((element->get_first_timestamp() < start_win_ts &&
+                  element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference >=
+                    start_win_ts) ||
+                 element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference >=
+                   end_win_ts) {
         // We don't need the whole aggregated object (e.g.: superchunk)
         for (auto frame_iter = element->begin(); frame_iter != element->end(); frame_iter++) {
           if (get_frame_iterator_timestamp(frame_iter) >= start_win_ts &&
@@ -462,9 +463,8 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
 }
 
 template<class RDT, class LBT>
-typename DefaultRequestHandlerModel<RDT, LBT>::RequestResult 
-DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr, 
-                                                   bool send_partial_fragment_if_available)
+typename DefaultRequestHandlerModel<RDT, LBT>::RequestResult
+DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr, bool send_partial_fragment_if_available)
 {
   // Prepare response
   RequestResult rres(ResultCode::kUnknown, dr);
@@ -484,19 +484,18 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
 
     uint64_t start_win_ts = dr.request_information.window_begin; // NOLINT(build/unsigned)
     uint64_t end_win_ts = dr.request_information.window_end;     // NOLINT(build/unsigned)
-    TLOG_DEBUG(TLVL_WORK_STEPS) << "Data request for trig/seq_num=" << dr.trigger_number
-      << "." << dr.sequence_number << " with"
-      << " Trigger TS=" << dr.trigger_timestamp
-      << " Oldest stored TS=" << last_ts
-      << " Newest stored TS=" << newest_ts
-      << " Start of window TS=" << start_win_ts
-      << " End of window TS=" << end_win_ts
-      << " Latency buffer occupancy=" << m_latency_buffer->occupancy();
+    TLOG_DEBUG(TLVL_WORK_STEPS) << "Data request for trig/seq_num=" << dr.trigger_number << "." << dr.sequence_number
+                                << " with"
+                                << " Trigger TS=" << dr.trigger_timestamp << " Oldest stored TS=" << last_ts
+                                << " Newest stored TS=" << newest_ts << " Start of window TS=" << start_win_ts
+                                << " End of window TS=" << end_win_ts
+                                << " Latency buffer occupancy=" << m_latency_buffer->occupancy();
 
     // List of safe-extraction conditions
     if (last_ts <= start_win_ts && end_win_ts <= newest_ts) { // the full window of data is there
       frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
-    } else if (send_partial_fragment_if_available && last_ts <= end_win_ts && end_win_ts <= newest_ts) { // partial data is there
+    } else if (send_partial_fragment_if_available && last_ts <= end_win_ts &&
+               end_win_ts <= newest_ts) { // partial data is there
       frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
       if (rres.result_code == ResultCode::kNotYet) {
         // 15-Sep-2022, KAB: this is really ugly.  I'm not sure why get_fragment_pieces occasionally
@@ -506,7 +505,8 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
         local_data_not_found_flag = true;
         rres.result_code = ResultCode::kNotFound;
       }
-    } else if ((! send_partial_fragment_if_available) && last_ts > start_win_ts) { // data at the start of the window is missing
+    } else if ((!send_partial_fragment_if_available) &&
+               last_ts > start_win_ts) { // data at the start of the window is missing
       frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
       rres.result_code = ResultCode::kNotFound;
       ++m_num_requests_old_window;
@@ -523,17 +523,16 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
         // have an object past the end of the window, so fill the
         // fragment with what we have so far
         if (m_warn_on_timeout) {
-          TLOG()
-            << "Returning partial fragment for trig/seq number " << dr.trigger_number << "." << dr.sequence_number
-            << " with TS " << dr.trigger_timestamp 
-            << ". Component " << dr.request_information.component 
-            << " with type " << daqdataformats::fragment_type_to_string(daqdataformats::FragmentType(frag_header.fragment_type));
+          TLOG() << "Returning partial fragment for trig/seq number " << dr.trigger_number << "." << dr.sequence_number
+                 << " with TS " << dr.trigger_timestamp << ". Component " << dr.request_information.component
+                 << " with type "
+                 << daqdataformats::fragment_type_to_string(daqdataformats::FragmentType(frag_header.fragment_type));
         } else {
-          TLOG_DEBUG(TLVL_WORK_STEPS)
-            << "Returning partial fragment for trig/seq number " << dr.trigger_number << "." << dr.sequence_number
-            << " with TS " << dr.trigger_timestamp 
-            << ". Component " << dr.request_information.component 
-            << " with type " << daqdataformats::fragment_type_to_string(daqdataformats::FragmentType(frag_header.fragment_type));
+          TLOG_DEBUG(TLVL_WORK_STEPS) << "Returning partial fragment for trig/seq number " << dr.trigger_number << "."
+                                      << dr.sequence_number << " with TS " << dr.trigger_timestamp << ". Component "
+                                      << dr.request_information.component << " with type "
+                                      << daqdataformats::fragment_type_to_string(
+                                           daqdataformats::FragmentType(frag_header.fragment_type));
         }
         frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kIncomplete));
         frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
@@ -547,7 +546,9 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
         // (TCBuffer) latency buffer (and no data later than the request window end time).
         // In those cases, get_fragment_pieces() returns kNotYet, and we need to change that
         // kFound in order to not keep looping.
-        if (rres.result_code == ResultCode::kNotYet) {rres.result_code = ResultCode::kFound;}
+        if (rres.result_code == ResultCode::kNotYet) {
+          rres.result_code = ResultCode::kFound;
+        }
       } else {
         ++m_num_requests_delayed;
         rres.result_code = ResultCode::kNotYet; // give it another chance
@@ -573,12 +574,9 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
 
     // Build fragment
     oss << "TS match result on link " << m_sourceid.id << ": "
-        << " Trigger number=" << dr.trigger_number
-        << " Oldest stored TS=" << last_ts
-        << " Start of window TS=" << start_win_ts
-        << " End of window TS=" << end_win_ts
-        << " Estimated newest stored TS=" << newest_ts
-        << " Requestor=" << dr.data_destination;
+        << " Trigger number=" << dr.trigger_number << " Oldest stored TS=" << last_ts
+        << " Start of window TS=" << start_win_ts << " End of window TS=" << end_win_ts
+        << " Estimated newest stored TS=" << newest_ts << " Requestor=" << dr.data_destination;
     TLOG_DEBUG(TLVL_WORK_STEPS) << oss.str();
   } else {
     local_data_not_found_flag = true;
@@ -593,10 +591,11 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
   }
 
   if (rres.result_code != ResultCode::kFound) {
-    if (m_warn_about_empty_buffer || (! local_data_not_found_flag)) {
+    if (m_warn_about_empty_buffer || (!local_data_not_found_flag)) {
       ers::warning(dunedaq::readoutlibs::TrmWithEmptyFragment(ERS_HERE, m_sourceid, oss.str()));
     } else {
-      TLOG_DEBUG(TLVL_WORK_STEPS) << "SourceID[" << m_sourceid << "] Trigger Matching result with empty fragment: " << oss.str();
+      TLOG_DEBUG(TLVL_WORK_STEPS) << "SourceID[" << m_sourceid
+                                  << "] Trigger Matching result with empty fragment: " << oss.str();
     }
   }
 

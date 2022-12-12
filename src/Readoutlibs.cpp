@@ -16,4 +16,3 @@
 #include "readoutlibs/models/SourceEmulatorModel.hpp"
 #include "readoutlibs/models/TaskRawDataProcessorModel.hpp"
 #include "readoutlibs/models/ZeroCopyRecordingRequestHandlerModel.hpp"
-

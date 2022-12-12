@@ -24,14 +24,15 @@ class BinarySearchQueueModel : public IterableQueueModel<T>
 public:
   BinarySearchQueueModel()
     : IterableQueueModel<T>()
-  {}
+  {
+  }
 
   explicit BinarySearchQueueModel(uint32_t size) // NOLINT(build/unsigned)
     : IterableQueueModel<T>(size)
-  {}
+  {
+  }
 
   typename IterableQueueModel<T>::Iterator lower_bound(T& element, bool /*with_errors=false*/);
-
 };
 
 } // namespace readoutlibs

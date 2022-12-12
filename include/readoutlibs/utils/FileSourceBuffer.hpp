@@ -31,7 +31,8 @@ public:
     , m_chunk_size(chunk_size)
     , m_element_count(0)
     , m_source_filename("")
-  {}
+  {
+  }
 
   FileSourceBuffer(const FileSourceBuffer&) = delete;            ///< FileSourceBuffer is not copy-constructible
   FileSourceBuffer& operator=(const FileSourceBuffer&) = delete; ///< FileSourceBuffer is not copy-assginable
