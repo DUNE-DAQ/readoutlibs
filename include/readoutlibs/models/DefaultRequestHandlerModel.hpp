@@ -473,9 +473,10 @@ protected:
         auto last_frame = m_latency_buffer->back();                                       // NOLINT
         uint64_t newest_ts = last_frame == nullptr ? std::numeric_limits<uint64_t>::min() // NOLINT(build/unsigned)
                                                    : last_frame->get_first_timestamp();
+	std::cout<<"newest_ts"<<newest_ts<<std::endl;
 
         size_t size = m_waiting_requests.size();
-
+	std::cout<<"waiting reqs "<<m_waiting_requests.size()<<" latency buf size "<<m_latency_buffer->occupancy()<<std::endl;
         for (size_t i = 0; i < size;) {
           if (m_waiting_requests[i].request.request_information.window_end < newest_ts) {
             issue_request(m_waiting_requests[i].request, false);
@@ -493,7 +494,8 @@ protected:
             m_waiting_requests.pop_back();
             size--;
           } else {
-            m_waiting_requests[i].retry_count++;
+            //std::cout<<"waiting reqs window end"<< m_waiting_requests[i].request.request_information.window_end<<std::endl;
+	    m_waiting_requests[i].retry_count++;
             i++;
           }
         }
@@ -515,6 +517,7 @@ protected:
     if (start_iter == m_latency_buffer->end()) {
       // Due to some concurrent access, the start_iter could not be retrieved successfully, try again
       ++m_num_requests_delayed;
+      printf("OOPS\n");
       rres.result_code = ResultCode::kNotYet; // give it another chance
     } else {
       rres.result_code = ResultCode::kFound;
@@ -523,7 +526,9 @@ protected:
       auto elements_handled = 0;
 
       ReadoutType* element = &(*start_iter);
+      printf("Naseem: %lu\n", element->get_first_timestamp());
       while (start_iter.good() && element->get_first_timestamp() < end_win_ts) {
+	printf("Naseem 2: %lu, %d \n", element->get_first_timestamp(), (int)element->get_frame_size());
         if (element->get_first_timestamp() < start_win_ts ||
             element->get_first_timestamp() + (element->get_num_frames() - 1) * ReadoutType::expected_tick_difference >=
               end_win_ts) {
@@ -537,6 +542,7 @@ protected:
           }
         } else {
           // We are somewhere in the middle -> the whole aggregated object (e.g.: superchunk) can be copied
+          printf("Naseem 3: %d\n", (int)element->get_payload_size());
           frag_pieces.emplace_back(
             std::make_pair<void*, size_t>(static_cast<void*>((*start_iter).begin()), element->get_payload_size()));
         }
@@ -565,10 +571,10 @@ protected:
       auto last_element = m_latency_buffer->back();             // NOLINT
       uint64_t last_ts = front_element->get_first_timestamp();  // NOLINT(build/unsigned)
       uint64_t newest_ts = last_element->get_first_timestamp(); // NOLINT(build/unsigned)
-
+      //std::cout<<"HERE"<< "last_ts, newest_ts" << last_ts << newest_ts << std::endl;
       uint64_t start_win_ts = dr.request_information.window_begin; // NOLINT(build/unsigned)
       uint64_t end_win_ts = dr.request_information.window_end;     // NOLINT(build/unsigned)
-      TLOG_DEBUG(TLVL_WORK_STEPS) << "Data request for "
+      TLOG() << "Data request for "
                                   << "Trigger TS=" << dr.trigger_timestamp << " "
                                   << "Oldest stored TS=" << last_ts << " "
                                   << "Newest stored TS=" << newest_ts << " "
@@ -578,6 +584,7 @@ protected:
       // List of safe-extraction conditions
       if (last_ts <= start_win_ts && end_win_ts <= newest_ts) { // data is there
         frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
+	std::cout<<"getting fragment pieces"<<std::endl;
       } else if (last_ts > start_win_ts) { // data is gone.
         frag_header.error_bits |= (0x1 << static_cast<size_t>(daqdataformats::FragmentErrorBits::kDataNotFound));
         rres.result_code = ResultCode::kNotFound;
@@ -631,6 +638,7 @@ protected:
     }
 
     if (rres.result_code != ResultCode::kFound) {
+      std::cout<<"rres.result_code"<<rres.result_code;
       ers::warning(dunedaq::readoutlibs::TrmWithEmptyFragment(ERS_HERE, m_geoid, oss.str()));
     }
 
@@ -639,7 +647,6 @@ protected:
 
     // Set header
     rres.fragment->set_header_fields(frag_header);
-
     return rres;
   }
 
