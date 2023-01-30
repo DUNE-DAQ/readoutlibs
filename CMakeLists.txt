@@ -35,7 +35,7 @@ set(READOUT_DEPENDENCIES
 
 ##############################################################################
 # Extra options and tweaks
-set(READOUT_USE_LIBNUMA OFF)
+set(READOUT_USE_LIBNUMA ON)
 
 if(${READOUT_USE_LIBNUMA})
   list(APPEND READOUT_DEPENDENCIES numa)
