@@ -38,7 +38,10 @@ set(READOUT_DEPENDENCIES
 set(READOUT_USE_LIBNUMA ON)
 
 if(${READOUT_USE_LIBNUMA})
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(numa REQUIRED IMPORTED_TARGET "numa")
   list(APPEND READOUT_DEPENDENCIES numa)
+  #list(APPEND READOUT_DEPENDENCIES ${numa_LINK_LIBRARIES})
   add_compile_definitions(WITH_LIBNUMA_SUPPORT)
 endif()
 
@@ -48,6 +51,11 @@ daq_add_library(
   *.cpp
   LINK_LIBRARIES ${READOUT_DEPENDENCIES}
 )
+
+
+if(${READOUT_USE_LIBNUMA})
+  target_include_directories(readoutlibs PUBLIC ${numa_INCLUDE_DIRS})
+endif()
 
 ##############################################################################
 # Integration tests
