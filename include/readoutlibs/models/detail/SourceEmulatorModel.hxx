@@ -160,7 +160,7 @@ SourceEmulatorModel<ReadoutType>::run_produce()
       ++m_packet_count_tot;
     }
 
-    timestamp += m_time_tick_diff * 12;
+    timestamp += m_time_tick_diff * rptr->get_num_frames();
 
     m_rate_limiter->limit();
   }
