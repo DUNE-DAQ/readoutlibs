@@ -134,17 +134,22 @@ ReadoutModel<RDT, RHT, LBT, RPT>::stop(const nlohmann::json& args)
 
   // Stop receiving data requests as first thing
   m_data_request_receiver->remove_callback();
+  TLOG() << "Sbhuller:" << "SourceID " << m_sourceid << "Removed request reciever callback";
   // Stop the other threads
   m_request_handler_impl->stop(args);
   while (!m_timesync_thread.get_readiness()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
+  TLOG() << "Sbhuller:" << "SourceID " << m_sourceid << "Timesync threads completed";
   while (!m_consumer_thread.get_readiness()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
-  TLOG_DEBUG(TLVL_WORK_STEPS) << "Flushing latency buffer with occupancy: " << m_latency_buffer_impl->occupancy();
+  TLOG() << "Sbhuller:" << "SourceID " << m_sourceid << "consumer threads completed";
+  TLOG() << "Sbhuller:" << "SourceID " << m_sourceid << " Flushing latency buffer with occupancy: " << m_latency_buffer_impl->occupancy();
   m_latency_buffer_impl->flush();
+  TLOG() << "Sbhuller:" << "SourceID " << m_sourceid << "Latency buffer flushed";
   m_raw_processor_impl->stop(args);
+  TLOG() << "Sbhuller:" << "SourceID " << m_sourceid << "RDP stopped";
   m_raw_processor_impl->reset_last_daq_time();
 }
 
@@ -208,14 +213,14 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
   m_sum_payloads = 0;
   m_stats_packet_count = 0;
 
-  TLOG_DEBUG(TLVL_WORK_STEPS) << "Consumer thread started...";
+  TLOG() << "Sbhuller: Consumer thread started...";
   while (m_run_marker.load()) {
     // Try to acquire data
     try {
       RDT payload = m_raw_data_receiver->receive(m_raw_receiver_timeout_ms);
       m_raw_processor_impl->preprocess_item(&payload);
       if (!m_latency_buffer_impl->write(std::move(payload))) {
-        TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Latency buffer is full and data was overwritten!";
+        TLOG() << "Sbhuller:" << "SourceID " << m_sourceid << " ***ERROR: Latency buffer is full and data was overwritten!";
         m_num_payloads_overwritten++;
       }
       m_raw_processor_impl->postprocess_item(m_latency_buffer_impl->back());
@@ -224,6 +229,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
       ++m_stats_packet_count;
     } catch (const iomanager::TimeoutExpired& excpt) {
       ++m_rawq_timeout_count;
+      TLOG() << "Sbhuller" << "SourceID " << m_sourceid << ": timeout expired!";
       // ers::error(QueueTimeoutError(ERS_HERE, " raw source "));
     }
   }
