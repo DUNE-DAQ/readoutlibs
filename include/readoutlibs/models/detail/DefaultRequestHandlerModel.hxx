@@ -431,18 +431,19 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
 
     RDT* element = &(*start_iter);
     while (start_iter.good() && element->get_first_timestamp() < end_win_ts) {
-      if ( element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference < start_win_ts) {
+      //if ( element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference < start_win_ts) {
+      if ( element->get_first_timestamp() + element->get_num_frames() * RDT::expected_tick_difference < start_win_ts) {
         // skip processing for current element, out of readout window.
       } else if (
          (element->get_first_timestamp() < start_win_ts &&
-          element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference >= start_win_ts) 
+          element->get_first_timestamp() + element->get_num_frames() * RDT::expected_tick_difference > start_win_ts) 
          ||
-          element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference >=
+          element->get_first_timestamp() + element->get_num_frames() * RDT::expected_tick_difference >
             end_win_ts) {
         // We don't need the whole aggregated object (e.g.: superchunk)
         for (auto frame_iter = element->begin(); frame_iter != element->end(); frame_iter++) {
-          if (get_frame_iterator_timestamp(frame_iter) >= start_win_ts &&
-              get_frame_iterator_timestamp(frame_iter) < end_win_ts) {
+          if (get_frame_iterator_timestamp(frame_iter) > (start_win_ts - RDT::expected_tick_difference)&&
+              get_frame_iterator_timestamp(frame_iter) < end_win_ts ) {
             frag_pieces.emplace_back(
               std::make_pair<void*, size_t>(static_cast<void*>(&(*frame_iter)), element->get_frame_size()));
           }
