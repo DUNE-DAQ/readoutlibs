@@ -21,6 +21,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
       } else if (cr.name == "timesync_output") {
   	    TLOG() << "Create timesync sender";
   	    m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(cr.uid);
+            m_timesync_connection_name = cr.uid;
       }
     }
     //iomanager::ConnectionRef raw_input_ref = iomanager::ConnectionRef{ "input", "raw_input", iomanager::Direction::kInput };
@@ -77,8 +78,6 @@ ReadoutModel<RDT, RHT, LBT, RPT>::conf(const nlohmann::json& args)
 
   m_sourceid.id = conf.source_id;
   m_sourceid.subsystem = RDT::subsystem;
-
-  m_timesync_connection_name = conf.timesync_connection_name;
 
   m_send_partial_fragment_if_available = conf.send_partial_fragment_if_available;
 
