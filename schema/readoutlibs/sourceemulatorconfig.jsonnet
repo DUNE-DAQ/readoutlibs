@@ -64,7 +64,10 @@ local sourceemulatorconfig = {
 
         s.field("queue_timeout_ms", self.uint4, 2000,
                 doc="Queue timeout in milliseconds"),
-        
+
+        s.field("use_now_as_first_data_time", self.choice, false,
+                doc="Whether to use the current wallclock time for the timestamp of the first data frame"),
+
         s.field("set_t0_to", self.int8, -1,
                 doc="The first DAQ timestamp. If -1, t0 from file is used.")
 
