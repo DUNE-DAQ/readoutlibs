@@ -124,8 +124,7 @@ SourceEmulatorModel<ReadoutType>::run_produce()
     auto time_now = std::chrono::system_clock::now().time_since_epoch();
     uint64_t current_time = // NOLINT (build/unsigned)
       std::chrono::duration_cast<std::chrono::microseconds>(time_now).count();
-    uint64_t m_clock_frequency = 62500000; // NOLINT (build/unsigned)
-    ts_0 = (m_clock_frequency / 100000) * current_time;
+    ts_0 = (m_conf.clock_speed_hz / 100000) * current_time;
     ts_0 /= 10;
   }
   TLOG_DEBUG(TLVL_BOOKKEEPING) << "Using first timestamp: " << ts_0;
