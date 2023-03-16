@@ -49,7 +49,8 @@ public:
                                uint64_t time_tick_diff, // NOLINT(build/unsigned)
                                double dropout_rate,
                                double frame_error_rate,
-                               double rate_khz)
+                               double rate_khz,
+			       uint16_t frames_per_tick=1)
     : m_run_marker(run_marker)
     , m_time_tick_diff(time_tick_diff)
     , m_dropout_rate(dropout_rate)
@@ -60,6 +61,7 @@ public:
     , m_producer_thread(0)
     , m_name(name)
     , m_rate_khz(rate_khz)
+    ,m_frames_per_tick(frames_per_tick)
   {}
 
   void init(const nlohmann::json& /*args*/) {}
@@ -119,6 +121,7 @@ private:
   std::string m_name;
   bool m_is_configured = false;
   double m_rate_khz;
+  uint16_t m_frames_per_tick;
 
   std::vector<bool> m_dropouts; // Random population
   std::vector<bool> m_frame_errors;
