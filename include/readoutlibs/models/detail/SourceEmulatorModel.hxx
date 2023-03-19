@@ -116,8 +116,18 @@ SourceEmulatorModel<ReadoutType>::run_produce()
   auto rptr = reinterpret_cast<ReadoutType*>(source.data()); // NOLINT
 
   // set the initial timestamp to a configured value, otherwise just use the timestamp from the header
-  uint64_t ts_0 = (m_conf.set_t0_to >= 0) ? m_conf.set_t0_to : rptr->get_first_timestamp(); // NOLINT(build/unsigned)
-  TLOG_DEBUG(TLVL_BOOKKEEPING) << "First timestamp in the source file: " << ts_0;
+  uint64_t ts_0 = rptr->get_first_timestamp(); // NOLINT(build/unsigned)
+  if (m_conf.set_t0_to >= 0) {
+    ts_0 = m_conf.set_t0_to;
+  }
+  else if (m_conf.use_now_as_first_data_time) {
+    auto time_now = std::chrono::system_clock::now().time_since_epoch();
+    uint64_t current_time = // NOLINT (build/unsigned)
+      std::chrono::duration_cast<std::chrono::microseconds>(time_now).count();
+    ts_0 = (m_conf.clock_speed_hz / 100000) * current_time;
+    ts_0 /= 10;
+  }
+  TLOG_DEBUG(TLVL_BOOKKEEPING) << "Using first timestamp: " << ts_0;
   uint64_t timestamp = ts_0; // NOLINT(build/unsigned)
   int dropout_index = 0;
 
