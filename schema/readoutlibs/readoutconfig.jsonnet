@@ -36,8 +36,6 @@ local readoutconfig = {
     string : s.string("String", moo.re.ident,
                       doc="A string field"),
 
-    netmgr_name : s.string("NetworkManagerName", doc="Connection or topic name to be used with NetworkManager"),
-
     latencybufferconf : s.record("LatencyBufferConf", [
             s.field("latency_buffer_size", self.size, 100000,
                             doc="Size of latency buffer"),
@@ -135,7 +133,6 @@ local readoutconfig = {
                             doc="Timeout for source queue"),
             s.field("source_id", self.source_id, 0,
                             doc="The source id of this link"),
-            s.field("timesync_connection_name", self.netmgr_name, "", doc="Connection name for sending timesyncs"),
             s.field("send_partial_fragment_if_available", self.choice, false,
                             doc="Whether to send a partial fragment if one is available")
     ], doc="Readout Model Config"),

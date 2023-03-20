@@ -13,6 +13,9 @@ local s = moo.oschema.schema(ns);
 
 // Object structure used by the test/fake producer module
 local sourceemulatorconfig = {
+    size: s.number("Size", "u8",
+                   doc="A count of very many things"),
+
     uint4  : s.number("uint4", "u4",
                      doc="An unsigned of 4 bytes"),
 
@@ -64,7 +67,13 @@ local sourceemulatorconfig = {
 
         s.field("queue_timeout_ms", self.uint4, 2000,
                 doc="Queue timeout in milliseconds"),
-        
+
+        s.field("use_now_as_first_data_time", self.choice, false,
+                doc="Whether to use the current wallclock time for the timestamp of the first data frame"),
+
+        s.field("clock_speed_hz", self.size, 62500000,
+                doc="Clock frequency in Hz (for use in calculating the first data frame timestamp)"),
+
         s.field("set_t0_to", self.int8, -1,
                 doc="The first DAQ timestamp. If -1, t0 from file is used.")
 
