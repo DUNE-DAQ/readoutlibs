@@ -206,7 +206,7 @@ DefaultRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest data
     m_cv.notify_all();
     if (result.result_code == ResultCode::kFound || result.result_code == ResultCode::kNotFound) {
       try { // Send to fragment connection
-        TLOG() << "Sending fragment with trigger/sequence_number "
+        TLOG() << "Sending empty fragment with trigger/sequence_number "
           << result.fragment->get_trigger_number() << "."
           << result.fragment->get_sequence_number() << ", run number "
           << result.fragment->get_run_number() << ", and SourceID "
@@ -414,7 +414,7 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
                                                           RequestResult& rres)
 {
 
-  TLOG() << "Looking for frags between " << start_win_ts << " and " << end_win_ts;
+  //TLOG() << "Looking for frags between " << start_win_ts << " and " << end_win_ts;
   std::vector<std::pair<void*, size_t>> frag_pieces;
   RDT request_element = RDT();
   request_element.set_first_timestamp(start_win_ts);
@@ -427,13 +427,24 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
     rres.result_code = ResultCode::kNotYet; // give it another chance
     TLOG() << "Timestamp in future";
   } else {
-    TLOG() << "Lower bound found " << start_iter->get_first_timestamp() << ", distance from window: " << int64_t(start_win_ts) - int64_t(start_iter->get_first_timestamp()) ;  
+    TLOG() << "Lower bound found " << start_iter->get_first_timestamp() << ", --> distance from window: " << int64_t(start_win_ts) - int64_t(start_iter->get_first_timestamp()) ;  
     rres.result_code = ResultCode::kFound;
     ++m_num_requests_found;
 
     auto elements_handled = 0;
 
     RDT* element = &(*start_iter);
+/*
+    int i = 0;
+    while (start_iter!=m_latency_buffer->end() && i < 64) {
+      frag_pieces.emplace_back(std::make_pair<void*, size_t>(static_cast<void*>(element), element->get_frame_size()));
+      //TLOG() << "Added element with timestamp " << element->get_first_timestamp() << " and size " << element->get_frame_size();
+      ++start_iter;
+      element = &(*start_iter);     
+      ++i;
+    }
+*/
+    
     while (start_iter.good() && element->get_first_timestamp() < end_win_ts) {
       //if ( element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference < start_win_ts) {
       if ( element->get_first_timestamp() + element->get_num_frames() * RDT::expected_tick_difference < start_win_ts) {
@@ -463,8 +474,9 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
       ++start_iter;
       element = &(*start_iter);
     }
+    
   }
-  TLOG() << "Number of frames retrieved: " << frag_pieces.size();
+  TLOG() << "*** Number of frames retrieved: " << frag_pieces.size();
   return frag_pieces;
 }
 
