@@ -210,8 +210,9 @@ DefaultRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest data
           << result.fragment->get_trigger_number() << "."
           << result.fragment->get_sequence_number() << ", run number "
           << result.fragment->get_run_number() << ", and SourceID "
-          << result.fragment->get_element_id() << ", and result code"
-	  << result.result_code;
+          << result.fragment->get_element_id() << ", and result code "
+          << result.result_code << ", and fragment size "
+          << result.fragment->get_size();
         // Send fragment
         get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)
           ->send(std::move(result.fragment), std::chrono::milliseconds(m_fragment_send_timeout_ms));
