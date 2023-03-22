@@ -210,7 +210,8 @@ DefaultRequestHandlerModel<RDT, LBT>::issue_request(dfmessages::DataRequest data
           << result.fragment->get_trigger_number() << "."
           << result.fragment->get_sequence_number() << ", run number "
           << result.fragment->get_run_number() << ", and SourceID "
-          << result.fragment->get_element_id();
+          << result.fragment->get_element_id() << ", and result code"
+	  << result.result_code;
         // Send fragment
         get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)
           ->send(std::move(result.fragment), std::chrono::milliseconds(m_fragment_send_timeout_ms));
@@ -425,16 +426,16 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
     // Due to some concurrent access, the start_iter could not be retrieved successfully, try again
     ++m_num_requests_delayed;
     rres.result_code = ResultCode::kNotYet; // give it another chance
-    TLOG() << "Timestamp in future";
+    //TLOG() << "Timestamp in future";
   } else {
-    TLOG() << "Lower bound found " << start_iter->get_first_timestamp() << ", --> distance from window: " << int64_t(start_win_ts) - int64_t(start_iter->get_first_timestamp()) ;  
+    //TLOG() << "Lower bound found " << start_iter->get_first_timestamp() << ", --> distance from window: " << int64_t(start_win_ts) - int64_t(start_iter->get_first_timestamp()) ;  
     rres.result_code = ResultCode::kFound;
     ++m_num_requests_found;
 
     auto elements_handled = 0;
 
     RDT* element = &(*start_iter);
-/*
+    /*
     int i = 0;
     while (start_iter!=m_latency_buffer->end() && i < 64) {
       frag_pieces.emplace_back(std::make_pair<void*, size_t>(static_cast<void*>(element), element->get_frame_size()));
@@ -443,18 +444,20 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
       element = &(*start_iter);     
       ++i;
     }
-*/
-    
-    while (start_iter.good() && element->get_first_timestamp() < end_win_ts) {
+    */
+   
+    while (start_iter!=m_latency_buffer->end() && element->get_first_timestamp() < end_win_ts) {
       //if ( element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference < start_win_ts) {
       if ( element->get_first_timestamp() + element->get_num_frames() * RDT::expected_tick_difference < start_win_ts) {
         //TLOG() << "skip processing for current element " << element->get_first_timestamp() << ", out of readout window.";
-      } else if (
-         (element->get_first_timestamp() < start_win_ts &&
+      } 
+      
+      else if ( element->get_num_frames()>1 &&
+         ((element->get_first_timestamp() < start_win_ts &&
           element->get_first_timestamp() + element->get_num_frames() * RDT::expected_tick_difference > start_win_ts) 
          ||
           element->get_first_timestamp() + element->get_num_frames() * RDT::expected_tick_difference >
-            end_win_ts) {
+            end_win_ts)) {
         //TLOG() << "We don't need the whole aggregated object (e.g.: superchunk)" ;
         for (auto frame_iter = element->begin(); frame_iter != element->end(); frame_iter++) {
           if (get_frame_iterator_timestamp(frame_iter) > (start_win_ts - RDT::expected_tick_difference)&&
@@ -463,7 +466,8 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
               std::make_pair<void*, size_t>(static_cast<void*>(&(*frame_iter)), element->get_frame_size()));
           }
         }
-      } else {
+      }
+      else {
 	//TLOG() << "Add element " << element->get_first_timestamp();      
         // We are somewhere in the middle -> the whole aggregated object (e.g.: superchunk) can be copied
         frag_pieces.emplace_back(
@@ -476,7 +480,7 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
     }
     
   }
-  TLOG() << "*** Number of frames retrieved: " << frag_pieces.size();
+  //TLOG() << "*** Number of frames retrieved: " << frag_pieces.size();
   return frag_pieces;
 }
 
