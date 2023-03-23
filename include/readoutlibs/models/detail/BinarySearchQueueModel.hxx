@@ -32,9 +32,25 @@ BinarySearchQueueModel<T>::lower_bound(T& element, bool /*with_errors=false*/)
     if (middle_index >= IterableQueueModel<T>::size_)
       middle_index -= IterableQueueModel<T>::size_;
     T& element_between = IterableQueueModel<T>::records_[middle_index];
-    if (diff == 0) {
+
+    //if we landed on our element, let's get out of here.
+    if (element.get_first_timestamp()==element_between.get_first_timestamp())
       return typename IterableQueueModel<T>::Iterator(*this, middle_index);
-    } else if (element < element_between) {
+
+    if ( diff == 0 ) {
+
+      //if we satisfy the lower_bound condition, we have the right index
+      if(element < element_between)
+	return typename IterableQueueModel<T>::Iterator(*this, middle_index);
+
+      //if we don't, we need to increment one up. for safety check size too
+      if(++middle_index >= IterableQueueModel<T>::size_)
+	middle_index -= IterableQueueModel<T>::size_;
+      
+      return typename IterableQueueModel<T>::Iterator(*this, middle_index);
+    }
+    
+    if (element < element_between) {
       end_index = middle_index != 0 ? middle_index - 1 : IterableQueueModel<T>::size_ - 1;
     } else {
       start_index = middle_index;
