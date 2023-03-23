@@ -380,6 +380,8 @@ DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests()
           m_waiting_requests.pop_back();
           size--;
         } else if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - m_waiting_requests[i].start_time).count() >= m_request_timeout_ms) {
+          uint64_t delay = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - m_waiting_requests[i].start_time).count();
+          TLOG() << "Charlie: The delay on this FAILED readout requests is: " << delay << " and the request timeout is: " << m_request_timeout_ms;
           issue_request(m_waiting_requests[i].request, true);
 
           if (m_warn_on_timeout) {
