@@ -137,6 +137,8 @@ SourceEmulatorModel<ReadoutType>::run_produce()
       offset = 0;
     }
 
+    //TLOG() << "Generating " << m_frames_per_tick << " for TS " << timestamp;
+    for (uint16_t i=0 ; i < m_frames_per_tick; i++) {
     bool create_frame = m_dropouts[dropout_index]; // NOLINT(runtime/threadsafe_fn)
     dropout_index = (dropout_index + 1) % m_dropouts.size();
     if (create_frame) {
@@ -169,7 +171,7 @@ SourceEmulatorModel<ReadoutType>::run_produce()
       ++m_packet_count;
       ++m_packet_count_tot;
     }
-
+    }
     timestamp += m_time_tick_diff * rptr->get_num_frames();
 
     m_rate_limiter->limit();
