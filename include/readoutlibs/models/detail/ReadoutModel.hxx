@@ -333,9 +333,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::dispatch_requests(dfmessages::DataRequest& dat
      ers::error(RequestSourceIDMismatch(ERS_HERE, m_sourceid, data_request.request_information.component));
      return;
   }
-
-  TLOG() << "Received DataRequest"
-  //TLOG_DEBUG(TLVL_QUEUE_POP) << "Received DataRequest" 
+  TLOG_DEBUG(TLVL_QUEUE_POP) << "Received DataRequest" 
     << " for trig/seq_number " << data_request.trigger_number << "." << data_request.sequence_number
     << ", runno " << data_request.run_number
     << ", trig timestamp " << data_request.trigger_timestamp
