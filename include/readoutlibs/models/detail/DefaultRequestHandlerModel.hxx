@@ -439,7 +439,7 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
    
     while (start_iter.good() && element->get_first_timestamp() < end_win_ts) {
       //if ( element->get_first_timestamp() + (element->get_num_frames() - 1) * RDT::expected_tick_difference < start_win_ts) {
-      if ( element->get_first_timestamp() + element->get_num_frames() * RDT::expected_tick_difference < start_win_ts) {
+      if ( element->get_first_timestamp() + element->get_num_frames() * RDT::expected_tick_difference <= start_win_ts) {
         //TLOG() << "skip processing for current element " << element->get_first_timestamp() << ", out of readout window.";
       } 
       
