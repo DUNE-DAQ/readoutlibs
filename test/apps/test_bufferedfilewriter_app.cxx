@@ -7,6 +7,7 @@
  * received with this code.
  */
 #include "readoutlibs/utils/BufferedFileWriter.hpp"
+#include "readoutlibs/utils/RateLimiter.hpp"
 
 #include "logging/Logging.hpp"
 #include "readoutlibs/ReadoutTypes.hpp"
@@ -21,14 +22,15 @@ using namespace dunedaq::readoutlibs;
 int
 main(int argc, char* argv[])
 {
-  if (argc != 2) {
-    TLOG() << "usage: readoutlibs_test_bufferedfilewriter filename" << std::endl;
+  if (argc < 2 || argc > 4 || argc==3 || (argc == 4 && strcmp(argv[2], "-L") != 0)) {
+    TLOG() << "usage: readoutlibs_test_bufferedfilewriter filename <-L rate_limiter_frequency>" << std::endl;
+    TLOG() << "-L frequency parameter is optional. Limiter will be disable" << std::endl;    
     exit(1);
   }
   remove(argv[1]); // NOLINT
   std::string filename(argv[1]);
-  BufferedFileWriter writer(filename, 8388608);
   types::DUMMY_FRAME_STRUCT chunk;
+  BufferedFileWriter writer(filename, 8388608);
   for (uint i = 0; i < sizeof(chunk); ++i) {
     (reinterpret_cast<char*>(&chunk))[i] = static_cast<char>(i); // NOLINT
   }
@@ -51,6 +53,17 @@ main(int argc, char* argv[])
     }
   });
 
+  // Initializing limiter
+  double limiter_freq = 0;
+  if (argc == 4) limiter_freq = std::stod(argv[3]);
+  auto limiter = RateLimiter(limiter_freq);
+
+  if (argc == 4) {
+    TLOG() << "Starting with ratelimiter at " << limiter_freq << "kHz";
+    limiter.init();
+  }
+  
+
   while (true) {
     if (!writer.write(reinterpret_cast<char*>(&chunk), sizeof(chunk))) {
       TLOG() << "Could not write to file" << std::endl;
@@ -58,5 +71,6 @@ main(int argc, char* argv[])
     }
     bytes_written_total += sizeof(chunk);
     bytes_written_since_last_statistics += sizeof(chunk);
+    if (argc == 4) limiter.limit();
   }
 }
