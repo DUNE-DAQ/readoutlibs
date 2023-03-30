@@ -35,6 +35,11 @@ local readoutconfig = {
 
     string : s.string("String", moo.re.ident,
                       doc="A string field"),
+   
+    channel_list : s.sequence( "ChannelList",   self.count, 
+                      doc="List of offline channels to be masked out from the TPHandler"),
+
+
 
     latencybufferconf : s.record("LatencyBufferConf", [
             s.field("latency_buffer_size", self.size, 100000,
@@ -70,8 +75,8 @@ local readoutconfig = {
                             doc="Select software TPG algorithm"),
             s.field("software_tpg_threshold", self.count, 5,
                             doc="Select software TPG threshold"),
-            s.field("channel_mask_file", self.file_name, "./ChannelMask.txt",
-                            doc="File containing offline channels to be masked out from the TPHandler"),
+            s.field( "software_tpg_channel_mask", self.channel_list, default=[], 
+                            doc="List of offline channels to be masked out from the TPHandler"),
             s.field("enable_firmware_tpg", self.choice, false,
                             doc="Enable firmware TPG"),
             s.field("fwtp_number_of_ticks", self.size, 64,
