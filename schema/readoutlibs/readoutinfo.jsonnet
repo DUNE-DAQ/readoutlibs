@@ -26,6 +26,10 @@ local info = {
         s.field("num_frame_errors",              self.uint8,     0, doc="Total number of frame errors")
    ], doc="Latency buffer information"),
 
+   tpchannelinfo: s.record("TPChannelInfo", [
+        s.field("num_tp",                  self.uint8,     0, doc="Number of TPs per channel")
+   ], doc="Info for a single TP channel"),
+
    requesthandlerinfo: s.record("RequestHandlerInfo", [
         s.field("num_requests_found",            self.uint8,     0, doc="Number of found requests"),
         s.field("num_requests_bad",              self.uint8,     0, doc="Number of bad requests"),
