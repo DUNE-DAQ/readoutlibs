@@ -159,6 +159,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::get_info(opmonlib::InfoCollector& ci, int leve
   ri.num_requests = m_num_requests.exchange(0);
   ri.num_payloads_overwritten = m_num_payloads_overwritten.exchange(0);
   ri.num_buffer_elements = m_latency_buffer_impl->occupancy();
+  ri.last_daq_timestamp = m_raw_processor_impl->get_last_daq_time();
 
   auto now = std::chrono::high_resolution_clock::now();
   int new_packets = m_stats_packet_count.exchange(0);
