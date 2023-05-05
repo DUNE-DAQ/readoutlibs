@@ -57,7 +57,8 @@ local info = {
        s.field("num_payloads_overwritten",      self.uint8,     0, doc="Number of overwritten payloads because the LB is full"),
        s.field("rate_payloads_consumed",        self.float8,    0, doc="Rate of consumed packets"),
        s.field("num_raw_queue_timeouts",        self.uint8,     0, doc="Raw queue timeouts"),
-       s.field("num_buffer_elements",           self.uint8,     0, doc="Occupancy of the LB")
+       s.field("num_buffer_elements",           self.uint8,     0, doc="Occupancy of the LB"),
+       s.field("last_daq_timestamp",            self.uint8,     0, doc="Last DAQ timestamp processed")
    ], doc="Readout information")
 };
 
