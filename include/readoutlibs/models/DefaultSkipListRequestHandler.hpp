@@ -53,8 +53,8 @@ protected:
   void skip_list_cleanup_request(); 
 
 private:
-  // Constants
-  static const constexpr uint64_t m_max_ts_diff = 10000000; // NOLINT(build/unsigned)
+  // Constant: m_max_ts_diff is used to clean old data from the latency buffer. It is set to 10s.
+  static const constexpr uint64_t m_max_ts_diff = 625000000; // NOLINT(build/unsigned)
 
   // Stats
   std::atomic<int> m_found_requested_count{ 0 };
