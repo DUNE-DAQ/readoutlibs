@@ -129,6 +129,9 @@ private:
   uint m_dropouts_length = 10000; // NOLINT(build/unsigned) Random population size
   uint m_frame_errors_length = 10000;
   daqdataformats::SourceID m_sourceid;
+  int m_crateid = 0;
+  int m_slotid = 0;
+  int m_linkid = 0;
 };
 
 } // namespace readoutlibs
