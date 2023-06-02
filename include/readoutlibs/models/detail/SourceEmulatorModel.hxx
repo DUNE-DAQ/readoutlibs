@@ -36,6 +36,10 @@ SourceEmulatorModel<ReadoutType>::conf(const nlohmann::json& args,
     m_sourceid.id = m_link_conf.source_id;
     m_sourceid.subsystem = ReadoutType::subsystem;
 
+    m_crateid = m_link_conf.crate_id;
+    m_slotid = m_link_conf.slot_id;
+    m_linkid = m_link_conf.link_id;
+
     m_file_source = std::make_unique<FileSourceBuffer>(m_link_conf.input_limit, sizeof(ReadoutType));
     try {
       m_file_source->read(m_link_conf.data_filename);
@@ -150,6 +154,9 @@ SourceEmulatorModel<ReadoutType>::run_produce()
 
       // Fake timestamp
       payload.fake_timestamps(timestamp, m_time_tick_diff);
+
+      // Fake geoid
+      payload.fake_geoid(m_crateid, m_slotid, m_linkid);
 
       // Introducing frame errors
       std::vector<uint16_t> frame_errs; // NOLINT(build/unsigned)

@@ -43,6 +43,12 @@ local sourceemulatorconfig = {
 
     link_conf : s.record("LinkConfiguration", [
         s.field("source_id", self.source_id, doc="SourceID of the link"),
+        s.field("crate_id", self.uint4, 0,
+                            doc="The crate id of this link"),
+        s.field("slot_id", self.uint4, 0,
+                            doc="The slot id of this link"),
+        s.field("link_id", self.uint4, 0,
+                            doc="The link id of this link"),
         s.field("input_limit", self.uint4, 10485100,
             doc="Maximum allowed file size"),
         s.field("slowdown", self.slowdown_t, 1,
