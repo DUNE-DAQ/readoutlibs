@@ -134,13 +134,13 @@ SourceEmulatorModel<ReadoutType>::run_produce()
   int dropout_index = 0;
 
   while (m_run_marker.load()) {
-    // Which element to push to the buffer
-    if (offset == num_elem * sizeof(ReadoutType) || (offset + 1) * sizeof(ReadoutType) > source.size()) {
-      offset = 0;
-    }
-
     // TLOG() << "Generating " << m_frames_per_tick << " for TS " << timestamp;
     for (uint16_t i = 0; i < m_frames_per_tick; i++) {
+      // Which element to push to the buffer
+      if (offset == num_elem || (offset + 1) * sizeof(ReadoutType) > source.size()) {
+        offset = 0;
+      }
+
       bool create_frame = m_dropouts[dropout_index]; // NOLINT(runtime/threadsafe_fn)
       dropout_index = (dropout_index + 1) % m_dropouts.size();
       if (create_frame) {
