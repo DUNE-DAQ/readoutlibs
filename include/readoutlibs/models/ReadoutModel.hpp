@@ -26,7 +26,7 @@
 #include "daqdataformats/Fragment.hpp"
 
 #include "dfmessages/DataRequest.hpp"
-#include "dfmessages/TimeSync.hpp"
+#include "utilities/TimeSync.hpp"
 
 #include "readoutlibs/ReadoutLogging.hpp"
 #include "readoutlibs/concepts/ReadoutConcept.hpp"
@@ -169,7 +169,7 @@ private:
   //std::shared_ptr<fragment_sender_ct> m_fragment_sender;
 
   // TIME-SYNC
-  using timesync_sender_ct = iomanager::SenderConcept<dfmessages::TimeSync>; // no timeout -> published
+  using timesync_sender_ct = iomanager::SenderConcept<utilities::TimeSync>; // no timeout -> published
   std::shared_ptr<timesync_sender_ct> m_timesync_sender;
   ReusableThread m_timesync_thread;
   std::string m_timesync_connection_name;

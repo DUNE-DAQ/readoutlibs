@@ -20,7 +20,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
   	    m_raw_data_receiver = get_iom_receiver<RDT>(cr.uid);
       } else if (cr.name == "timesync_output") {
   	    TLOG() << "Create timesync sender";
-  	    m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(cr.uid);
+        m_timesync_sender = get_iom_sender<utilities::TimeSync>(cr.uid);
             m_timesync_connection_name = cr.uid;
       }
     }
@@ -28,7 +28,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
     //m_raw_data_receiver = get_iom_receiver<RDT>(ini["raw_input"]);
     //iomanager::ConnectionRef frag_output_ref = iomanager::ConnectionRef{ "output", "frag_output", iomanager::Direction::kOutput };
     //iomanager::ConnectionRef timesync_output_ref = iomanager::ConnectionRef{ "output", "timesync_output", iomanager::Direction::kOutput };
-    //m_timesync_sender = get_iom_sender<dfmessages::TimeSync>("timesync_output");
+    //m_timesync_sender = get_iom_sender<utilities::TimeSync>("timesync_output");
   } catch (const ers::Issue& excpt) {
     throw ResourceQueueError(ERS_HERE, "raw_input or frag_output", "ReadoutModel", excpt);
   }
@@ -260,7 +260,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
   size_t total_timestamp_count = 0;
   while (m_run_marker.load()) {
     try {
-      auto timesyncmsg = dfmessages::TimeSync(m_raw_processor_impl->get_last_daq_time());
+      auto timesyncmsg = utilities::TimeSync(m_raw_processor_impl->get_last_daq_time());
       ++total_timestamp_count;
       // daq_time is zero for the first received timesync, and may
       // be the same as the previous daq_time if the data has
@@ -274,7 +274,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync()
           << " wall=" << timesyncmsg.system_time << " run=" << timesyncmsg.run_number
           << " seqno=" << timesyncmsg.sequence_number << " pid=" << timesyncmsg.source_pid;
         try {
-            dfmessages::TimeSync timesyncmsg_copy(timesyncmsg);
+            utilities::TimeSync timesyncmsg_copy(timesyncmsg);
           m_timesync_sender->send(std::move(timesyncmsg_copy), std::chrono::milliseconds(500));
         } catch (ers::Issue& excpt) {
           ers::warning(

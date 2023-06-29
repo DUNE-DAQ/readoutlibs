@@ -13,6 +13,7 @@ find_package(opmonlib REQUIRED)
 find_package(daqdataformats REQUIRED)
 find_package(dfmessages REQUIRED)
 find_package(folly REQUIRED)
+find_package(utilities REQUIRED)
 find_package(Boost COMPONENTS iostreams unit_test_framework REQUIRED)
 set(BOOST_LIBS Boost::iostreams ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_LIBRARIES})
 
@@ -31,6 +32,7 @@ set(READOUT_DEPENDENCIES
   opmonlib::opmonlib
   daqdataformats::daqdataformats
   dfmessages::dfmessages
+  utilities::utilities
 )
 
 ##############################################################################
