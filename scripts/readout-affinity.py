@@ -5,6 +5,7 @@ import os
 import sys
 import psutil
 import json
+import re
 
 info = 'Alters CPU masks of running processes with different arguments, based on a configuration file.'
 parser = argparse.ArgumentParser(description=info)
@@ -75,7 +76,10 @@ try:
             affinity_dict[proc][proc_opts]['threads'] = {}
             for thr_aff_field in affinity_json[proc][proc_opts][aff_field]:
               aff_value = affinity_json[proc][proc_opts][aff_field][thr_aff_field]
-              affinity_dict[proc][proc_opts]['threads'][thr_aff_field] = parse_cpumask(aff_value)
+              affinity_dict[proc][proc_opts]['threads'][thr_aff_field] = {
+                'regex':  re.compile(thr_aff_field),
+                'cpu_list': parse_cpumask(aff_value)
+              }
           else: 
             print('Expected affinity fields are \'parent\' or \'threads\'! Ignoring field: ' + aff_field)
             continue
@@ -123,14 +127,35 @@ for proc in procs:
           tid.cpu_affinity(mask)
           
 
-      if 'threads' in affinity_dict[proc.name()][cmdl].keys():
+      if 'threads' in affinity_dict[proc.name()][cmdl]:
         print('      + Thread masks specified! Applying thread specific masks!')
         for thread in threads:
           tid = psutil.Process(thread.id)
-          if tid.name() in affinity_dict[proc.name()][cmdl]['threads'].keys():
-            tmask = affinity_dict[proc.name()][cmdl]['threads'][tid.name()]
-            print('        - For thread', tid.name(), 'applying mask', tmask)
-            tid.cpu_affinity(tmask)
+          thread_masks = affinity_dict[proc.name()][cmdl]['threads']
+          # print(thread_masks)
+
+          # Match thread names with the mask regex
+          mask_matches = [ m for m in [(th_mask['regex'].fullmatch(tid.name()),th_mask['cpu_list']) for th_mask in thread_masks.values()] if m[0] is not None]
+          if len(mask_matches) > 1:
+            raise ValueError(f"Thread {tid.name()} mask_matches multiple masks {mask_matches}")
+          elif len(mask_matches) == 0:
+            continue
+
+          # Extract the cpu list
+          ((_,cpu_list),) = mask_matches
+          # if tid.name() in affinity_dict[proc.name()][cmdl]['threads'].keys():
+          # tmask = affinity_dict[proc.name()][cmdl]['threads'][tid.name()]
+          # print('        - For thread', tid.name(), 'applying mask', cpu_list)
+          print(f'        - For thread {tid.name()} applying mask {cpu_list}')
+          tid.cpu_affinity(cpu_list)
+
+
+
+
+          # if tid.name() in affinity_dict[proc.name()][cmdl]['threads'].keys():
+          #   tmask = affinity_dict[proc.name()][cmdl]['threads'][tid.name()]
+          #   print('        - For thread', tid.name(), 'applying mask', tmask)
+          #   tid.cpu_affinity(tmask)
       print('\n')
 
 print('### CPU affinity applied!')
