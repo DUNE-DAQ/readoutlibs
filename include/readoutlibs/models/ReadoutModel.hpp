@@ -81,6 +81,7 @@ public:
     , m_send_partial_fragment_if_available(false)
     , m_consumer_thread(0)
     , m_raw_receiver_timeout_ms(0)
+    , m_raw_receiver_sleep_us(0)
     , m_raw_data_receiver(nullptr)
     , m_timesync_thread(0)
     , m_latency_buffer_impl(nullptr)
@@ -156,6 +157,7 @@ private:
 
   // RAW RECEIVER
   std::chrono::milliseconds m_raw_receiver_timeout_ms;
+  std::chrono::microseconds m_raw_receiver_sleep_us;
   using raw_receiver_ct = iomanager::ReceiverConcept<ReadoutType>;
   std::shared_ptr<raw_receiver_ct> m_raw_data_receiver;
 

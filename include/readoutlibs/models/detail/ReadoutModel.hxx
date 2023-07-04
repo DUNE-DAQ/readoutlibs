@@ -74,6 +74,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::conf(const nlohmann::json& args)
     m_fake_trigger = true;
   }
   m_raw_receiver_timeout_ms = std::chrono::milliseconds(conf.source_queue_timeout_ms);
+  m_raw_receiver_sleep_us = std::chrono::microseconds(conf.source_queue_timeout_ms);
   TLOG_DEBUG(TLVL_WORK_STEPS) << "ReadoutModel creation";
 
   m_sourceid.id = conf.source_id;
@@ -212,21 +213,11 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Consumer thread started...";
   while (m_run_marker.load()) {
     // Try to acquire data
-    try {
-      RDT payload = m_raw_data_receiver->receive(m_raw_receiver_timeout_ms);
 
-      // 31-Oct-2022, KAB: The following TLOG_DEBUG line should probably remain commented-out
-      // during production running, but it can be useful during debugging and when we are adding
-      // new readout types. It may consume too many resources to be left enabled all of the time
-      // even though TRACE messages are very efficient. The issue is that it could be called very
-      // often, so it is safer to leave it commented out so that is doesn't affect performance.
-      // In addition, it is a bit of a stop-gap measure. It is better to have TLOG_DEBUG
-      // messages that give more details about the data payload that has been received (for
-      // example, the timestamp of the payload), but such DEBUG messages need to be included
-      // in places like fdreadoutlibs/<xyz>/<XYZ>FrameProcessor where the type of the payload
-      // is fully known. In many cases, such DEBUG messages exist, but when a new readout type
-      // is being added, those messages may not exist yet, and this message could be helpful.
-      //TLOG_DEBUG(TLVL_FRAME_RECEIVED) << "Received payload of type " << typeid(payload).name();
+    auto opt_payload = m_raw_data_receiver->try_receive(std::chrono::milliseconds(0));
+    if (opt_payload) {
+
+      RDT& payload = opt_payload.value();
 
       m_raw_processor_impl->preprocess_item(&payload);
       if (!m_latency_buffer_impl->write(std::move(payload))) {
@@ -237,10 +228,41 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
       ++m_num_payloads;
       ++m_sum_payloads;
       ++m_stats_packet_count;
-    } catch (const iomanager::TimeoutExpired& excpt) {
+    } else {
       ++m_rawq_timeout_count;
-      // ers::error(QueueTimeoutError(ERS_HERE, " raw source "));
+      std::this_thread::sleep_for(m_raw_receiver_sleep_us);
+      // std::this_thread::sleep_for(std::chrono::microseconds(1000));
     }
+
+    // try {
+    //   RDT payload = m_raw_data_receiver->receive(m_raw_receiver_timeout_ms);
+
+    //   // 31-Oct-2022, KAB: The following TLOG_DEBUG line should probably remain commented-out
+    //   // during production running, but it can be useful during debugging and when we are adding
+    //   // new readout types. It may consume too many resources to be left enabled all of the time
+    //   // even though TRACE messages are very efficient. The issue is that it could be called very
+    //   // often, so it is safer to leave it commented out so that is doesn't affect performance.
+    //   // In addition, it is a bit of a stop-gap measure. It is better to have TLOG_DEBUG
+    //   // messages that give more details about the data payload that has been received (for
+    //   // example, the timestamp of the payload), but such DEBUG messages need to be included
+    //   // in places like fdreadoutlibs/<xyz>/<XYZ>FrameProcessor where the type of the payload
+    //   // is fully known. In many cases, such DEBUG messages exist, but when a new readout type
+    //   // is being added, those messages may not exist yet, and this message could be helpful.
+    //   //TLOG_DEBUG(TLVL_FRAME_RECEIVED) << "Received payload of type " << typeid(payload).name();
+
+    //   m_raw_processor_impl->preprocess_item(&payload);
+    //   if (!m_latency_buffer_impl->write(std::move(payload))) {
+    //     TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Latency buffer is full and data was overwritten!";
+    //     m_num_payloads_overwritten++;
+    //   }
+    //   m_raw_processor_impl->postprocess_item(m_latency_buffer_impl->back());
+    //   ++m_num_payloads;
+    //   ++m_sum_payloads;
+    //   ++m_stats_packet_count;
+    // } catch (const iomanager::TimeoutExpired& excpt) {
+    //   ++m_rawq_timeout_count;
+    //   // ers::error(QueueTimeoutError(ERS_HERE, " raw source "));
+    // }
   }
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Consumer thread joins... ";
 }
