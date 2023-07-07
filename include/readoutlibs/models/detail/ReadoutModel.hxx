@@ -214,7 +214,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
   while (m_run_marker.load()) {
     // Try to acquire data
 
-    auto opt_payload = m_raw_data_receiver->try_receive(std::chrono::milliseconds(0));
+    auto opt_payload = m_raw_data_receiver->try_receive(iomanager::Sender::s_no_block);
     if (opt_payload) {
 
       RDT& payload = opt_payload.value();
