@@ -24,7 +24,9 @@ local info = {
         s.field("num_tps_dropped",               self.uint8,     0, doc="Number of dropped TPs (because they were too old)"),
         s.field("num_heartbeats",                self.uint8,     0, doc="Number of empty TP sets - heartbeats"),
         s.field("rate_tp_hits",                  self.float8,    0, doc="TP hit rate in kHz"),
-        s.field("num_frame_errors",              self.uint8,     0, doc="Total number of frame errors")
+        s.field("num_frame_errors",              self.uint8,     0, doc="Total number of frame errors"),
+        s.field("num_seq_id_errors",             self.uint8,     0, doc="Total number of sequence id frame errors"),
+        s.field("num_ts_errors",                 self.uint8,     0, doc="Total number of timestamp frame errors")
    ], doc="Latency buffer information"),
 
    tpchannelinfo: s.record("TPChannelInfo", [
