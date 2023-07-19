@@ -214,7 +214,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
   while (m_run_marker.load()) {
     // Try to acquire data
 
-    auto opt_payload = m_raw_data_receiver->try_receive(iomanager::Sender::s_no_block);
+    auto opt_payload = m_raw_data_receiver->try_receive(m_raw_receiver_timeout_ms);
     if (opt_payload) {
 
       RDT& payload = opt_payload.value();
@@ -230,8 +230,9 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
       ++m_stats_packet_count;
     } else {
       ++m_rawq_timeout_count;
-      std::this_thread::sleep_for(m_raw_receiver_sleep_us);
-      // std::this_thread::sleep_for(std::chrono::microseconds(1000));
+      // Protection against a zero sleep becoming a yield
+      if ( m_raw_receiver_sleep_us != std::chrono::duration_values::zero)
+        std::this_thread::sleep_for(m_raw_receiver_sleep_us);
     }
 
     // try {
