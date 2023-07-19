@@ -231,7 +231,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
     } else {
       ++m_rawq_timeout_count;
       // Protection against a zero sleep becoming a yield
-      if ( m_raw_receiver_sleep_us != std::chrono::duration_values::zero)
+      if ( m_raw_receiver_sleep_us != std::chrono::microseconds::zero())
         std::this_thread::sleep_for(m_raw_receiver_sleep_us);
     }
 
