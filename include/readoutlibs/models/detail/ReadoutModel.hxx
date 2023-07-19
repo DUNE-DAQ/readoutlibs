@@ -74,7 +74,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::conf(const nlohmann::json& args)
     m_fake_trigger = true;
   }
   m_raw_receiver_timeout_ms = std::chrono::milliseconds(conf.source_queue_timeout_ms);
-  m_raw_receiver_sleep_us = std::chrono::microseconds(conf.source_queue_timeout_ms);
+  m_raw_receiver_sleep_us = std::chrono::microseconds(conf.source_queue_sleep_us);
   TLOG_DEBUG(TLVL_WORK_STEPS) << "ReadoutModel creation";
 
   m_sourceid.id = conf.source_id;
