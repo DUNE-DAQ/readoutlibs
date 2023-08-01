@@ -145,7 +145,7 @@ for proc in procs:
           # tmask = affinity_dict[proc.name()][cmdl]['threads'][tid.name()]
           # print('        - For thread', tid.name(), 'applying mask', cpu_list)
           print(f'        - For thread {tid.name()} applying mask {cpu_list}')
-          if max(cpu_mask) > lcpu_count:
+          if max(cpu_list) > lcpu_count:
             raise Exception('Error! The CPU mask contains higher CPU IDs than logical CPU count on system!')
           else:
             tid.cpu_affinity(cpu_list)
