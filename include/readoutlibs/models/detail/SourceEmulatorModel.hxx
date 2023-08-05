@@ -1,10 +1,23 @@
 // Declarations for SourceEmulatorModel
+#include <iostream>
 
 using dunedaq::readoutlibs::logging::TLVL_TAKE_NOTE;
 using dunedaq::readoutlibs::logging::TLVL_WORK_STEPS;
 
 namespace dunedaq {
 namespace readoutlibs {
+
+void
+SourceEmulatorPatternGenerator::generate(int source_id)
+{
+  //TLOG() << "Generate random ADC patterns" ;
+  std::srand(source_id*12345678);
+  m_channel.reserve(m_size);
+  for (int i = 0; i < m_size; i++) {
+      int random_ch = std::rand()%64;
+      m_channel.push_back(random_ch);
+  }
+}
 
 template<class ReadoutType>
 void
@@ -60,6 +73,13 @@ SourceEmulatorModel<ReadoutType>::conf(const nlohmann::json& args, const nlohman
     m_frame_error_rate = m_link_conf.emu_frame_error_rate;
     m_error_bit_generator = ErrorBitGenerator(m_frame_error_rate);
     m_error_bit_generator.generate();
+
+    // Generate random ADC pattern
+    if (m_conf.generate_periodic_adc_pattern) {
+      TLOG() << "Generated pattern.";
+      m_pattern_generator.generate(m_sourceid.id);
+      m_random_channels = m_pattern_generator.get_channels();
+    }
 
     m_is_configured = true;
   }
@@ -163,6 +183,26 @@ SourceEmulatorModel<ReadoutType>::run_produce()
         }
         payload.fake_frame_errors(&frame_errs);
 
+        if (m_conf.generate_periodic_adc_pattern) {
+          // Adding a hit every 2298 gives a total Sent TP rate of approx 100 Hz/wire
+          if (timestamp - m_pattern_generator_previous_ts > 2298) {
+      
+            // Reset the pattern from the beginning if it reaches the maximum
+            m_pattern_index++;
+            if (m_pattern_index == m_pattern_generator.get_total_size()) {
+              m_pattern_index = 0;
+            }
+      
+            // Set the ADC to the uint16 maximum value
+            int channel = m_random_channels[m_pattern_index];
+            payload.fake_adc_pattern(channel);
+            //TLOG() << "Lift channel " << channel;
+      
+            // Update the previous timestamp of the pattern generator
+            m_pattern_generator_previous_ts = timestamp;
+          } // timestamp difference
+        }
+
         // send it
         try {
           m_raw_data_sender->send(std::move(payload), m_raw_sender_timeout_ms);
@@ -175,9 +215,13 @@ SourceEmulatorModel<ReadoutType>::run_produce()
         ++offset;
         ++m_packet_count;
         ++m_packet_count_tot;
+
+
       }
     }
     timestamp += m_time_tick_diff * rptr->get_num_frames();
+
+
 
     m_rate_limiter->limit();
   }

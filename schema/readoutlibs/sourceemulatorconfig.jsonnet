@@ -81,7 +81,10 @@ local sourceemulatorconfig = {
                 doc="Clock frequency in Hz (for use in calculating the first data frame timestamp)"),
 
         s.field("set_t0_to", self.int8, -1,
-                doc="The first DAQ timestamp. If -1, t0 from file is used.")
+                doc="The first DAQ timestamp. If -1, t0 from file is used."),
+        
+        s.field( "generate_periodic_adc_pattern", self.choice, false, 
+                doc="Generate a periodic ADC pattern inside the input data.")                
 
     ], doc="Fake Elink reader module configuration"),
 
