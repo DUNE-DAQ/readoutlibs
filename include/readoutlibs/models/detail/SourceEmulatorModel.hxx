@@ -1,5 +1,4 @@
 // Declarations for SourceEmulatorModel
-#include <iostream>
 
 using dunedaq::readoutlibs::logging::TLVL_TAKE_NOTE;
 using dunedaq::readoutlibs::logging::TLVL_WORK_STEPS;
