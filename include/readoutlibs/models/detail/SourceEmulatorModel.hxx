@@ -78,6 +78,13 @@ SourceEmulatorModel<ReadoutType>::conf(const nlohmann::json& args, const nlohman
       TLOG() << "Generated pattern.";
       m_pattern_generator.generate(m_sourceid.id);
       m_random_channels = m_pattern_generator.get_channels();
+
+      TLOG() << "TP rate per channel multiplier (base of 100 Hz/ch): " << m_conf.TP_rate_per_ch;
+      if (m_conf.TP_rate_per_ch != 0) {
+       // Define time to wait when adding an ADC above threshold
+       // Adding a hit every 2298 gives a total Sent TP rate of approx 100 Hz/wire
+        m_time_to_wait = 2140 / m_conf.TP_rate_per_ch;       
+      }  
     }
 
     m_is_configured = true;
@@ -182,9 +189,8 @@ SourceEmulatorModel<ReadoutType>::run_produce()
         }
         payload.fake_frame_errors(&frame_errs);
 
-        if (m_conf.generate_periodic_adc_pattern) {
-          // Adding a hit every 2298 gives a total Sent TP rate of approx 100 Hz/wire
-          if (timestamp - m_pattern_generator_previous_ts > 2298) {
+        if (m_conf.generate_periodic_adc_pattern) { 
+          if (timestamp - m_pattern_generator_previous_ts > m_time_to_wait) {
       
             // Reset the pattern from the beginning if it reaches the maximum
             m_pattern_index++;
@@ -196,9 +202,10 @@ SourceEmulatorModel<ReadoutType>::run_produce()
             int channel = m_random_channels[m_pattern_index];
             payload.fake_adc_pattern(channel);
             //TLOG() << "Lift channel " << channel;
-      
+            
             // Update the previous timestamp of the pattern generator
-            m_pattern_generator_previous_ts = timestamp;
+            m_pattern_generator_previous_ts = timestamp;      
+            
           } // timestamp difference
         }
 

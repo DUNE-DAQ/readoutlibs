@@ -165,6 +165,7 @@ private:
   std::vector<int> m_random_channels; 
   int m_pattern_index = 0;
   uint64_t m_pattern_generator_previous_ts = 0;  
+  int m_time_to_wait = 2140; // Adding a hit every 2140 gives a TP rate of approx 100 Hz/wire
 };
 
 } // namespace readoutlibs

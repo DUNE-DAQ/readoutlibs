@@ -84,7 +84,10 @@ local sourceemulatorconfig = {
                 doc="The first DAQ timestamp. If -1, t0 from file is used."),
         
         s.field( "generate_periodic_adc_pattern", self.choice, false, 
-                doc="Generate a periodic ADC pattern inside the input data.")                
+                doc="Generate a periodic ADC pattern inside the input data."),                
+
+        s.field( "TP_rate_per_ch", self.size, 1, 
+                doc="Rate of TPs per channel when using a periodic ADC pattern generation. Values expresses as multiples of the expected rate of 100 Hz/ch.")                
 
     ], doc="Fake Elink reader module configuration"),
 
