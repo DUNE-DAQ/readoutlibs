@@ -44,7 +44,7 @@ public:
   {
     std::lock_guard<std::mutex> guard(m_error_map_mutex);
     if (m_errors.find(error_name) == m_errors.end()) {
-      TLOG() << "Encountered new error";
+      TLOG() << "Encountered new error, name=\"" << error_name << "\"";
     }
     m_errors.erase(error_name);
     m_errors.insert(std::make_pair(error_name, error));
@@ -55,8 +55,9 @@ public:
     std::lock_guard<std::mutex> guard(m_error_map_mutex);
     for (auto it = m_errors.begin(); it != m_errors.end();) {
       if (ts > it->second.end_ts) {
+        std::string error_name = it->first;
         it = m_errors.erase(it);
-        TLOG() << "Removed error";
+        TLOG() << "Removed error, name=\"" << error_name << "\"";
       } else {
         it++;
       }
