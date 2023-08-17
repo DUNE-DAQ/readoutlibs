@@ -31,8 +31,6 @@ def parse_cpumask(mask):
   cpu_mask = set()
   if type(mask) == list:
     cpu_mask = set(mask)
-    if max(cpu_mask) > lcpu_count:
-      raise Exception('Error! The CPU mask contains higher CPU IDs than logical CPU count on system!')
     return list(cpu_mask)
   elif type(mask) == str:
     for region_str in mask.split(','):
@@ -46,13 +44,11 @@ def parse_cpumask(mask):
           for cpu in range(cpu_from, cpu_to+1):
             cpu_mask.add(cpu)
         else:
-          raise Exception('This is neither a single CPU or a range of CPUs:', mask_str)
+          raise Exception('This is neither a single CPU or a range of CPUs:', mask)
       except Exception as e:
-        raise Exception('Corrcupt CPU mask region! Mask string:', mask_str, 'Exception:', e)
+        raise Exception('Corrcupt CPU mask region! Mask string:', mask, 'Exception:', e)
   else:
     raise Exception('CPU mask needs to be string or list. Current:', mask)
-  if max(cpu_mask) > lcpu_count:
-    raise Exception('Error! The CPU mask contains higher CPU IDs than logical CPU count on system!')
   return list(cpu_mask)
 
 ### Parse affinity json
@@ -119,13 +115,15 @@ for proc in procs:
         mask = affinity_dict[proc.name()][cmdl]['parent']
         print('      + Parent mask specified! Applying mask for every children and thread!')
         print('        - mask:', mask)
-        for child in children:
-          cid = psutil.Process(child.id)
-          cid.cpu_affinity(mask)
-        for thread in threads:
-          tid = psutil.Process(thread.id)
-          tid.cpu_affinity(mask)
-          
+        if max(mask) > lcpu_count:
+          raise Exception('Error! The CPU mask contains higher CPU IDs than logical CPU count on system!')
+        else: 
+          for child in children:
+            cid = psutil.Process(child.id)
+            cid.cpu_affinity(mask)
+          for thread in threads:
+            tid = psutil.Process(thread.id)
+            tid.cpu_affinity(mask)
 
       if 'threads' in affinity_dict[proc.name()][cmdl]:
         print('      + Thread masks specified! Applying thread specific masks!')
@@ -147,10 +145,10 @@ for proc in procs:
           # tmask = affinity_dict[proc.name()][cmdl]['threads'][tid.name()]
           # print('        - For thread', tid.name(), 'applying mask', cpu_list)
           print(f'        - For thread {tid.name()} applying mask {cpu_list}')
-          tid.cpu_affinity(cpu_list)
-
-
-
+          if max(cpu_list) > lcpu_count:
+            raise Exception('Error! The CPU mask contains higher CPU IDs than logical CPU count on system!')
+          else:
+            tid.cpu_affinity(cpu_list)
 
           # if tid.name() in affinity_dict[proc.name()][cmdl]['threads'].keys():
           #   tmask = affinity_dict[proc.name()][cmdl]['threads'][tid.name()]

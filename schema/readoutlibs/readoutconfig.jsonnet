@@ -133,6 +133,8 @@ local readoutconfig = {
                             doc="flag indicating whether to generate fake triggers: 1=true, 0=false "),
             s.field("source_queue_timeout_ms", self.count, 2000,
                             doc="Timeout for source queue"),
+            s.field("source_queue_sleep_us", self.count, 0,
+                            doc="Sleep for source us"),
             s.field("source_id", self.source_id, 0,
                             doc="The source id of this link"),
             s.field("tpset_min_latency_ticks", self.size, 3125000,
