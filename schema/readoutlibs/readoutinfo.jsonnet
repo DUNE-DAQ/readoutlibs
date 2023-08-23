@@ -6,13 +6,11 @@ local moo = import "moo.jsonnet";
 local s = moo.oschema.schema("dunedaq.readoutlibs.readoutinfo");
 
 local info = {
-    uint8  : s.number("uint8", "u8",
-                     doc="An unsigned of 8 bytes"),
-    float8 : s.number("float8", "f8",
-                      doc="A float of 8 bytes"),
+    int2   : s.number("int2", "i2", doc="An signed of 2 bytes"),
+    uint8  : s.number("uint8", "u8", doc="An unsigned of 8 bytes"),
+    float8 : s.number("float8", "f8", doc="A float of 8 bytes"),
     choice : s.boolean("Choice"),
-    string : s.string("String", moo.re.ident,
-                          doc="A string field"),
+    string : s.string("String", moo.re.ident, doc="A string field"),
 
    #latencybufferinfo: s.record("LatencyBufferInfo", [
 
@@ -24,7 +22,11 @@ local info = {
         s.field("num_tps_dropped",               self.uint8,     0, doc="Number of dropped TPs (because they were too old)"),
         s.field("num_heartbeats",                self.uint8,     0, doc="Number of empty TP sets - heartbeats"),
         s.field("rate_tp_hits",                  self.float8,    0, doc="TP hit rate in kHz"),
-        s.field("num_frame_errors",              self.uint8,     0, doc="Total number of frame errors")
+        s.field("num_frame_errors",              self.uint8,     0, doc="Total number of frame errors"),
+        s.field("num_seq_id_errors",             self.uint8,     0, doc="Total number of sequence id frame errors"),
+        s.field("min_seq_id_jump",               self.int2,      0, doc="Minimum sequence-id jump"),
+        s.field("max_seq_id_jump",               self.int2,      0, doc="Maximum sequence-id jump"),
+        s.field("num_ts_errors",                 self.uint8,     0, doc="Total number of timestamp frame errors")
    ], doc="Latency buffer information"),
 
    tpchannelinfo: s.record("TPChannelInfo", [
