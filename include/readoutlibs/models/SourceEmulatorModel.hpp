@@ -166,7 +166,7 @@ private:
   int m_pattern_index = 0;
   uint64_t m_pattern_generator_previous_ts = 0;  
   // Adding a hit every 9768 gives a TP rate of approx 100 Hz/wire using WIBEthernet
-  int m_time_to_wait = 9768; 
+  uint32_t m_time_to_wait = 9768; 
 };
 
 } // namespace readoutlibs
