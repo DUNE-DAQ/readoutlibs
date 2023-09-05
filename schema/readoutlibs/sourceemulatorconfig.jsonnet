@@ -28,6 +28,8 @@ local sourceemulatorconfig = {
     double8 : s.number("double8", "f8",
                      doc="floating point of 8 bytes"),
 
+    float4 : s.number("float4", "f4", doc="A float of 4 bytes"),
+
     slowdown_t : s.number("slowdown_t", "f8",
                      doc="Slowdown factor"),
   
@@ -86,8 +88,8 @@ local sourceemulatorconfig = {
         s.field( "generate_periodic_adc_pattern", self.choice, false, 
                 doc="Generate a periodic ADC pattern inside the input data."),                
 
-        s.field( "TP_rate_per_ch", self.size, 1, 
-                doc="Rate of TPs per channel when using a periodic ADC pattern generation. Values expresses as multiples of the expected rate of 100 Hz/ch.")                
+        s.field( "TP_rate_per_ch", self.float4, 1.0,
+                doc="Rate of TPs per channel when using a periodic ADC pattern generation. Values expresses as multiples of the expected rate of 100 Hz/ch.")
 
     ], doc="Fake Elink reader module configuration"),
 
