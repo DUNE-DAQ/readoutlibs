@@ -135,7 +135,7 @@ SourceEmulatorModel<ReadoutType>::run_produce()
   uint offset = 0; // NOLINT(build/unsigned)
   auto& source = m_file_source->get();
 
-  int num_elem = m_file_source->num_elements();
+  uint num_elem = m_file_source->num_elements();
   if (num_elem == 0) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "No elements to read from buffer! Sleeping...";
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
