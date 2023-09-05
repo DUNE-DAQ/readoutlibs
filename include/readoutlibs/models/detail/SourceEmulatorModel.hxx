@@ -82,8 +82,8 @@ SourceEmulatorModel<ReadoutType>::conf(const nlohmann::json& args, const nlohman
       TLOG() << "TP rate per channel multiplier (base of 100 Hz/ch): " << m_conf.TP_rate_per_ch;
       if (m_conf.TP_rate_per_ch != 0) {
        // Define time to wait when adding an ADC above threshold
-       // Adding a hit every 2298 gives a total Sent TP rate of approx 100 Hz/wire
-        m_time_to_wait = 2140 / m_conf.TP_rate_per_ch;       
+       // Adding a hit every 9768 gives a total Sent TP rate of approx 100 Hz/wire with WIBEth
+        m_time_to_wait = m_time_to_wait / m_conf.TP_rate_per_ch;       
       }  
     }
 
@@ -135,7 +135,7 @@ SourceEmulatorModel<ReadoutType>::run_produce()
   uint offset = 0; // NOLINT(build/unsigned)
   auto& source = m_file_source->get();
 
-  int num_elem = m_file_source->num_elements();
+  uint num_elem = m_file_source->num_elements();
   if (num_elem == 0) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "No elements to read from buffer! Sleeping...";
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
