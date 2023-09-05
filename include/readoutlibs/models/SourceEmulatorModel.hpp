@@ -40,6 +40,33 @@ using dunedaq::readoutlibs::logging::TLVL_WORK_STEPS;
 namespace dunedaq {
 namespace readoutlibs {
 
+
+// Pattern generator class for creating different types of TP patterns
+// AAA: at the moment the pattern generator is very simple: random source id and random channel
+class SourceEmulatorPatternGenerator {
+
+public:
+  SourceEmulatorPatternGenerator() {
+    m_size = 1000000;
+  };
+  ~SourceEmulatorPatternGenerator() {};
+
+  void generate(int);
+
+  std::vector<int> get_channels() {
+    return m_channel;
+  }
+
+  int get_total_size() {
+    return m_size;
+  }
+ 
+private: 
+  int m_size;
+  std::vector<int> m_channel;
+};
+
+
 template<class ReadoutType>
 class SourceEmulatorModel : public SourceEmulatorConcept
 {
@@ -132,6 +159,14 @@ private:
   int m_crateid = 0;
   int m_slotid = 0;
   int m_linkid = 0;
+
+  // Pattern generator configs
+  SourceEmulatorPatternGenerator m_pattern_generator;
+  std::vector<int> m_random_channels; 
+  int m_pattern_index = 0;
+  uint64_t m_pattern_generator_previous_ts = 0;  
+  // Adding a hit every 9768 gives a TP rate of approx 100 Hz/wire using WIBEthernet
+  int m_time_to_wait = 9768; 
 };
 
 } // namespace readoutlibs
