@@ -499,7 +499,7 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
     uint64_t start_win_ts = dr.request_information.window_begin; // NOLINT(build/unsigned)
     uint64_t end_win_ts = dr.request_information.window_end;     // NOLINT(build/unsigned)
     TLOG_DEBUG(TLVL_WORK_STEPS) << "Data request for trig/seq_num=" << dr.trigger_number
-      << "." << dr.sequence_number << " with"
+      << "." << dr.sequence_number << " and SourceID[" << m_sourceid << "] with"
       << " Trigger TS=" << dr.trigger_timestamp
       << " Oldest stored TS=" << last_ts
       << " Newest stored TS=" << newest_ts
@@ -586,8 +586,8 @@ DefaultRequestHandlerModel<RDT, LBT>::data_request(dfmessages::DataRequest dr,
     }
 
     // Build fragment
-    oss << "TS match result on link " << m_sourceid.id << ": "
-        << " Trigger number=" << dr.trigger_number
+    oss << "TS match result for SourceID[" << m_sourceid << "]: "
+        << " Trigger/sequence number=" << dr.trigger_number << "." << dr.sequence_number
         << " Oldest stored TS=" << last_ts
         << " Start of window TS=" << start_win_ts
         << " End of window TS=" << end_win_ts
