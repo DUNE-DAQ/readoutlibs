@@ -55,10 +55,10 @@ IterableQueueModel<T>::allocate_memory(std::size_t size,
 #ifdef WITH_LIBNUMA_SUPPORT
     numa_set_preferred((unsigned)numa_node); // https://linux.die.net/man/3/numa_set_preferred
  #ifdef WITH_LIBNUMA_BIND_POLICY
-    //numa_set_bind_policy(WITH_LIBNUMA_BIND_POLICY); // https://linux.die.net/man/3/numa_set_bind_policy
+    numa_set_bind_policy(WITH_LIBNUMA_BIND_POLICY); // https://linux.die.net/man/3/numa_set_bind_policy
  #endif
  #ifdef WITH_LIBNUMA_STRICT_POLICY
-    //numa_set_strict(WITH_LIBNUMA_STRICT_POLICY);    // https://linux.die.net/man/3/numa_set_strict
+    numa_set_strict(WITH_LIBNUMA_STRICT_POLICY);    // https://linux.die.net/man/3/numa_set_strict
  #endif
     records_ = static_cast<T*>(numa_alloc_onnode(sizeof(T) * size, numa_node));
 #else
