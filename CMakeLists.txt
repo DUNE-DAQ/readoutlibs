@@ -14,6 +14,7 @@ find_package(daqdataformats REQUIRED)
 find_package(dfmessages REQUIRED)
 find_package(folly REQUIRED)
 find_package(Boost COMPONENTS iostreams unit_test_framework REQUIRED)
+find_package(CLI11 REQUIRED)
 set(BOOST_LIBS Boost::iostreams ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_LIBRARIES})
 
 daq_codegen( readoutconfig.jsonnet sourceemulatorconfig.jsonnet recorderconfig.jsonnet TEMPLATES Structs.hpp.j2 Nljs.hpp.j2 )
@@ -42,7 +43,7 @@ if(${READOUT_USE_LIBNUMA})
   pkg_check_modules(numa REQUIRED IMPORTED_TARGET "numa")
   list(APPEND READOUT_DEPENDENCIES numa)
   #list(APPEND READOUT_DEPENDENCIES ${numa_LINK_LIBRARIES})
-  add_compile_definitions(WITH_LIBNUMA_SUPPORT)
+  add_compile_definitions(WITH_LIBNUMA_SUPPORT WITH_LIBNUMA_BIND_POLICY=1 WITH_LIBNUMA_STRICT_POLICY=1)
 endif()
 
 ##############################################################################
@@ -60,7 +61,7 @@ endif()
 ##############################################################################
 # Integration tests
 daq_add_application(readoutlibs_test_ratelimiter test_ratelimiter_app.cxx TEST LINK_LIBRARIES readoutlibs)
-daq_add_application(readoutlibs_test_lb_allocation test_lb_allocation_app.cxx TEST LINK_LIBRARIES readoutlibs)
+daq_add_application(readoutlibs_test_lb_allocation test_lb_allocation_app.cxx TEST LINK_LIBRARIES readoutlibs CLI11::CLI11)
 daq_add_application(readoutlibs_test_bufferedfilewriter test_bufferedfilewriter_app.cxx TEST LINK_LIBRARIES readoutlibs ${BOOST_LIBS})
 daq_add_application(readoutlibs_test_bufferedfilereader test_bufferedfilereader_app.cxx TEST LINK_LIBRARIES readoutlibs ${BOOST_LIBS})
 daq_add_application(readoutlibs_test_skiplist test_skiplist_app.cxx TEST LINK_LIBRARIES readoutlibs ${BOOST_LIBS})
