@@ -53,9 +53,7 @@ local readoutconfig = {
             s.field("latency_buffer_alignment_size", self.count, 0,
                             doc="Alignment size of LB allocation"),
             s.field("latency_buffer_preallocation", self.choice, false,
-                            doc="Preallocate memory for the latency buffer"),
-            s.field("source_id", self.source_id, 0,
-                            doc="The source id of this link")],
+                            doc="Preallocate memory for the latency buffer")],
             doc="Latency Buffer Config"),
 
     rawdataprocessorconf : s.record("RawDataProcessorConf", [
