@@ -19,7 +19,10 @@ local info = {
    rawdataprocessorinfo: s.record("RawDataProcessorInfo", [
         s.field("num_tps_sent",                  self.uint8,     0, doc="Number of sent TPs"),
         s.field("num_tpsets_sent",               self.uint8,     0, doc="Number of sent TPSets"),
-        s.field("num_tps_dropped",               self.uint8,     0, doc="Number of dropped TPs (because they were too old)"),
+        s.field("num_tps_dropped",               self.uint8,     0, doc="Number of dropped TPs (because their time over threshold was too large)"),
+        s.field("num_tps_lost",                  self.uint8,     0, doc="Number of lost TPs (because they could not be successfully sent)"),
+        s.field("num_tpsets_lost",               self.uint8,     0, doc="Number of lost TPSets (because they could not be successfully sent)"),
+        s.field("num_tps_missed",                self.uint8,     0, doc="Number of missed TPs (because they arrived too late to be included)"),
         s.field("num_heartbeats",                self.uint8,     0, doc="Number of empty TP sets - heartbeats"),
         s.field("rate_tp_hits",                  self.float8,    0, doc="TP hit rate in kHz"),
         s.field("num_frame_errors",              self.uint8,     0, doc="Total number of frame errors"),

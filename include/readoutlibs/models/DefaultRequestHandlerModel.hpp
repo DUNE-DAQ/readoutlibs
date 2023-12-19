@@ -150,6 +150,10 @@ public:
   // Opmon get_info implementation
   void get_info(opmonlib::InfoCollector& ci, int /*level*/) override;
 
+  virtual dunedaq::daqdataformats::timestamp_t get_cutoff_timestamp() {return 0;}
+  virtual bool supports_cutoff_timestamp() {return false;}
+  virtual void increment_missed_tp_count() {}
+
 protected:
   // An inline helper function that creates a fragment header based on a data request
   inline 
