@@ -385,13 +385,22 @@ DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests()
           issue_request(m_waiting_requests[i].request, true);
 
           if (m_warn_on_timeout) {
+            uint64_t earliest_ts = 0; // NOLINT(build/unsigned)
+            uint64_t latest_ts = 0;   // NOLINT(build/unsigned)
+            if (m_latency_buffer->occupancy() != 0) {
+              auto front_element = m_latency_buffer->front();     // NOLINT
+              auto back_element = m_latency_buffer->back();       // NOLINT
+              earliest_ts = front_element->get_first_timestamp(); // NOLINT(build/unsigned)
+              latest_ts = back_element->get_first_timestamp();    // NOLINT(build/unsigned)
+            }
             ers::warning(dunedaq::readoutlibs::VerboseRequestTimedOut(ERS_HERE, m_sourceid,
                                                                       m_waiting_requests[i].request.trigger_number,
                                                                       m_waiting_requests[i].request.sequence_number,
                                                                       m_waiting_requests[i].request.run_number,
                                                                       m_waiting_requests[i].request.request_information.window_begin,
                                                                       m_waiting_requests[i].request.request_information.window_end,
-                                                                      m_waiting_requests[i].request.data_destination));
+                                                                      m_waiting_requests[i].request.data_destination,
+                                                                      earliest_ts, latest_ts));
           }
 
           m_num_requests_bad++;

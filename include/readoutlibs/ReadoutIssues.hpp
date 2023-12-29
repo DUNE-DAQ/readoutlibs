@@ -161,9 +161,9 @@ ERS_DECLARE_ISSUE(readoutlibs,
 ERS_DECLARE_ISSUE(readoutlibs,
                   VerboseRequestTimedOut,
                   "SourceID[" << sourceid << "] Request timed out for trig/seq_num " << trignum << "." << seqnum
-                           << ", run_num " << runnum << ", window begin/end " << window_begin << "/" << window_end
-                           << ", data_destination: " << dest,
-                  ((daqdataformats::SourceID)sourceid)((daqdataformats::trigger_number_t)trignum)((daqdataformats::sequence_number_t)seqnum)((daqdataformats::run_number_t)runnum)((daqdataformats::timestamp_t)window_begin)((daqdataformats::timestamp_t)window_end)((std::string)dest))
+                  << ", run_num " << runnum << ", window begin/end " << window_begin << "/" << window_end
+                  << ", data_destination " << dest << ", earliest/latest stored ts " << earliest_ts << "/" << latest_ts,
+                  ((daqdataformats::SourceID)sourceid)((daqdataformats::trigger_number_t)trignum)((daqdataformats::sequence_number_t)seqnum)((daqdataformats::run_number_t)runnum)((daqdataformats::timestamp_t)window_begin)((daqdataformats::timestamp_t)window_end)((std::string)dest)((daqdataformats::timestamp_t)earliest_ts)((daqdataformats::timestamp_t)latest_ts))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   EndOfRunEmptyFragment,
