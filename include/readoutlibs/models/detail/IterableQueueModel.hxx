@@ -219,17 +219,17 @@ IterableQueueModel<T>::back()
 // Configures the model
 template<class T>
 void 
-IterableQueueModel<T>::conf(const nlohmann::json& cfg)
+IterableQueueModel<T>::conf(const appdal::LatencyBuffer* cfg)
 {
   auto conf = cfg["latencybufferconf"].get<readoutconfig::LatencyBufferConf>();
-  assert(conf.latency_buffer_size >= 2);
+  assert(cfg->get_size() >= 2);
   free_memory();
 
-  allocate_memory(conf.latency_buffer_size,
-                  conf.latency_buffer_numa_aware,
-                  conf.latency_buffer_numa_node,
-                  conf.latency_buffer_intrinsic_allocator,
-                  conf.latency_buffer_alignment_size);
+  allocate_memory(cfg->get_size(),
+                  cfg->get_numa_aware(),
+                  cfg->get_numa_node(),
+                  cfg->get_intrinsic_allocator(),
+                  cfg->get_alignment_size());
   readIndex_ = 0;
   writeIndex_ = 0;
 
@@ -237,7 +237,7 @@ IterableQueueModel<T>::conf(const nlohmann::json& cfg)
     throw std::bad_alloc();
   }
 
-  if (conf.latency_buffer_preallocation) {
+  if (cfg->get_preallocation()) {
     for (size_t i = 0; i < size_ - 1; ++i) {
       T element = T();
       write_(std::move(element));

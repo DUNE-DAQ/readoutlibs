@@ -14,6 +14,7 @@
 #include "readoutlibs/recorderconfig/Structs.hpp"
 #include "readoutlibs/utils/BufferedFileWriter.hpp"
 #include "readoutlibs/utils/ReusableThread.hpp"
+#include "appdal/DataRecorder.hpp"
 
 #include <atomic>
 #include <fstream>
@@ -35,11 +36,11 @@ public:
   RecorderConcept(RecorderConcept&&) = delete;
   RecorderConcept& operator=(RecorderConcept&&) = delete;
 
-  virtual void init(const nlohmann::json& obj) = 0;
   virtual void get_info(opmonlib::InfoCollector& ci, int level) = 0;
-
-  // Commands
-  virtual void do_conf(const nlohmann::json& obj) = 0;
+  virtual void init(const appdal::DataRecorder* mcfg) = 0;
+  
+ // Commands
+   virtual void do_conf(const nlohmann::json& args) = 0;
   virtual void do_start(const nlohmann::json& obj) = 0;
   virtual void do_stop(const nlohmann::json& obj) = 0;
   virtual void do_scrap(const nlohmann::json& obj) = 0;

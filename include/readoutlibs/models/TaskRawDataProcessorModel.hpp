@@ -15,7 +15,8 @@
 #include "readoutlibs/ReadoutIssues.hpp"
 #include "readoutlibs/ReadoutLogging.hpp"
 #include "readoutlibs/concepts/RawDataProcessorConcept.hpp"
-#include "readoutlibs/readoutconfig/Nljs.hpp"
+//#include "readoutlibs/readoutconfig/Nljs.hpp"
+
 #include "readoutlibs/utils/ReusableThread.hpp"
 
 #include <folly/ProducerConsumerQueue.h>
@@ -47,7 +48,7 @@ public:
   ~TaskRawDataProcessorModel() {}
 
   // Configures the element pointer queue for the post-processors, and the SourceID
-  void conf(const nlohmann::json& cfg) override;
+  void conf(daqdataformats::SourceID sid, const appdal::DataProcessor* conf) override;
 
   // Clears elements to process, pre-proc pipeline, and post-proc functions
   void scrap(const nlohmann::json& /*cfg*/) override;
@@ -109,9 +110,9 @@ protected:
 
   // Internals
   size_t m_postprocess_queue_sizes;
-  uint32_t m_this_link_number; // NOLINT(build/unsigned)
+  //uint32_t m_this_link_number; // NOLINT(build/unsigned)
   daqdataformats::SourceID m_sourceid;
-  bool m_emulator_mode{ false };
+  //bool m_emulator_mode{ false };
   std::atomic<std::uint64_t> m_last_processed_daq_ts{ 0 }; // NOLINT(build/unsigned)
 
 };

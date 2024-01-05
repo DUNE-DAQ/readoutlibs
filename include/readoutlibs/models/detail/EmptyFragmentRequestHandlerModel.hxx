@@ -25,7 +25,7 @@ EmptyFragmentRequestHandlerModel<ReadoutType, LatencyBufferType>::issue_request(
                                 << fragment->get_element_id();
     //auto frag = std::make_pair(std::move(fragment), datarequest.data_destination);
     get_iom_sender<std::unique_ptr<daqdataformats::Fragment>>(datarequest.data_destination)
-      ->send(std::move(fragment), std::chrono::milliseconds(10));
+      ->send(std::move(fragment), m_fragment_send_timeout_ms);
   } catch (const ers::Issue& excpt) {
     ers::warning(CannotWriteToQueue(
       ERS_HERE, DefaultRequestHandlerModel<ReadoutType, LatencyBufferType>::m_sourceid, "fragment queue", excpt));

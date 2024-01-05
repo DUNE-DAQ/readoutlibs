@@ -26,8 +26,9 @@
 
 #include "readoutlibs/ReadoutIssues.hpp"
 #include "readoutlibs/concepts/LatencyBufferConcept.hpp"
-#include "readoutlibs/readoutconfig/Nljs.hpp"
-#include "readoutlibs/readoutconfig/Structs.hpp"
+
+//#include "readoutlibs/readoutconfig/Nljs.hpp"
+//#include "readoutlibs/readoutconfig/Structs.hpp"
 
 #include "logging/Logging.hpp"
 
@@ -196,7 +197,7 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
   std::size_t occupancy() const override;
 
   // The size of the underlying buffer, not the amount of usable slots
-  std::size_t get_size() const { return size_; }
+  std::size_t size() const { return size_; }
 
   // Maximum number of items in the queue.
   std::size_t capacity() const { return size_ - 1; }
@@ -214,7 +215,7 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
   T* end_of_buffer() { return &records_[size_]; }
 
   // Configures the model
-  void conf(const nlohmann::json& cfg) override;
+  void conf(const appdal::LatencyBuffer* cfg) override;
 
   // Unconfigures the model
   void scrap(const nlohmann::json& /*cfg*/) override;

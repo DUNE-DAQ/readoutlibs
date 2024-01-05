@@ -6,11 +6,14 @@ namespace readoutlibs {
 // Special configuration that checks LB alignment and O_DIRECT flag on output file
 template<class ReadoutType, class LatencyBufferType>
 void 
-ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::conf(const nlohmann::json& args)
+ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::conf(const appdal:ReadoutModel* conf)
 {
-  auto conf = args["requesthandlerconf"].get<readoutconfig::RequestHandlerConf>();
-  if (conf.enable_raw_recording) {
-    inherited::m_sourceid.id = conf.source_id;
+
+  auto data_rec_conf = conf->get_data_recorder();
+
+  
+  if (data_rec_conf != nullptr) {
+    inherited::m_sourceid.id = conf->get_source_id();
     inherited::m_sourceid.subsystem = ReadoutType::subsystem;
 
     // Check for alignment restrictions
@@ -20,18 +23,18 @@ ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::conf(const
     }
 
     // RS: This will need to go away with the SNB store handler!
-    if (remove(conf.output_file.c_str()) == 0) {
-      TLOG(TLVL_WORK_STEPS) << "Removed existing output file from previous run: " << conf.output_file;
+    if (remove(data_rec_conf->get_output_file().c_str()) == 0) {
+      TLOG(TLVL_WORK_STEPS) << "Removed existing output file from previous run: " << data_rec_conf->get_output_file();
     }
 
     m_oflag = O_CREAT | O_WRONLY;
-    if (conf.use_o_direct) {
+    if (data_rec_conf->get_use_o_direct()) {
       m_oflag |= O_DIRECT;
     }
-    m_fd = ::open(conf.output_file.c_str(), m_oflag, 0644);
+    m_fd = ::open(data_rec_conf->get_output_file().c_str(), m_oflag, 0644);
     inherited::m_recording_configured = true;
   }
-  inherited::conf(args);
+  inherited::conf(conf);
 }
 
 // Special record command that writes to files from memory aligned LBs

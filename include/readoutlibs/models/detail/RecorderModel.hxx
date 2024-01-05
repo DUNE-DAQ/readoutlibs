@@ -5,14 +5,19 @@ namespace readoutlibs {
 
 template<class ReadoutType>
 void 
-RecorderModel<ReadoutType>::init(const nlohmann::json& args)
+RecorderModel<ReadoutType>::init(const appdal::DataRecorder* conf)
 {
-  try {
-    auto ci = appfwk::connection_index(args, { "raw_recording" });
-    m_data_receiver = get_iom_receiver<ReadoutType>(ci["raw_recording"]);
-  } catch (const ers::Issue& excpt) {
-    throw ResourceQueueError(ERS_HERE, "raw_recording", "RecorderModel");
+  for (input : conf->get_inputs()) {
+    try {
+      m_data_receiver = get_iom_receiver<ReadoutType>(input->UID());
+    } catch (const ers::Issue& excpt) {
+      throw ResourceQueueError(ERS_HERE, "raw_recording", "RecorderModel");
+    }
   }
+  m_output_file = conf->get_configuration()->get_output_file();
+  m_stream_buffer_size = conf->get_configuration()->get_streaming_buffer_size();
+  m_compression_algorithm =  conf->get_configuration()->get_compression_algorithm();
+  m_use_o_direct = conf->get_configuration()->get_use_o_direct();
 }
 
 template<class ReadoutType>
@@ -36,15 +41,14 @@ template<class ReadoutType>
 void 
 RecorderModel<ReadoutType>::do_conf(const nlohmann::json& args)
 {
-  m_conf = args.get<recorderconfig::Conf>();
-  std::string output_file = m_conf.output_file;
-  if (remove(output_file.c_str()) == 0) {
+  
+  if (remove(m_output_file.c_str()) == 0) {
     TLOG(TLVL_WORK_STEPS) << "Removed existing output file from previous run" << std::endl;
   }
 
   m_buffered_writer.open(
-    m_conf.output_file, m_conf.stream_buffer_size, m_conf.compression_algorithm, m_conf.use_o_direct);
-  m_work_thread.set_name(m_name, 0);
+    m_output_file, m_stream_buffer_size, m_compression_algorithm, m_use_o_direct);
+  m_work_thread.set_name(get_name(), 0);
 }
 
 template<class ReadoutType>

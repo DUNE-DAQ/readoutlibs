@@ -9,9 +9,12 @@
 #ifndef READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_READOUTMODEL_HPP_
 #define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_READOUTMODEL_HPP_
 
-#include "appfwk/app/Nljs.hpp"
-#include "appfwk/cmd/Nljs.hpp"
-#include "appfwk/cmd/Structs.hpp"
+//#include "appfwk/app/Nljs.hpp"
+#include "appfwk/ModuleConfiguration.hpp"
+
+//#include "appfwk/cmd/Nljs.hpp"
+//#include "appfwk/cmd/Structs.hpp"
+
 
 #include "appfwk/DAQModuleHelper.hpp"
 #include "iomanager/IOManager.hpp"
@@ -30,8 +33,9 @@
 
 #include "readoutlibs/ReadoutLogging.hpp"
 #include "readoutlibs/concepts/ReadoutConcept.hpp"
-#include "readoutlibs/readoutconfig/Nljs.hpp"
-#include "readoutlibs/readoutinfo/InfoNljs.hpp"
+#include "appdal/ReadoutModule.hpp"
+//#include "readoutlibs/readoutconfig/Nljs.hpp"
+//#include "readoutlibs/readoutinfo/InfoNljs.hpp"
 
 #include "readoutlibs/FrameErrorRegistry.hpp"
 
@@ -91,7 +95,7 @@ public:
   }
 
   // Initializes the readoutmodel and its internals
-  void init(const nlohmann::json& args);
+  void init(const appdal::ReadoutModule* modconf);
 
   // Configures the readoutmodel and its internals
   void conf(const nlohmann::json& args);
@@ -120,9 +124,7 @@ public:
   void get_info(opmonlib::InfoCollector& ci, int level);
 
 private:
-  // Sets up input queues for requests
-  void setup_request_queues(const nlohmann::json& args);
-
+ 
   // Raw data consumer's work function
   void run_consume();
 
@@ -136,8 +138,10 @@ private:
   std::atomic<bool>& m_run_marker;
 
   // CONFIGURATION
-  appfwk::app::ModInit m_queue_config;
+  std::shared_ptr<appfwk::ModuleConfiguration> mcfg
+  //appfwk::app::ModInit m_queue_config;
   bool m_fake_trigger;
+  bool m_generate_timesync = false;
   int m_current_fake_trigger_id;
   daqdataformats::SourceID m_sourceid;
   daqdataformats::run_number_t m_run_number;

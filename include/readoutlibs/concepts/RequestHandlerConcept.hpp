@@ -12,6 +12,7 @@
 #include "daqdataformats/Fragment.hpp"
 #include "dfmessages/DataRequest.hpp"
 #include "opmonlib/InfoCollector.hpp"
+#include "appdal/ReadoutModule.hpp"
 
 #include <map>
 #include <memory>
@@ -36,8 +37,8 @@ public:
   RequestHandlerConcept(RequestHandlerConcept&&) = delete; ///< RequestHandlerConcept is not move-constructible
   RequestHandlerConcept& operator=(RequestHandlerConcept&&) = delete; ///< RequestHandlerConcept is not move-assignable
 
-  virtual void init(const nlohmann::json& args) = 0;
-  virtual void conf(const nlohmann::json& args) = 0;
+  //virtual void init(const nlohmann::json& args) = 0;
+  virtual void conf(const appdal::ReadoutModule* conf) = 0;
   virtual void scrap(const nlohmann::json& args) = 0;
   virtual void start(const nlohmann::json& args) = 0;
   virtual void stop(const nlohmann::json& args) = 0;

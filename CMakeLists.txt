@@ -7,6 +7,8 @@ daq_setup_environment()
 
 find_package(ers REQUIRED)
 find_package(appfwk REQUIRED)
+find_package(coredal REQUIRED)
+find_package(appdal REQUIRED)
 find_package(logging REQUIRED)
 find_package(iomanager REQUIRED)
 find_package(opmonlib REQUIRED)
@@ -16,7 +18,7 @@ find_package(folly REQUIRED)
 find_package(Boost COMPONENTS iostreams unit_test_framework REQUIRED)
 set(BOOST_LIBS Boost::iostreams ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_LIBRARIES})
 
-daq_codegen( readoutconfig.jsonnet sourceemulatorconfig.jsonnet recorderconfig.jsonnet TEMPLATES Structs.hpp.j2 Nljs.hpp.j2 )
+#daq_codegen( readoutconfig.jsonnet sourceemulatorconfig.jsonnet recorderconfig.jsonnet TEMPLATES Structs.hpp.j2 Nljs.hpp.j2 )
 daq_codegen( *info.jsonnet DEP_PKGS opmonlib TEMPLATES opmonlib/InfoStructs.hpp.j2 opmonlib/InfoNljs.hpp.j2 )
 
 ##############################################################################
@@ -28,6 +30,8 @@ set(READOUT_DEPENDENCIES
   logging::logging
 #dunedaq
   appfwk::appfwk
+  coredal::coredal
+  appdal::appdal
   opmonlib::opmonlib
   daqdataformats::daqdataformats
   dfmessages::dfmessages

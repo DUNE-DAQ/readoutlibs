@@ -14,8 +14,9 @@
 #include "readoutlibs/utils/BufferedFileWriter.hpp"
 #include "readoutlibs/utils/ReusableThread.hpp"
 
-#include "readoutlibs/readoutconfig/Nljs.hpp"
-#include "readoutlibs/readoutinfo/InfoNljs.hpp"
+//#include "readoutlibs/readoutconfig/Nljs.hpp"
+//#include "readoutlibs/readoutinfo/InfoNljs.hpp"
+#include "appdal/RequestHandler.hpp"
 
 #include "appfwk/Issues.hpp"
 #include "dfmessages/Fragment_serialization.hpp"
@@ -123,10 +124,10 @@ public:
   };
 
   // Default init mechanism (no-op impl)
-  void init(const nlohmann::json& /*args*/) override { }
+  //void init(const nlohmann::json& /*args*/) override { }
 
   // Default configuration mechanism
-  void conf(const nlohmann::json& args);
+  void conf(daqdataformats::SourceID sid, uint16_t det_id, const appdal::RequestHandler* conf);
 
   // Default un-configure mechanism
   void scrap(const nlohmann::json& /*args*/) override;
@@ -281,9 +282,10 @@ protected:
   // std::deque<std::pair<int, int>> m_response_time_log;
   // std::mutex m_response_time_log_lock;
 
+  int m_fragment_send_timeout_ms;
 private:
-    int m_request_timeout_ms;
-    int m_fragment_send_timeout_ms;
+  int m_request_timeout_ms;
+    
 };
 
 } // namespace readoutlibs

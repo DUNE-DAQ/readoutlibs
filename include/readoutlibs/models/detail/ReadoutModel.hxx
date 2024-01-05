@@ -7,51 +7,31 @@ namespace readoutlibs {
 
 template<class RDT, class RHT, class LBT, class RPT>
 void 
-ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
+ReadoutModel<RDT, RHT, LBT, RPT>::init(const appdal::ReadoutModule* mcfg)
 {
-  // Setupo request queues
-  setup_request_queues(args);
+  // Setup request queues
+  //setup_request_queues(mcfg);
 
   try {
-    auto ini = args.get<appfwk::app::ModInit>();
-    for (const auto &cr : ini.conn_refs) {
-      if (cr.name == "raw_input") {
-        TLOG() << "Create raw_input receiver";
-  	    m_raw_data_receiver = get_iom_receiver<RDT>(cr.uid);
-      } else if (cr.name == "timesync_output") {
-  	    TLOG() << "Create timesync sender";
-  	    m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(cr.uid);
-            m_timesync_connection_name = cr.uid;
+    for (auto input : mcfg->get_inputs()) {
+      if (input->get_data_type() == "DataRequest") {
+        m_data_request_receiver = get_iom_receiver<dfmessages::DataRequest>(input->UID()) ;
+      }
+      else {
+        m_raw_data_receiver = get_iom_receiver<RDT>(input->UID()); 
+        m_raw_receiver_timeout_ms = std::chrono::milliseconds(input->get_recv_timeout_ms());
       }
     }
-    //iomanager::ConnectionRef raw_input_ref = iomanager::ConnectionRef{ "input", "raw_input", iomanager::Direction::kInput };
-    //m_raw_data_receiver = get_iom_receiver<RDT>(ini["raw_input"]);
-    //iomanager::ConnectionRef frag_output_ref = iomanager::ConnectionRef{ "output", "frag_output", iomanager::Direction::kOutput };
-    //iomanager::ConnectionRef timesync_output_ref = iomanager::ConnectionRef{ "output", "timesync_output", iomanager::Direction::kOutput };
-    //m_timesync_sender = get_iom_sender<dfmessages::TimeSync>("timesync_output");
+    for (auto output : mcfg->get_ouputs()) {
+      if (input->get_data_type() == "TymeSync") {
+        m_generate_timesync = true;
+        m_timesync_sender = get_iom_receiver<dfmessages::TimeSync>(output->UID()) ;
+        m_timesync_connection_name = output->UID();
+        break;
+      }
+    }
   } catch (const ers::Issue& excpt) {
     throw ResourceQueueError(ERS_HERE, "raw_input or frag_output", "ReadoutModel", excpt);
-  }
-
-  std::string errstring = "";
-  if (m_raw_data_receiver == nullptr) {
-    errstring = "raw_input";
-  }
-  if (m_timesync_sender == nullptr) {
-    if (errstring != "") { 
-      errstring += ", "; 
-    }
-    errstring += "timesync_output";
-  }
-  if (m_data_request_receiver == nullptr)
-  {
-    if (errstring != "") { 
-      errstring += ", "; 
-    }
-    errstring += "request_input";
-  }
-  if (errstring != "") {
-    throw ResourceQueueError(ERS_HERE, errstring, "ReadoutModel");
   }
 
   // Instantiate functionalities
@@ -59,44 +39,40 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
   m_latency_buffer_impl.reset(new LBT());
   m_raw_processor_impl.reset(new RPT(m_error_registry));
   m_request_handler_impl.reset(new RHT(m_latency_buffer_impl, m_error_registry));
-  m_request_handler_impl->init(args);
-  m_raw_processor_impl->init(args);
+  //m_request_handler_impl->init(mcfg->get_module_configuration()->get_request_handler());
+  //m_raw_processor_impl->init(mcfg->get_module_configuration()->get_data_processor());
+
+  // Do configuration here
+  // FIXME: do we still want these options configurable in the data link handler?
+  m_fake_trigger = false;  
+  m_raw_receiver_sleep_us = 0;
+  m_send_partial_fragment_if_available = true;
+  m_sourceid.id = mcfg->get_source_id();
+  m_sourceid.subsystem = RDT::subsystem;
+
+  // Configure implementations:
+  m_raw_processor_impl->conf(mcfg);
+  // Configure the latency buffer before the request handler so the request handler can check for alignment
+  // restrictions
+  try {
+    m_latency_buffer_impl->conf(mcfg->get_module_configuration()->get_latency_buffer());
+  } catch (const std::bad_alloc& be) {
+    ers::error(ConfigurationError(ERS_HERE, m_sourceid, "Latency Buffer can't be allocated with size!"));
+  }
+
+  m_request_handler_impl->conf(m_cfg);
+
+
 }
 
 template<class RDT, class RHT, class LBT, class RPT>
 void 
 ReadoutModel<RDT, RHT, LBT, RPT>::conf(const nlohmann::json& args)
 {
-  auto conf = args["readoutmodelconf"].get<readoutconfig::ReadoutModelConf>();
-  if (conf.fake_trigger_flag == 0) {
-    m_fake_trigger = false;
-  } else {
-    m_fake_trigger = true;
-  }
-  m_raw_receiver_timeout_ms = std::chrono::milliseconds(conf.source_queue_timeout_ms);
-  m_raw_receiver_sleep_us = std::chrono::microseconds(conf.source_queue_sleep_us);
-  TLOG_DEBUG(TLVL_WORK_STEPS) << "ReadoutModel creation";
-
-  m_sourceid.id = conf.source_id;
-  m_sourceid.subsystem = RDT::subsystem;
-
-  m_send_partial_fragment_if_available = conf.send_partial_fragment_if_available;
-
-  // Configure implementations:
-  m_raw_processor_impl->conf(args);
-  // Configure the latency buffer before the request handler so the request handler can check for alignment
-  // restrictions
-  try {
-    m_latency_buffer_impl->conf(args);
-  } catch (const std::bad_alloc& be) {
-    ers::error(ConfigurationError(ERS_HERE, m_sourceid, "Latency Buffer can't be allocated with size!"));
-  }
-
-  m_request_handler_impl->conf(args);
-
   // Configure threads:
-  m_consumer_thread.set_name("consumer", conf.source_id);
-  m_timesync_thread.set_name("timesync", conf.source_id);
+  m_consumer_thread.set_name("consumer", m_sourceid.id);
+  if (m_generate_timesync)
+    m_timesync_thread.set_name("timesync", m_sourceid.id);
 }
 
 
@@ -121,7 +97,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::start(const nlohmann::json& args)
   m_raw_processor_impl->start(args);
   m_request_handler_impl->start(args);
   m_consumer_thread.set_work(&ReadoutModel<RDT, RHT, LBT, RPT>::run_consume, this);
-  m_timesync_thread.set_work(&ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync, this);
+  if (m_generate_timesync) m_timesync_thread.set_work(&ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync, this);
   // Register callback to receive and dispatch data requests
   m_data_request_receiver->add_callback(
     std::bind(&ReadoutModel<RDT, RHT, LBT, RPT>::dispatch_requests, this, std::placeholders::_1));
@@ -137,8 +113,10 @@ ReadoutModel<RDT, RHT, LBT, RPT>::stop(const nlohmann::json& args)
   m_data_request_receiver->remove_callback();
   // Stop the other threads
   m_request_handler_impl->stop(args);
-  while (!m_timesync_thread.get_readiness()) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  if (m_generate_timesync) {
+    while (!m_timesync_thread.get_readiness()) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
   }
   while (!m_consumer_thread.get_readiness()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -180,25 +158,6 @@ ReadoutModel<RDT, RHT, LBT, RPT>::get_info(opmonlib::InfoCollector& ci, int leve
 
   m_request_handler_impl->get_info(ci, level);
   m_raw_processor_impl->get_info(ci, level);
-}
-
-template<class RDT, class RHT, class LBT, class RPT>
-void 
-ReadoutModel<RDT, RHT, LBT, RPT>::setup_request_queues(const nlohmann::json& args)
-{
-  auto ini = args.get<appfwk::app::ModInit>();	  
-  for (const auto& cr : ini.conn_refs) {
-    if(cr.name == "request_input") {
-      m_data_request_receiver = get_iom_receiver<dfmessages::DataRequest>(cr.uid) ;
-    }
-  }
-  //int index = 0;
-  //iomanager::ConnectionRef request_input_ref = iomanager::ConnectionRef{ "input", "request_input_*", iomanager::Direction::kInput };
-  // Loop over request_input refs...
-  //while (queue_index.find("data_requests_" + std::to_string(index)) != queue_index.end()) {
-  //  m_data_request_receivers.push_back( get_iom_receiver<dfmessages::DataRequest>(ini.conn_refs["request_input"]) );
-    //index++;
-  //}
 }
 
 template<class RDT, class RHT, class LBT, class RPT>

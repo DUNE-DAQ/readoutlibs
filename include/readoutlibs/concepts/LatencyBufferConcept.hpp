@@ -9,6 +9,7 @@
 #define READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_LATENCYBUFFERCONCEPT_HPP_
 
 #include <nlohmann/json.hpp>
+#include "appdal/LatencyBuffer.hpp"
 
 #include <cstddef>
 
@@ -37,13 +38,17 @@ public:
   LatencyBufferConcept& operator=(LatencyBufferConcept&&) = delete; ///< LatencyBufferConcept is not move-assignable
 
   //! Configure the LB
-  virtual void conf(const nlohmann::json& cfg) = 0;
+  virtual void conf(const appdal::LatencyBuffer* conf) = 0;
 
   //! Unconfigure the LB
   virtual void scrap(const nlohmann::json& cfg) = 0;
 
   //! Occupancy of LB
   virtual std::size_t occupancy() const = 0;
+
+  //! Size of LB
+  virtual std::size_t size() const = 0;
+ 
 
   //! Move referenced object into LB
   virtual bool write(T&& element) = 0;

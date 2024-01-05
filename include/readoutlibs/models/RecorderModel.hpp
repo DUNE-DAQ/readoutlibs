@@ -14,12 +14,13 @@
 #include "utilities/WorkerThread.hpp"
 #include "readoutlibs/ReadoutTypes.hpp"
 #include "readoutlibs/concepts/RecorderConcept.hpp"
-#include "readoutlibs/recorderconfig/Nljs.hpp"
-#include "readoutlibs/recorderconfig/Structs.hpp"
+//#include "readoutlibs/recorderconfig/Nljs.hpp"
+//#include "readoutlibs/recorderconfig/Structs.hpp"
 #include "readoutlibs/recorderinfo/InfoStructs.hpp"
 #include "readoutlibs/utils/BufferedFileWriter.hpp"
 #include "readoutlibs/utils/ReusableThread.hpp"
 
+#include "appdal/DataRecoder.hpp"
 #include <atomic>
 #include <fstream>
 #include <iostream>
@@ -38,9 +39,9 @@ public:
     , m_name(name)
   {}
 
-  void init(const nlohmann::json& args) override;
+  //void init(const nlohmann::json& args) override;
   void get_info(opmonlib::InfoCollector& ci, int /* level */) override;
-  void do_conf(const nlohmann::json& args) override;
+  void do_conf(const appdal::DataRecorder* conf) override;
   void do_scrap(const nlohmann::json& /*args*/) override { m_buffered_writer.close(); }
   void do_start(const nlohmann::json& /* args */) override;
   void do_stop(const nlohmann::json& /* args */) override;
@@ -54,7 +55,7 @@ private:
   std::shared_ptr<source_t> m_data_receiver;
 
   // Internal
-  recorderconfig::Conf m_conf;
+  //recorderconfig::Conf m_conf;
   BufferedFileWriter<> m_buffered_writer;
 
   // Threading
