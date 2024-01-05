@@ -38,7 +38,7 @@
 #include "readoutlibs/concepts/ReadoutConcept.hpp"
 #include "appdal/ReadoutModule.hpp"
 //#include "readoutlibs/readoutconfig/Nljs.hpp"
-//#include "readoutlibs/readoutinfo/InfoNljs.hpp"
+#include "readoutlibs/readoutinfo/InfoNljs.hpp"
 
 #include "readoutlibs/FrameErrorRegistry.hpp"
 
@@ -126,7 +126,7 @@ public:
   // Opmon get_info call implementation
   void get_info(opmonlib::InfoCollector& ci, int level);
 
-private:
+protected:
  
   // Raw data consumer's work function
   void run_consume();

@@ -18,7 +18,7 @@ ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::conf(const
 
     // Check for alignment restrictions
     if (inherited::m_latency_buffer->get_alignment_size() == 0 ||
-        sizeof(ReadoutType) * inherited::m_latency_buffer->get_size() % 4096) {
+        sizeof(ReadoutType) * inherited::m_latency_buffer->size() % 4096) {
       ers::error(ConfigurationError(ERS_HERE, inherited::m_sourceid, "Latency buffer is not 4k aligned"));
     }
 
@@ -40,7 +40,7 @@ ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::conf(const
 // Special record command that writes to files from memory aligned LBs
 template<class ReadoutType, class LatencyBufferType>
 void 
-ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::record(const nlohmann::json& args)
+ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::record(const nlohmann::json& /*args*/)
 {
   if (inherited::m_recording.load()) {
     ers::error(

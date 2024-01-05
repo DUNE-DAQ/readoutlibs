@@ -113,7 +113,7 @@ DefaultRequestHandlerModel<RDT, LBT>::stop(const nlohmann::json& /*args*/)
 
 template<class RDT, class LBT>
 void 
-DefaultRequestHandlerModel<RDT, LBT>::record(const nlohmann::json& args)
+DefaultRequestHandlerModel<RDT, LBT>::record(const nlohmann::json& /*args*/)
 {
   //auto conf = args.get<readoutconfig::RecordingParams>();
   //FIXME: how do we pass the duration or recording?

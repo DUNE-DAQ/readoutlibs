@@ -46,10 +46,6 @@ public:
   //! Occupancy of LB
   virtual std::size_t occupancy() const = 0;
 
-  //! Size of LB
-  virtual std::size_t size() const = 0;
- 
-
   //! Move referenced object into LB
   virtual bool write(T&& element) = 0;
 

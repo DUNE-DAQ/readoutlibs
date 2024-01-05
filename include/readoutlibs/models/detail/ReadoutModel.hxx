@@ -25,7 +25,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const appdal::ReadoutModule* mcfg)
     for (auto output : mcfg->get_outputs()) {
       if (output->get_data_type() == "TymeSync") {
         m_generate_timesync = true;
-        m_timesync_sender = get_iom_receiver<dfmessages::TimeSync>(output->UID()) ;
+        m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(output->UID()) ;
         m_timesync_connection_name = output->UID();
         break;
       }
@@ -45,7 +45,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const appdal::ReadoutModule* mcfg)
   // Do configuration here
   // FIXME: do we still want these options configurable in the data link handler?
   m_fake_trigger = false;  
-  m_raw_receiver_sleep_us = 0;
+  m_raw_receiver_sleep_us = std::chrono::microseconds::zero();
   m_send_partial_fragment_if_available = true;
   m_sourceid.id = mcfg->get_source_id();
   m_sourceid.subsystem = RDT::subsystem;
@@ -67,7 +67,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const appdal::ReadoutModule* mcfg)
 
 template<class RDT, class RHT, class LBT, class RPT>
 void 
-ReadoutModel<RDT, RHT, LBT, RPT>::conf(const nlohmann::json& args)
+ReadoutModel<RDT, RHT, LBT, RPT>::conf(const nlohmann::json& /*args*/)
 {
   // Configure threads:
   m_consumer_thread.set_name("consumer", m_sourceid.id);
