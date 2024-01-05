@@ -221,7 +221,6 @@ template<class T>
 void 
 IterableQueueModel<T>::conf(const appdal::LatencyBuffer* cfg)
 {
-  auto conf = cfg["latencybufferconf"].get<readoutconfig::LatencyBufferConf>();
   assert(cfg->get_size() >= 2);
   free_memory();
 

@@ -7,7 +7,7 @@ template<class ReadoutType>
 void 
 RecorderModel<ReadoutType>::init(const appdal::DataRecorder* conf)
 {
-  for (input : conf->get_inputs()) {
+  for (auto input : conf->get_inputs()) {
     try {
       m_data_receiver = get_iom_receiver<ReadoutType>(input->UID());
     } catch (const ers::Issue& excpt) {
@@ -39,7 +39,7 @@ RecorderModel<ReadoutType>::get_info(opmonlib::InfoCollector& ci, int /* level *
 
 template<class ReadoutType>
 void 
-RecorderModel<ReadoutType>::do_conf(const nlohmann::json& args)
+RecorderModel<ReadoutType>::do_conf(const nlohmann::json& /* args */)
 {
   
   if (remove(m_output_file.c_str()) == 0) {
@@ -48,7 +48,7 @@ RecorderModel<ReadoutType>::do_conf(const nlohmann::json& args)
 
   m_buffered_writer.open(
     m_output_file, m_stream_buffer_size, m_compression_algorithm, m_use_o_direct);
-  m_work_thread.set_name(get_name(), 0);
+  m_work_thread.set_name(m_name, 0);
 }
 
 template<class ReadoutType>
@@ -83,7 +83,7 @@ RecorderModel<ReadoutType>::do_work()
       m_packets_processed_total++;
       m_packets_processed_since_last_info++;
       if (!m_buffered_writer.write(reinterpret_cast<char*>(&element), sizeof(element))) { // NOLINT
-        ers::warning(CannotWriteToFile(ERS_HERE, m_conf.output_file));
+        ers::warning(CannotWriteToFile(ERS_HERE, m_output_file));
         break;
       }
     } catch (const dunedaq::iomanager::TimeoutExpired& excpt) {

@@ -11,7 +11,7 @@
 #include "utilities/WorkerThread.hpp"
 #include "opmonlib/InfoCollector.hpp"
 #include "readoutlibs/ReadoutTypes.hpp"
-#include "readoutlibs/recorderconfig/Structs.hpp"
+//#include "readoutlibs/recorderconfig/Structs.hpp"
 #include "readoutlibs/utils/BufferedFileWriter.hpp"
 #include "readoutlibs/utils/ReusableThread.hpp"
 #include "appdal/DataRecorder.hpp"

@@ -16,8 +16,11 @@
 #include "opmonlib/InfoCollector.hpp"
 
 //#include "readoutlibs/sourceemulatorconfig/Nljs.hpp"
-//#include "readoutlibs/sourceemulatorinfo/InfoNljs.hpp"
+#include "readoutlibs/sourceemulatorinfo/InfoNljs.hpp"
 #include "coredal/DROStreamConf.hpp"
+#include "coredal/StreamParameters.hpp"
+#include "coredal/GeoId.hpp"
+#include "coredal/StreamEmulationParameters.hpp"
 
 #include "readoutlibs/ReadoutIssues.hpp"
 #include "readoutlibs/concepts/SourceEmulatorConcept.hpp"
@@ -127,7 +130,7 @@ private:
   std::atomic<int> m_packet_count{ 0 };
   std::atomic<int> m_packet_count_tot{ 0 };
 
-  sourceemulatorconfig::Conf m_cfg;
+  //sourceemulatorconfig::Conf m_cfg;
 
   // RAW SENDER
   std::chrono::milliseconds m_raw_sender_timeout_ms;
@@ -163,6 +166,7 @@ private:
 
   bool m_t0_now;
   // Pattern generator configs
+  bool m_generate_periodic_adc_pattern;
   SourceEmulatorPatternGenerator m_pattern_generator;
   std::vector<int> m_random_channels; 
   int m_pattern_index;

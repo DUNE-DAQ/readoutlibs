@@ -32,7 +32,7 @@ public:
   }
 
   // Special configuration that checks LB alignment and O_DIRECT flag on output file
-  void conf(daqdataformats::SourceID sid, uint16_t det_id, const appdal:RequestHandler* conf) override;
+  void conf(const appdal::ReadoutModule* conf) override;
 
   // Special record command that writes to files from memory aligned LBs
   void record(const nlohmann::json& args) override;

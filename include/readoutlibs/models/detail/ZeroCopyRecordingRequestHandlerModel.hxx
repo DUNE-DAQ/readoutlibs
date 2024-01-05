@@ -6,10 +6,10 @@ namespace readoutlibs {
 // Special configuration that checks LB alignment and O_DIRECT flag on output file
 template<class ReadoutType, class LatencyBufferType>
 void 
-ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::conf(const appdal:ReadoutModel* conf)
+ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::conf(const appdal::ReadoutModule* conf)
 {
 
-  auto data_rec_conf = conf->get_data_recorder();
+  auto data_rec_conf = conf->get_module_configuration()->get_request_handler()->get_data_recorder();
 
   
   if (data_rec_conf != nullptr) {
@@ -47,6 +47,9 @@ ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::record(con
       CommandError(ERS_HERE, inherited::m_sourceid, "A recording is still running, no new recording was started!"));
     return;
   }
+// FIXME: parameters to commands to be clarified.... hardcode for now
+  int recording_time_sec = 1;
+
   inherited::m_recording_thread.set_work(
     [&](int duration) {
       size_t chunk_size = inherited::m_stream_buffer_size;
@@ -185,8 +188,7 @@ ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::record(con
 
       TLOG() << "Stopped recording, wrote " << bytes_written << " bytes";
       inherited::m_recording.exchange(false);
-    },
-    args.get<readoutconfig::RecordingParams>().duration);
+    }, recording_time_sec);
 }
 
 } // namespace readoutlibs

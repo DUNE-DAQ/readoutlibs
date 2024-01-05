@@ -22,8 +22,8 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const appdal::ReadoutModule* mcfg)
         m_raw_receiver_timeout_ms = std::chrono::milliseconds(input->get_recv_timeout_ms());
       }
     }
-    for (auto output : mcfg->get_ouputs()) {
-      if (input->get_data_type() == "TymeSync") {
+    for (auto output : mcfg->get_outputs()) {
+      if (output->get_data_type() == "TymeSync") {
         m_generate_timesync = true;
         m_timesync_sender = get_iom_receiver<dfmessages::TimeSync>(output->UID()) ;
         m_timesync_connection_name = output->UID();
@@ -60,7 +60,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const appdal::ReadoutModule* mcfg)
     ers::error(ConfigurationError(ERS_HERE, m_sourceid, "Latency Buffer can't be allocated with size!"));
   }
 
-  m_request_handler_impl->conf(m_cfg);
+  m_request_handler_impl->conf(mcfg);
 
 
 }

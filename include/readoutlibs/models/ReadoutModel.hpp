@@ -10,13 +10,16 @@
 #define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_READOUTMODEL_HPP_
 
 //#include "appfwk/app/Nljs.hpp"
-#include "appfwk/ModuleConfiguration.hpp"
+#include "coredal/DaqModule.hpp"
+#include "coredal/Connection.hpp"
+#include "appdal/ReadoutModule.hpp"
+#include "appdal/ReadoutModuleConf.hpp"
 
 //#include "appfwk/cmd/Nljs.hpp"
 //#include "appfwk/cmd/Structs.hpp"
 
 
-#include "appfwk/DAQModuleHelper.hpp"
+//#include "appfwk/DAQModuleHelper.hpp"
 #include "iomanager/IOManager.hpp"
 #include "iomanager/Sender.hpp"
 #include "iomanager/Receiver.hpp"
@@ -138,7 +141,6 @@ private:
   std::atomic<bool>& m_run_marker;
 
   // CONFIGURATION
-  std::shared_ptr<appfwk::ModuleConfiguration> mcfg
   //appfwk::app::ModInit m_queue_config;
   bool m_fake_trigger;
   bool m_generate_timesync = false;
