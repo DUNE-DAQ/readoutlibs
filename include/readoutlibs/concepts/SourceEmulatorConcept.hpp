@@ -13,6 +13,7 @@
 
 #include "readoutlibs/utils/RateLimiter.hpp"
 #include "coredal/DROStreamConf.hpp"
+#include "appdal/StreamEmulationParameters.hpp"
 
 #include <map>
 #include <string>
@@ -35,7 +36,7 @@ public:
 
   //virtual void init(const nlohmann::json& /*args*/) = 0;
   virtual void set_sender(const std::string& /*sink_name*/) = 0;
-  virtual void conf(const coredal::DROStreamConf* conf) = 0;
+  virtual void conf(const coredal::DROStreamConf* conf, const appdal::StreamEmulationParameters* emu_conf) = 0;
   virtual void start(const nlohmann::json& /*args*/) = 0;
   virtual void stop(const nlohmann::json& /*args*/) = 0;
   virtual void scrap(const nlohmann::json& /*args*/) = 0;

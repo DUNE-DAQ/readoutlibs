@@ -32,7 +32,7 @@ SourceEmulatorModel<ReadoutType>::set_sender(const std::string& conn_name)
 
 template<class ReadoutType>
 void
-SourceEmulatorModel<ReadoutType>::conf(const coredal::DROStreamConf* link_conf)
+SourceEmulatorModel<ReadoutType>::conf(const coredal::DROStreamConf* link_conf, const appdal::StreamEmulationParameters* emu_params)
 {
   if (m_is_configured) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "This emulator is already configured!";
@@ -51,7 +51,6 @@ SourceEmulatorModel<ReadoutType>::conf(const coredal::DROStreamConf* link_conf)
     m_slotid = link_conf->get_geo_id()->get_slot_id();
     m_linkid = link_conf->get_geo_id()->get_stream_id();
 
-    auto emu_params = link_conf->get_stream_params()->get_emulation_conf();
     m_t0_now = emu_params->get_set_t0();
     m_file_source = std::make_unique<FileSourceBuffer>(emu_params->get_input_file_size_limit(), sizeof(ReadoutType));
     try {
