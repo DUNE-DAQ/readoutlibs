@@ -49,6 +49,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const appdal::ReadoutModule* mcfg)
   m_send_partial_fragment_if_available = true;
   m_sourceid.id = mcfg->get_source_id();
   m_sourceid.subsystem = RDT::subsystem;
+  m_processing_delay_ticks = mcfg->get_module_configuration()->get_post_processing_delay_ticks();
 
   // Configure implementations:
   m_raw_processor_impl->conf(mcfg);
@@ -169,6 +170,12 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
   m_sum_payloads = 0;
   m_stats_packet_count = 0;
 
+  timestamp_t oldest_ts=0;
+  timestamp_t newest_ts=0;
+  timestamp_t start_win_ts=0;
+  timestamp_t end_win_ts=0;
+  bool first_cycle = true;
+
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Consumer thread started...";
   while (m_run_marker.load()) {
     // Try to acquire data
@@ -183,10 +190,42 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
         TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Latency buffer is full and data was overwritten!";
         m_num_payloads_overwritten++;
       }
-      m_raw_processor_impl->postprocess_item(m_latency_buffer_impl->back());
-      ++m_num_payloads;
-      ++m_sum_payloads;
-      ++m_stats_packet_count;
+
+      // Add here a possible deferral of the post processing, to allow elements being reordered in the LB
+      // Basically, find data older than a certain timestamp and process all data since the last post-processed element up to that value
+      if (m_processing_delay_ticks !=0) {
+        std::vector<std::pair<void*, size_t>> frag_pieces;
+
+        // Get the newest TP
+        SkipListAcc acc(m_latency_buffer_impl->get_skip_list());
+        auto tail = acc.last();
+        auto head = acc.first();
+        newest_ts = (*tail).get_first_timestamp();
+        oldest_ts = (*head).get_first_timestamp();
+        
+        if (first_cycle) {
+          start_win_ts = oldest_ts;
+        first_cycle = false;
+        }
+        if (newest_ts - start_win_ts > m_processing_delay_ticks) {
+          end_win_ts = newest_ts - m_processing_delay_ticks;
+          frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
+          for (const auto& [frag,fsize] : frag_pieces) {
+            m_raw_processor_impl->postprocess_item(frag);
+            ++m_num_payloads;
+            ++m_sum_payloads;
+            ++m_stats_packet_count;
+          }
+          //remember what we sent for the next loop
+          start_win_ts = end_win_ts;
+        }
+      }
+      else {
+        m_raw_processor_impl->postprocess_item(m_latency_buffer_impl->back());
+        ++m_num_payloads;
+        ++m_sum_payloads;
+        ++m_stats_packet_count;
+      }
     } else {
       ++m_rawq_timeout_count;
       // Protection against a zero sleep becoming a yield

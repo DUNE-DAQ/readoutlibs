@@ -148,7 +148,7 @@ protected:
   daqdataformats::SourceID m_sourceid;
   daqdataformats::run_number_t m_run_number;
   bool m_send_partial_fragment_if_available;
- 
+  uint64_t m_processing_delay_ticks;
   // STATS
   std::atomic<int> m_num_payloads{ 0 };
   std::atomic<int> m_sum_payloads{ 0 };
