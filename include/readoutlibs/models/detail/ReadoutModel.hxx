@@ -50,6 +50,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const appdal::ReadoutModule* mcfg)
   m_sourceid.id = mcfg->get_source_id();
   m_sourceid.subsystem = RDT::subsystem;
   m_processing_delay_ticks = mcfg->get_module_configuration()->get_post_processing_delay_ticks();
+  m_processing_delay_ticks = 0;
 
   // Configure implementations:
   m_raw_processor_impl->conf(mcfg);
@@ -177,10 +178,14 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
   bool first_cycle = true;
 
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Consumer thread started...";
+
+  auto last_post_proc_time = std::chrono::system_clock::now();
+    
   while (m_run_marker.load()) {
     // Try to acquire data
 
     auto opt_payload = m_raw_data_receiver->try_receive(m_raw_receiver_timeout_ms);
+
     if (opt_payload) {
 
       RDT& payload = opt_payload.value();
@@ -190,37 +195,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
         TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Latency buffer is full and data was overwritten!";
         m_num_payloads_overwritten++;
       }
-
-      // Add here a possible deferral of the post processing, to allow elements being reordered in the LB
-      // Basically, find data older than a certain timestamp and process all data since the last post-processed element up to that value
-      if (m_processing_delay_ticks !=0) {
-        std::vector<std::pair<void*, size_t>> frag_pieces;
-
-        // Get the newest TP
-        SkipListAcc acc(m_latency_buffer_impl->get_skip_list());
-        auto tail = acc.last();
-        auto head = acc.first();
-        newest_ts = (*tail).get_first_timestamp();
-        oldest_ts = (*head).get_first_timestamp();
-        
-        if (first_cycle) {
-          start_win_ts = oldest_ts;
-        first_cycle = false;
-        }
-        if (newest_ts - start_win_ts > m_processing_delay_ticks) {
-          end_win_ts = newest_ts - m_processing_delay_ticks;
-          frag_pieces = get_fragment_pieces(start_win_ts, end_win_ts, rres);
-          for (const auto& [frag,fsize] : frag_pieces) {
-            m_raw_processor_impl->postprocess_item(frag);
-            ++m_num_payloads;
-            ++m_sum_payloads;
-            ++m_stats_packet_count;
-          }
-          //remember what we sent for the next loop
-          start_win_ts = end_win_ts;
-        }
-      }
-      else {
+      if (m_processing_delay_ticks ==0) {
         m_raw_processor_impl->postprocess_item(m_latency_buffer_impl->back());
         ++m_num_payloads;
         ++m_sum_payloads;
@@ -233,35 +208,66 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
         std::this_thread::sleep_for(m_raw_receiver_sleep_us);
     }
 
-    // try {
-    //   RDT payload = m_raw_data_receiver->receive(m_raw_receiver_timeout_ms);
+    // Add here a possible deferral of the post processing, to allow elements being reordered in the LB
+    /* Basically, find data older than a certain timestamp and process all data since the last post-processed element up to that value
+    if (m_processing_delay_ticks !=0) {
+      std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+      auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(last_post_proc_time - now);
+      last_post_proc_time = now;
+      if (milliseconds > 10) {
+        std::vector<std::pair<void*, size_t>> frag_pieces;
 
-    //   // 31-Oct-2022, KAB: The following TLOG_DEBUG line should probably remain commented-out
-    //   // during production running, but it can be useful during debugging and when we are adding
-    //   // new readout types. It may consume too many resources to be left enabled all of the time
-    //   // even though TRACE messages are very efficient. The issue is that it could be called very
-    //   // often, so it is safer to leave it commented out so that is doesn't affect performance.
-    //   // In addition, it is a bit of a stop-gap measure. It is better to have TLOG_DEBUG
-    //   // messages that give more details about the data payload that has been received (for
-    //   // example, the timestamp of the payload), but such DEBUG messages need to be included
-    //   // in places like fdreadoutlibs/<xyz>/<XYZ>FrameProcessor where the type of the payload
-    //   // is fully known. In many cases, such DEBUG messages exist, but when a new readout type
-    //   // is being added, those messages may not exist yet, and this message could be helpful.
-    //   //TLOG_DEBUG(TLVL_FRAME_RECEIVED) << "Received payload of type " << typeid(payload).name();
+        // Get the newest TP
+        SkipListAcc acc(m_latency_buffer_impl->get_skip_list());
+        auto tail = acc.last();
+        auto head = acc.first();
+        newest_ts = (*tail).get_first_timestamp();
+        oldest_ts = (*head).get_first_timestamp();
+        
+        if (first_cycle) {
+          start_win_ts = oldest_ts;
+          first_cycle = false;
+        }
+        if (newest_ts - start_win_ts > m_processing_delay_ticks) {
+          end_win_ts = newest_ts - m_processing_delay_ticks;
+          RDT request_element = RDT();
+          request_element.set_first_timestamp(start_win_ts);
+          /// HERE!!!
+  request_element.set_first_timestamp(start_win_ts-(request_element.get_num_frames() * RDT::expected_tick_difference));
+  auto start_iter = m_latency_buffer->lower_bound(request_element);
 
-    //   m_raw_processor_impl->preprocess_item(&payload);
-    //   if (!m_latency_buffer_impl->write(std::move(payload))) {
-    //     TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Latency buffer is full and data was overwritten!";
-    //     m_num_payloads_overwritten++;
-    //   }
-    //   m_raw_processor_impl->postprocess_item(m_latency_buffer_impl->back());
-    //   ++m_num_payloads;
-    //   ++m_sum_payloads;
-    //   ++m_stats_packet_count;
-    // } catch (const iomanager::TimeoutExpired& excpt) {
-    //   ++m_rawq_timeout_count;
-    //   // ers::error(QueueTimeoutError(ERS_HERE, " raw source "));
-    // }
+  if (start_iter != m_latency_buffer->end()) {
+    RDT* element = &(*start_iter);
+
+    while (start_iter.good() && element->get_first_timestamp() < end_win_ts) {
+      if ( element->get_first_timestamp() + element->get_num_frames() * RDT::expected_tick_difference <= start_win_ts) {
+     }
+
+      else if ( element->get_num_frames()>1 &&
+         ((element->get_first_timestamp() < start_win_ts &&
+          element->get_first_timestamp() + element->get_num_frames() * RDT::expected_tick_difference > start_win_ts)
+         ||
+          element->get_first_timestamp() + element->get_num_frames() * RDT::expected_tick_difference >
+            end_win_ts)) {
+        for (auto frame_iter = element->begin(); frame_iter != element->end(); frame_iter++) {
+          if (get_frame_iterator_timestamp(frame_iter) > (start_win_ts - RDT::expected_tick_difference)&&
+              get_frame_iterator_timestamp(frame_iter) < end_win_ts ) {
+            frag_pieces.emplace_back(
+              std::make_pair<void*, size_t>(static_cast<void*>(&(*frame_iter)), element->get_frame_size()));
+          }
+        }
+      }
+      else {
+        frag_pieces.emplace_back(
+          std::make_pair<void*, size_t>(static_cast<void*>((*start_iter).begin()), element->get_payload_size()));
+      }
+
+      elements_handled++;
+      ++start_iter;
+      element = &(*start_iter);
+    }
+*/
+
   }
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Consumer thread joins... ";
 }
