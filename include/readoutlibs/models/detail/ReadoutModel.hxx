@@ -166,6 +166,7 @@ template<class RDT, class RHT, class LBT, class RPT>
 void 
 ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
 {
+
   m_rawq_timeout_count = 0;
   m_num_payloads = 0;
   m_sum_payloads = 0;
@@ -180,7 +181,8 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Consumer thread started...";
 
   auto last_post_proc_time = std::chrono::system_clock::now();
-    
+  RDT processed_element;
+
   while (m_run_marker.load()) {
     // Try to acquire data
 
@@ -209,65 +211,44 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
     }
 
     // Add here a possible deferral of the post processing, to allow elements being reordered in the LB
-    /* Basically, find data older than a certain timestamp and process all data since the last post-processed element up to that value
+    // Basically, find data older than a certain timestamp and process all data since the last post-processed element up to that value
     if (m_processing_delay_ticks !=0) {
       std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
       auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(last_post_proc_time - now);
       last_post_proc_time = now;
-      if (milliseconds > 10) {
+      if (milliseconds.count() > 10) {
         std::vector<std::pair<void*, size_t>> frag_pieces;
-
-        // Get the newest TP
-        SkipListAcc acc(m_latency_buffer_impl->get_skip_list());
-        auto tail = acc.last();
-        auto head = acc.first();
-        newest_ts = (*tail).get_first_timestamp();
-        oldest_ts = (*head).get_first_timestamp();
+        // Get the LB boundtries
+	auto head = m_latency_buffer_impl->front();
+	auto tail = m_latency_buffer_impl->back();
+        newest_ts = tail->get_first_timestamp();
+        oldest_ts = head->get_first_timestamp();
         
         if (first_cycle) {
           start_win_ts = oldest_ts;
           first_cycle = false;
+          processed_element.set_first_timestamp(start_win_ts);
         }
         if (newest_ts - start_win_ts > m_processing_delay_ticks) {
-          end_win_ts = newest_ts - m_processing_delay_ticks;
-          RDT request_element = RDT();
-          request_element.set_first_timestamp(start_win_ts);
-          /// HERE!!!
-  request_element.set_first_timestamp(start_win_ts-(request_element.get_num_frames() * RDT::expected_tick_difference));
-  auto start_iter = m_latency_buffer->lower_bound(request_element);
+          end_win_ts = newest_ts - m_processing_delay_ticks; 
+          auto start_iter = m_latency_buffer_impl->lower_bound(processed_element, false);
 
-  if (start_iter != m_latency_buffer->end()) {
-    RDT* element = &(*start_iter);
-
-    while (start_iter.good() && element->get_first_timestamp() < end_win_ts) {
-      if ( element->get_first_timestamp() + element->get_num_frames() * RDT::expected_tick_difference <= start_win_ts) {
-     }
-
-      else if ( element->get_num_frames()>1 &&
-         ((element->get_first_timestamp() < start_win_ts &&
-          element->get_first_timestamp() + element->get_num_frames() * RDT::expected_tick_difference > start_win_ts)
-         ||
-          element->get_first_timestamp() + element->get_num_frames() * RDT::expected_tick_difference >
-            end_win_ts)) {
-        for (auto frame_iter = element->begin(); frame_iter != element->end(); frame_iter++) {
-          if (get_frame_iterator_timestamp(frame_iter) > (start_win_ts - RDT::expected_tick_difference)&&
-              get_frame_iterator_timestamp(frame_iter) < end_win_ts ) {
-            frag_pieces.emplace_back(
-              std::make_pair<void*, size_t>(static_cast<void*>(&(*frame_iter)), element->get_frame_size()));
+          if (start_iter != m_latency_buffer_impl->end()) {
+            RDT* element = &(*start_iter);
+            while (start_iter.good() && element->get_first_timestamp() < end_win_ts) {
+              m_raw_processor_impl->postprocess_item(element);
+              ++m_num_payloads;
+              ++m_sum_payloads;
+              ++m_stats_packet_count;
+              ++start_iter;
+              element = &(*start_iter);
+            }
+            processed_element = *element;
           }
         }
       }
-      else {
-        frag_pieces.emplace_back(
-          std::make_pair<void*, size_t>(static_cast<void*>((*start_iter).begin()), element->get_payload_size()));
-      }
-
-      elements_handled++;
-      ++start_iter;
-      element = &(*start_iter);
+     
     }
-*/
-
   }
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Consumer thread joins... ";
 }

@@ -49,8 +49,6 @@
 #include "readoutlibs/ReadoutIssues.hpp"
 #include "readoutlibs/utils/ReusableThread.hpp"
 
-#include "folly/ConcurrentSkipList.h"
-
 #include <functional>
 #include <memory>
 #include <string>
