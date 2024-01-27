@@ -4,6 +4,7 @@
 #include "readoutlibs/concepts/RecorderConcept.hpp"
 #include "readoutlibs/concepts/RequestHandlerConcept.hpp"
 #include "readoutlibs/concepts/SourceEmulatorConcept.hpp"
+#include "readoutlibs/concepts/DataSubscriberConcept.hpp"
 
 #include "readoutlibs/models/BinarySearchQueueModel.hpp"
 #include "readoutlibs/models/DefaultRequestHandlerModel.hpp"
@@ -16,4 +17,5 @@
 #include "readoutlibs/models/SourceEmulatorModel.hpp"
 #include "readoutlibs/models/TaskRawDataProcessorModel.hpp"
 #include "readoutlibs/models/ZeroCopyRecordingRequestHandlerModel.hpp"
+#include "readoutlibs/models/DataSubscriberModel.hpp"
 
