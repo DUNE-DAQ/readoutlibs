@@ -23,7 +23,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const appdal::ReadoutModule* mcfg)
       }
     }
     for (auto output : mcfg->get_outputs()) {
-      if (output->get_data_type() == "TimeSync") {
+      if (output->get_data_type() == "TymeSync") {
         m_generate_timesync = true;
         m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(output->UID()) ;
         m_timesync_connection_name = output->UID();
