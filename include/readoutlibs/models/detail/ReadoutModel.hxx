@@ -219,8 +219,8 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
       if (milliseconds.count() > 10) {
         std::vector<std::pair<void*, size_t>> frag_pieces;
         // Get the LB boundtries
-	      auto head = m_latency_buffer_impl->front();
-	      auto tail = m_latency_buffer_impl->back();
+	auto head = m_latency_buffer_impl->front();
+	auto tail = m_latency_buffer_impl->back();
         newest_ts = tail->get_first_timestamp();
         oldest_ts = head->get_first_timestamp();
         
