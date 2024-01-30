@@ -39,7 +39,6 @@ DefaultRequestHandlerModel<RDT, LBT>::conf(const appdal::ReadoutModule* conf)
 
   m_warn_on_timeout = reqh_conf->get_warn_on_timeout();
   m_warn_about_empty_buffer = reqh_conf->get_warn_on_empty_buffer();
-  m_periodic_data_transmission_ms = reqh_conf->get_m_periodic_data_transmission_ms();
   
   if (m_pop_limit_pct < 0.0f || m_pop_limit_pct > 1.0f || m_pop_size_pct < 0.0f || m_pop_size_pct > 1.0f) {
     ers::error(ConfigurationError(ERS_HERE, m_sourceid, "Auto-pop percentage out of range."));
@@ -50,7 +49,6 @@ DefaultRequestHandlerModel<RDT, LBT>::conf(const appdal::ReadoutModule* conf)
 
   m_recording_thread.set_name("recording", m_sourceid.id);
   m_cleanup_thread.set_name("cleanup", m_sourceid.id);
-  m_periodic_transmission_thread.set_name("periodic", m_sourceid.id);
 
   std::ostringstream oss;
   oss << "RequestHandler configured. " << std::fixed << std::setprecision(2)
@@ -93,10 +91,6 @@ DefaultRequestHandlerModel<RDT, LBT>::start(const nlohmann::json& /*args*/)
 
   m_run_marker.store(true);
   m_cleanup_thread.set_work(&DefaultRequestHandlerModel<RDT, LBT>::periodic_cleanups, this);
-  if(m_periodic_data_transmission_ms > 0) {
-    m_periodic_transmission_thread.set_work(&DefaultRequestHandlerModel<RDT, LBT>::periodic_data_transmissions, this);
-  }
-
   m_waiting_queue_thread = 
     std::thread(&DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests, this);
 }
@@ -113,10 +107,6 @@ DefaultRequestHandlerModel<RDT, LBT>::stop(const nlohmann::json& /*args*/)
   while (!m_cleanup_thread.get_readiness()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
-  while (!m_periodic_transmission_thread.get_readiness()) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-  }
-
   m_waiting_queue_thread.join();
   m_request_handler_thread_pool->join();
 }
@@ -348,21 +338,6 @@ DefaultRequestHandlerModel<RDT, LBT>::periodic_cleanups()
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
 }
-
-template<class RDT, class LBT>
-void 
-DefaultRequestHandlerModel<RDT, LBT>::periodic_data_transmissions()
-{
- while (m_run_marker.load()) {
-    periodic_data_transmission();
-    std::this_thread::sleep_for(std::chrono::milliseconds(m_periodic_data_transmission_ms));
-  }
-}
-
-template<class RDT, class LBT>
-void 
-DefaultRequestHandlerModel<RDT, LBT>::periodic_data_transmission()
-{}
 
 template<class RDT, class LBT>
 void 
