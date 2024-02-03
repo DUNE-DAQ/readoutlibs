@@ -224,7 +224,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
       if (m_request_handler_supports_cutoff_timestamp) {
         int64_t diff1 = payload.get_first_timestamp() - m_request_handler_impl->get_cutoff_timestamp();
         if (diff1 <= 0) {
-          m_request_handler_impl->increment_missed_tp_count();
+          m_request_handler_impl->increment_tardy_tp_count();
           ers::warning(DataPacketArrivedTooLate(ERS_HERE, m_run_number, payload.get_first_timestamp(),
                                                 m_request_handler_impl->get_cutoff_timestamp(), diff1,
                                                 (static_cast<double>(diff1)/62500.0)));
