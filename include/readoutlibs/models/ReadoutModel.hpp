@@ -185,6 +185,7 @@ private:
 
   // REQUEST HANDLER
   std::unique_ptr<RequestHandlerType> m_request_handler_impl;
+  bool m_request_handler_supports_cutoff_timestamp;
 
   // ERROR REGISTRY
   std::unique_ptr<FrameErrorRegistry> m_error_registry;
