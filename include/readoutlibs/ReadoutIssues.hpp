@@ -96,9 +96,9 @@ ERS_DECLARE_ISSUE(readoutlibs,
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   CannotDispatch,
-                  "Module" << name << "] Failed attempt to write to the queue: "
+                  "Module [" << name << "] Failed attempt to write to the queue: "
                            << ". Data will be lost!",
-                  (((std::string)name)))
+                  ((std::string)name))
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   RequestSourceIDMismatch,

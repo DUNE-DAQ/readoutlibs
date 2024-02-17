@@ -44,7 +44,7 @@ SourceEmulatorModel<ReadoutType>::conf(const coredal::DROStreamConf* link_conf, 
     std::mt19937 mt(rand()); // NOLINT(runtime/threadsafe_fn)
     std::uniform_real_distribution<double> dis(0.0, 1.0);
 
-    m_sourceid.id = link_conf->get_src_id();
+    m_sourceid.id = link_conf->get_source_id();
     m_sourceid.subsystem = ReadoutType::subsystem;
 
     m_crateid = link_conf->get_geo_id()->get_crate_id();

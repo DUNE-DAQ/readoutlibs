@@ -33,10 +33,11 @@ public:
   SourceConcept(SourceConcept&&) = delete;                 ///< SourceConcept is not move-constructible
   SourceConcept& operator=(SourceConcept&&) = delete;      ///< SourceConcept is not move-assignable
 
-  virtual void init(const appdal::DaqModule* mcfg) = 0;
+  virtual void init(const coredal::DaqModule* mcfg) = 0;
   virtual void start() = 0;
   virtual void stop() = 0;
-  virtual bool handle_payload(char* message, std::size_t size) = 0;
+  virtual void get_info(opmonlib::InfoCollector& ci, int level) = 0;
+  //virtual bool handle_payload(T& data) = 0;
   
 };
 

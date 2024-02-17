@@ -1,5 +1,5 @@
 /**
- * @file SourceModel.hpp
+ * @file DataSubscriberModel.hpp
  *
  * This is part of the DUNE DAQ , copyright 2020.
  * Licensing/copyright details are in the COPYING file that you should have
@@ -17,18 +17,20 @@
 #include "logging/Logging.hpp"
 //#include "readoutlibs/utils/ReusableThread.hpp"
 
+#include "coredal/Connection.hpp"
+
 //#include <folly/ProducerConsumerQueue.h>
 //#include <nlohmann/json.hpp>
 
 //#include <atomic>
 //#include <memory>
 //#include <mutex>
-//#include <string>
+#include <functional>
 
 namespace dunedaq::readoutlibs {
 
 template<class OriginalPayloadType, class TargetPayloadType>
-class SourceModel : public SourceConcept
+class DataSubscriberModel : public SourceConcept
 {
 public: 
   using inherited = SourceConcept;
@@ -37,11 +39,10 @@ public:
    * @brief SourceModel Constructor
    * @param name Instance name for this SourceModel instance
    */
-  template<class OriginalPayloadType, class TargetPayloadType>
-  SourceModel(): SourceConcept() {}
-  ~SourceModel() {}
+  DataSubscriberModel(): SourceConcept() {}
+  ~DataSubscriberModel() {}
 
-  void init(const appdal::DaqModule* mcfg) override {
+  void init(const coredal::DaqModule* cfg) override {
     if (cfg->get_outputs().size() != 1) {
       throw readoutlibs::InitializationError(ERS_HERE, "Only 1 output supported for subscribers");
     }
@@ -54,16 +55,21 @@ public:
   }
 
   void start() {
-    m_data_receiver->add_callback(&SourceModel::handle_payload, this, std::placeholders::_1);
+    m_data_receiver->add_callback(std::bind(&DataSubscriberModel::handle_payload, this, std::placeholders::_1));
   }  
 
   void stop() {
     m_data_receiver->remove_callback();
   }
 
-  bool handle_payload(char* message, std::size_t size) // NOLINT(build/unsigned)
+  void get_info(opmonlib::InfoCollector& /*ci*/, int /*level*/) 
   {
-    TargetPayloadType& target_payload = *reinterpret_cast<TargetPayloadType*>(message);
+  // FIXME: implement statistics publishing
+  }
+
+  bool handle_payload(OriginalPayloadType&  message) // NOLINT(build/unsigned)
+  {
+    TargetPayloadType& target_payload = reinterpret_cast<TargetPayloadType&>(message);
     if (!m_data_sender->try_send(std::move(target_payload), iomanager::Sender::s_no_block)) {
       ++m_dropped_packets;
     }
