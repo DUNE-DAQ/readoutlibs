@@ -8,6 +8,8 @@
 #ifndef READOUTLIBS_INCLUDE_READOUTLIBS_DATAMOVECALLBACKREGISTRY_HPP_
 #define READOUTLIBS_INCLUDE_READOUTLIBS_DATAMOVECALLBACKREGISTRY_HPP_
 
+#include "logging/Logging.hpp"
+
 #include <functional>
 #include <memory>
 #include <string>
@@ -35,9 +37,9 @@ public:
   DataMoveCallback(std::string id, std::function<void(DataType&&)> callback)
     : CallbackConcept(id)
   {
-    m_callback = std::make_unique<std::function<void(DataType&&)>>(callback);
+    m_callback = std::make_shared<std::function<void(DataType&&)>>(callback);
   }
-  std::unique_ptr<std::function<void(DataType&&)>> m_callback;
+  std::shared_ptr<std::function<void(DataType&&)>> m_callback;
 };
 
 class DataMoveCallbackRegistry
@@ -60,7 +62,7 @@ public:
   void register_callback(const std::string& id, std::function<void(DataType&&)> callback);
  
   template<typename DataType>
-  std::unique_ptr<std::function<void(DataType&&)>>&
+  std::shared_ptr<std::function<void(DataType&&)>>
   get_callback(const std::string& id);
 
 private:
