@@ -47,6 +47,10 @@ public:
 
   //! Check if cleanup is necessary and execute it if necessary
   virtual void cleanup_check() = 0;
+
+  //! Periodic data transmission - relevant for trigger in particular
+  virtual void periodic_data_transmission() = 0;
+
   //! Issue a data request to the request handler
   virtual void issue_request(dfmessages::DataRequest /*dr*/,
                              bool send_partial_fragment_if_not_yet) = 0;
