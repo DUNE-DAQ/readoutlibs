@@ -33,8 +33,6 @@ public:
   RawDataProcessorConcept& operator=(RawDataProcessorConcept&&) =
     delete; ///< RawDataProcessorConcept is not move-assignable
 
-  //! Init the raw processor
-  //virtual void init(const appdal::DataProcessor* conf) {}
   //! Start operation
   virtual void start(const nlohmann::json& args) = 0;
   //! Stop operation

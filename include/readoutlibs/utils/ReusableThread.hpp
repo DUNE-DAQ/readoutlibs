@@ -25,7 +25,7 @@ namespace readoutlibs {
 class ReusableThread
 {
 public:
-  explicit ReusableThread(int threadid)
+  explicit ReusableThread(int threadid=0)
     : m_thread_id(threadid)
     , m_task_executed(true)
     , m_task_assigned(false)

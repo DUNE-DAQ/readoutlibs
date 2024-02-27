@@ -39,6 +39,7 @@ DefaultRequestHandlerModel<RDT, LBT>::conf(const appdal::ReadoutModule* conf)
 
   m_warn_on_timeout = reqh_conf->get_warn_on_timeout();
   m_warn_about_empty_buffer = reqh_conf->get_warn_on_empty_buffer();
+  m_periodic_data_transmission_ms = reqh_conf->get_periodic_data_transmission_ms();
   
   if (m_pop_limit_pct < 0.0f || m_pop_limit_pct > 1.0f || m_pop_size_pct < 0.0f || m_pop_size_pct > 1.0f) {
     ers::error(ConfigurationError(ERS_HERE, m_sourceid, "Auto-pop percentage out of range."));
