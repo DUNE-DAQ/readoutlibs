@@ -3,7 +3,6 @@
 #include "readoutlibs/concepts/ReadoutConcept.hpp"
 #include "readoutlibs/concepts/RecorderConcept.hpp"
 #include "readoutlibs/concepts/RequestHandlerConcept.hpp"
-#include "readoutlibs/concepts/SourceConcept.hpp"
 #include "readoutlibs/concepts/SourceEmulatorConcept.hpp"
 
 #include "readoutlibs/models/BinarySearchQueueModel.hpp"
