@@ -313,7 +313,7 @@ IterableQueueModel<T>::conf(const appdal::LatencyBuffer* cfg)
     throw std::bad_alloc();
   }
 
-  if (fg->get_preallocation()) {
+  if (cfg->get_preallocation()) {
     force_pagefault();
   }
 }
