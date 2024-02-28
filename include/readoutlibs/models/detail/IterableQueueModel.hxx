@@ -53,6 +53,13 @@ IterableQueueModel<T>::allocate_memory(std::size_t size,
 
   } else if (numa_aware && numa_node < 8) { // numa allocator from libnuma; we get "numa_node >= 0" for free, given its datatype
 #ifdef WITH_LIBNUMA_SUPPORT
+    numa_set_preferred((unsigned)numa_node); // https://linux.die.net/man/3/numa_set_preferred
+ #ifdef WITH_LIBNUMA_BIND_POLICY
+    numa_set_bind_policy(WITH_LIBNUMA_BIND_POLICY); // https://linux.die.net/man/3/numa_set_bind_policy
+ #endif
+ #ifdef WITH_LIBNUMA_STRICT_POLICY
+    numa_set_strict(WITH_LIBNUMA_STRICT_POLICY);    // https://linux.die.net/man/3/numa_set_strict
+ #endif
     records_ = static_cast<T*>(numa_alloc_onnode(sizeof(T) * size, numa_node));
 #else
     throw GenericConfigurationError(ERS_HERE,
@@ -72,6 +79,76 @@ IterableQueueModel<T>::allocate_memory(std::size_t size,
   numa_node_ = numa_node;
   intrinsic_allocator_ = intrinsic_allocator;
   alignment_size_ = alignment_size;
+}
+
+template<class T>
+void
+IterableQueueModel<T>::prefill_task()
+{
+  // Wait until LB issues ready
+  std::unique_lock lk(prefill_mutex_);
+  prefill_cv_.wait(lk, [this]{ return prefill_ready_; });
+  
+  // After wait, we are ready to force page-fault
+  for (size_t i = 0; i < size_ - 1; ++i) {
+    T element = T();
+    write_(std::move(element));
+  }
+  flush();
+  
+  // Preallocation done
+  prefill_done_ = true;
+  
+  // Manual unlock is done before notify: avoid waking up the waiting thread only to block again.
+  lk.unlock();
+  prefill_cv_.notify_one();
+}
+
+template<class T>
+void
+IterableQueueModel<T>::force_pagefault()
+{
+  // Local prefiller thread
+  std::thread prefill_thread(&IterableQueueModel<T>::prefill_task, this);
+
+  // Tweak prefiller thread
+  char tname[16];
+  snprintf(tname, 16, "%s-%d", prefiller_name_.c_str(), numa_node_);
+  auto handle = prefill_thread.native_handle();
+  pthread_setname_np(handle, tname);
+
+#ifdef WITH_LIBNUMA_SUPPORT
+  cpu_set_t affinitymask;
+  CPU_ZERO(&affinitymask);
+  struct bitmask *nodecpumask = numa_allocate_cpumask();
+  int ret = 0;
+  // Get NODE CPU mask
+  ret = numa_node_to_cpus(numa_node_, nodecpumask);
+  assert(ret == 0);
+  // Apply corresponding NODE CPUs to affinity mask
+  for (int i=0; i< numa_num_configured_cpus(); ++i) {
+    if (numa_bitmask_isbitset(nodecpumask, i)) {
+      CPU_SET(i, &affinitymask);
+    }
+  }
+  ret = pthread_setaffinity_np(handle, sizeof(cpu_set_t), &affinitymask);
+  assert(ret == 0);
+  numa_free_cpumask(nodecpumask);
+#endif
+
+  // Trigger prefiller thread
+  {
+    std::lock_guard lk(prefill_mutex_);
+    prefill_ready_ = true;
+  }
+  prefill_cv_.notify_one();
+  // Wait for prefiller thread to finish
+  {
+    std::unique_lock lk(prefill_mutex_);
+    prefill_cv_.wait(lk, [this]{ return prefill_done_; });
+  }
+  // Join with prefiller thread
+  prefill_thread.join();
 }
 
 // Write element into the queue
@@ -236,12 +313,8 @@ IterableQueueModel<T>::conf(const appdal::LatencyBuffer* cfg)
     throw std::bad_alloc();
   }
 
-  if (cfg->get_preallocation()) {
-    for (size_t i = 0; i < size_ - 1; ++i) {
-      T element = T();
-      write_(std::move(element));
-    }
-    flush();
+  if (fg->get_preallocation()) {
+    force_pagefault();
   }
 }
 
@@ -256,6 +329,8 @@ IterableQueueModel<T>::scrap(const nlohmann::json& /*cfg*/)
   intrinsic_allocator_ = false;
   alignment_size_ = 0;
   invalid_configuration_requested_ = false;
+  prefill_ready_ = false;
+  prefill_done_ = false;
   size_ = 2;
   records_ = static_cast<T*>(std::malloc(sizeof(T) * 2));
   readIndex_ = 0;

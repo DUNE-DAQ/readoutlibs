@@ -84,6 +84,8 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
     , intrinsic_allocator_(false)
     , alignment_size_(0)
     , invalid_configuration_requested_(false)
+    , prefill_ready_(false)
+    , prefill_done_(false)
     , size_(2)
     , records_(static_cast<T*>(std::malloc(sizeof(T) * 2)))
     , readIndex_(0)
@@ -98,6 +100,8 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
     , intrinsic_allocator_(false)
     , alignment_size_(0)
     , invalid_configuration_requested_(false)
+    , prefill_ready_(false)
+    , prefill_done_(false)
     , size_(size)
     , records_(static_cast<T*>(std::malloc(sizeof(T) * size)))
     , readIndex_(0)
@@ -133,6 +137,8 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
     , intrinsic_allocator_(intrinsic_allocator)
     , alignment_size_(alignment_size)
     , invalid_configuration_requested_(false)
+    , prefill_ready_(false)
+    , prefill_done_(false)
     , size_(size)
     , readIndex_(0)
     , writeIndex_(0)
@@ -169,6 +175,12 @@ struct IterableQueueModel : public LatencyBufferConcept<T>
                        uint8_t numa_node = 0, // NOLINT (build/unsigned)
                        bool intrinsic_allocator = false,
                        std::size_t alignment_size = 0);
+
+  // Task that fills up the LB.
+  void prefill_task();
+
+  // Issue fre-fill task
+  void force_pagefault();
 
   // Write element into the queue
   bool write(T&& record) override;
@@ -312,6 +324,13 @@ protected:
   bool intrinsic_allocator_;
   std::size_t alignment_size_;
   bool invalid_configuration_requested_;
+
+  // Pre-fill and page-fault internal thread control
+  std::string prefiller_name_{"lbpfn"};
+  std::mutex prefill_mutex_;
+  std::condition_variable prefill_cv_;
+  bool prefill_ready_;
+  bool prefill_done_;
 
   // Ptr logger for debugging
   std::thread ptrlogger;
