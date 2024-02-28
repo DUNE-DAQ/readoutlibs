@@ -48,7 +48,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const appdal::ReadoutModule* mcfg)
   m_sourceid.id = mcfg->get_source_id();
   m_sourceid.subsystem = RDT::subsystem;
   m_processing_delay_ticks = mcfg->get_module_configuration()->get_post_processing_delay_ticks();
-  m_processing_delay_ticks = 0;
+  
 
   // Configure implementations:
   m_raw_processor_impl->conf(mcfg);
