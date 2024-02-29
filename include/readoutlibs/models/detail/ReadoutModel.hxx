@@ -41,7 +41,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const appdal::ReadoutModule* mcfg)
   m_request_handler_impl.reset(new RHT(m_latency_buffer_impl, m_error_registry));
   //m_request_handler_impl->init(args);
   //m_raw_processor_impl->init(args);
-  m_request_handler_supports_cutoff_timestamp = m_request_handler_impl.supports_cutoff_timestamp();
+  m_request_handler_supports_cutoff_timestamp = m_request_handler_impl->supports_cutoff_timestamp();
   m_fake_trigger = false;
   m_raw_receiver_sleep_us = std::chrono::microseconds::zero();
   m_send_partial_fragment_if_available = true;
