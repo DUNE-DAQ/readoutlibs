@@ -32,33 +32,34 @@ SourceEmulatorModel<ReadoutType>::set_sender(const std::string& conn_name)
 
 template<class ReadoutType>
 void
-SourceEmulatorModel<ReadoutType>::conf(const nlohmann::json& args, const nlohmann::json& link_conf)
+SourceEmulatorModel<ReadoutType>::conf(const coredal::DROStreamConf* link_conf, const appdal::StreamEmulationParameters* emu_params)
 {
   if (m_is_configured) {
     TLOG_DEBUG(TLVL_WORK_STEPS) << "This emulator is already configured!";
   } else {
-    m_conf = args.get<module_conf_t>();
-    m_link_conf = link_conf.get<link_conf_t>();
-    m_raw_sender_timeout_ms = std::chrono::milliseconds(m_conf.queue_timeout_ms);
+    //m_conf = args.get<module_conf_t>();
+    //m_link_conf = link_conf.get<link_conf_t>();
+    m_raw_sender_timeout_ms = std::chrono::milliseconds(1);
 
     std::mt19937 mt(rand()); // NOLINT(runtime/threadsafe_fn)
     std::uniform_real_distribution<double> dis(0.0, 1.0);
 
-    m_sourceid.id = m_link_conf.source_id;
+    m_sourceid.id = link_conf->get_source_id();
     m_sourceid.subsystem = ReadoutType::subsystem;
 
-    m_crateid = m_link_conf.crate_id;
-    m_slotid = m_link_conf.slot_id;
-    m_linkid = m_link_conf.link_id;
+    m_crateid = link_conf->get_geo_id()->get_crate_id();
+    m_slotid = link_conf->get_geo_id()->get_slot_id();
+    m_linkid = link_conf->get_geo_id()->get_stream_id();
 
-    m_file_source = std::make_unique<FileSourceBuffer>(m_link_conf.input_limit, sizeof(ReadoutType));
+    m_t0_now = emu_params->get_set_t0();
+    m_file_source = std::make_unique<FileSourceBuffer>(emu_params->get_input_file_size_limit(), sizeof(ReadoutType));
     try {
-      m_file_source->read(m_link_conf.data_filename);
+      m_file_source->read(emu_params->get_data_file_name());
     } catch (const ers::Issue& ex) {
       ers::fatal(ex);
       throw ConfigurationError(ERS_HERE, m_sourceid, "", ex);
     }
-    m_dropouts_length = m_link_conf.random_population_size;
+    m_dropouts_length = emu_params->get_random_population_size();
     if (m_dropout_rate == 0.0) {
       m_dropouts = std::vector<bool>(1);
     } else {
@@ -68,29 +69,30 @@ SourceEmulatorModel<ReadoutType>::conf(const nlohmann::json& args, const nlohman
       m_dropouts[i] = dis(mt) >= m_dropout_rate;
     }
 
-    m_frame_errors_length = m_link_conf.random_population_size;
-    m_frame_error_rate = m_link_conf.emu_frame_error_rate;
+    m_frame_errors_length = emu_params->get_random_population_size();
+    m_frame_error_rate = emu_params->get_frame_error_rate_hz();
     m_error_bit_generator = ErrorBitGenerator(m_frame_error_rate);
     m_error_bit_generator.generate();
 
     // Generate random ADC pattern
-    if (m_conf.generate_periodic_adc_pattern) {
+    m_generate_periodic_adc_pattern = emu_params->get_generate_periodic_adc_pattern();
+    if (m_generate_periodic_adc_pattern) {
       TLOG() << "Generated pattern.";
       m_pattern_generator.generate(m_sourceid.id);
       m_random_channels = m_pattern_generator.get_channels();
 
-      TLOG() << "TP rate per channel multiplier (base of 100 Hz/ch): " << m_conf.TP_rate_per_ch;
-      if (m_conf.TP_rate_per_ch != 0) {
+      if (emu_params->get_TP_rate_per_channel() != 0) {
+       TLOG() << "TP rate per channel multiplier (base of 100 Hz/ch): " << emu_params->get_TP_rate_per_channel();
        // Define time to wait when adding an ADC above threshold
        // Adding a hit every 9768 gives a total Sent TP rate of approx 100 Hz/wire with WIBEth
-        m_time_to_wait = m_time_to_wait / m_conf.TP_rate_per_ch;       
+        m_time_to_wait = m_time_to_wait / emu_params->get_TP_rate_per_channel();       
       }  
     }
 
     m_is_configured = true;
   }
   // Configure thread:
-  m_producer_thread.set_name("fakeprod", m_link_conf.source_id);
+  m_producer_thread.set_name("fakeprod", m_sourceid.id);
 }
 
 template<class ReadoutType>
@@ -99,7 +101,8 @@ SourceEmulatorModel<ReadoutType>::start(const nlohmann::json& /*args*/)
 {
   m_packet_count_tot = 0;
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Starting threads...";
-  m_rate_limiter = std::make_unique<RateLimiter>(m_rate_khz / m_link_conf.slowdown);
+  // FIXME: don't know where to take the slowdown from... m_rate_limiter = std::make_unique<RateLimiter>(m_rate_khz / m_link_conf.slowdown);
+  m_rate_limiter = std::make_unique<RateLimiter>(m_rate_khz);
   // m_stats_thread.set_work(&SourceEmulatorModel<ReadoutType>::run_stats, this);
   m_producer_thread.set_work(&SourceEmulatorModel<ReadoutType>::run_produce, this);
 }
@@ -146,14 +149,14 @@ SourceEmulatorModel<ReadoutType>::run_produce()
 
   // set the initial timestamp to a configured value, otherwise just use the timestamp from the header
   uint64_t ts_0 = rptr->get_first_timestamp(); // NOLINT(build/unsigned)
-  if (m_conf.set_t0_to >= 0) {
-    ts_0 = m_conf.set_t0_to;
-  } else if (m_conf.use_now_as_first_data_time) {
+  if (m_t0_now) {
     auto time_now = std::chrono::system_clock::now().time_since_epoch();
     uint64_t current_time = // NOLINT (build/unsigned)
       std::chrono::duration_cast<std::chrono::microseconds>(time_now).count();
-    ts_0 = (m_conf.clock_speed_hz / 100000) * current_time;
-    ts_0 /= 10;
+    // FIXME: where do I get the clockspeed from?
+    // ts_0 = (m_conf.clock_speed_hz / 100000) * current_time;
+    ts_0 = 625 * current_time / 10;
+
   }
   TLOG_DEBUG(TLVL_BOOKKEEPING) << "Using first timestamp: " << ts_0;
   uint64_t timestamp = ts_0; // NOLINT(build/unsigned)
@@ -189,7 +192,7 @@ SourceEmulatorModel<ReadoutType>::run_produce()
         }
         payload.fake_frame_errors(&frame_errs);
 
-        if (m_conf.generate_periodic_adc_pattern) { 
+        if (m_generate_periodic_adc_pattern) { 
           if (timestamp - m_pattern_generator_previous_ts > m_time_to_wait) {
       
             // Reset the pattern from the beginning if it reaches the maximum
@@ -231,7 +234,7 @@ SourceEmulatorModel<ReadoutType>::run_produce()
 
     m_rate_limiter->limit();
   }
-  TLOG_DEBUG(TLVL_WORK_STEPS) << "Data generation thread " << m_this_link_number << " finished";
+  TLOG_DEBUG(TLVL_WORK_STEPS) << "Data generation thread " << m_sourceid.to_string() << " finished";
 }
 
 } // namespace readoutlibs

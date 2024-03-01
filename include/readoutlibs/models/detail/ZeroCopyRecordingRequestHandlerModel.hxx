@@ -6,44 +6,50 @@ namespace readoutlibs {
 // Special configuration that checks LB alignment and O_DIRECT flag on output file
 template<class ReadoutType, class LatencyBufferType>
 void 
-ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::conf(const nlohmann::json& args)
+ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::conf(const appdal::ReadoutModule* conf)
 {
-  auto conf = args["requesthandlerconf"].get<readoutconfig::RequestHandlerConf>();
-  if (conf.enable_raw_recording) {
-    inherited::m_sourceid.id = conf.source_id;
+
+  auto data_rec_conf = conf->get_module_configuration()->get_request_handler()->get_data_recorder();
+
+  
+  if (data_rec_conf != nullptr) {
+    inherited::m_sourceid.id = conf->get_source_id();
     inherited::m_sourceid.subsystem = ReadoutType::subsystem;
 
     // Check for alignment restrictions
     if (inherited::m_latency_buffer->get_alignment_size() == 0 ||
-        sizeof(ReadoutType) * inherited::m_latency_buffer->get_size() % 4096) {
+        sizeof(ReadoutType) * inherited::m_latency_buffer->size() % 4096) {
       ers::error(ConfigurationError(ERS_HERE, inherited::m_sourceid, "Latency buffer is not 4k aligned"));
     }
 
     // RS: This will need to go away with the SNB store handler!
-    if (remove(conf.output_file.c_str()) == 0) {
-      TLOG(TLVL_WORK_STEPS) << "Removed existing output file from previous run: " << conf.output_file;
+    if (remove(data_rec_conf->get_output_file().c_str()) == 0) {
+      TLOG(TLVL_WORK_STEPS) << "Removed existing output file from previous run: " << data_rec_conf->get_output_file();
     }
 
     m_oflag = O_CREAT | O_WRONLY;
-    if (conf.use_o_direct) {
+    if (data_rec_conf->get_use_o_direct()) {
       m_oflag |= O_DIRECT;
     }
-    m_fd = ::open(conf.output_file.c_str(), m_oflag, 0644);
+    m_fd = ::open(data_rec_conf->get_output_file().c_str(), m_oflag, 0644);
     inherited::m_recording_configured = true;
   }
-  inherited::conf(args);
+  inherited::conf(conf);
 }
 
 // Special record command that writes to files from memory aligned LBs
 template<class ReadoutType, class LatencyBufferType>
 void 
-ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::record(const nlohmann::json& args)
+ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::record(const nlohmann::json& /*args*/)
 {
   if (inherited::m_recording.load()) {
     ers::error(
       CommandError(ERS_HERE, inherited::m_sourceid, "A recording is still running, no new recording was started!"));
     return;
   }
+// FIXME: parameters to commands to be clarified.... hardcode for now
+  int recording_time_sec = 1;
+
   inherited::m_recording_thread.set_work(
     [&](int duration) {
       size_t chunk_size = inherited::m_stream_buffer_size;
@@ -182,8 +188,7 @@ ZeroCopyRecordingRequestHandlerModel<ReadoutType, LatencyBufferType>::record(con
 
       TLOG() << "Stopped recording, wrote " << bytes_written << " bytes";
       inherited::m_recording.exchange(false);
-    },
-    args.get<readoutconfig::RecordingParams>().duration);
+    }, recording_time_sec);
 }
 
 } // namespace readoutlibs

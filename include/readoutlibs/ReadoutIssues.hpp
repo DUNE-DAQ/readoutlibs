@@ -95,6 +95,12 @@ ERS_DECLARE_ISSUE(readoutlibs,
                   ((daqdataformats::SourceID)sourceid)((std::string)queuename))
 
 ERS_DECLARE_ISSUE(readoutlibs,
+                  CannotDispatch,
+                  "Module [" << name << "] Failed attempt to write to the queue: "
+                           << ". Data will be lost!",
+                  ((std::string)name))
+
+ERS_DECLARE_ISSUE(readoutlibs,
                   RequestSourceIDMismatch,
                   "SourceID[" << sourceid << "] Got request for SourceID: " << request_sourceid,
                   ((daqdataformats::SourceID)sourceid)((daqdataformats::SourceID)request_sourceid))

@@ -13,6 +13,7 @@
 #include "readoutlibs/models/ReadoutModel.hpp"
 #include "readoutlibs/models/RecorderModel.hpp"
 #include "readoutlibs/models/SkipListLatencyBufferModel.hpp"
+#include "readoutlibs/models/DataSubscriberModel.hpp"
 #include "readoutlibs/models/SourceEmulatorModel.hpp"
 #include "readoutlibs/models/TaskRawDataProcessorModel.hpp"
 #include "readoutlibs/models/ZeroCopyRecordingRequestHandlerModel.hpp"

@@ -5,24 +5,42 @@ namespace readoutlibs {
 
 template<class RDT, class LBT>
 void 
-DefaultRequestHandlerModel<RDT, LBT>::conf(const nlohmann::json& args)
+DefaultRequestHandlerModel<RDT, LBT>::conf(const appdal::ReadoutModule* conf)
 {
-  auto conf = args["requesthandlerconf"].get<readoutconfig::RequestHandlerConf>();
-  m_pop_limit_pct = conf.pop_limit_pct;
-  m_pop_size_pct = conf.pop_size_pct;
-  m_buffer_capacity = conf.latency_buffer_size;
-  m_num_request_handling_threads = conf.num_request_handling_threads;
-  m_request_timeout_ms = conf.request_timeout_ms;
-  m_fragment_send_timeout_ms = conf.fragment_send_timeout_ms;
-  m_output_file = conf.output_file;
-  m_sourceid.id = conf.source_id;
+  //auto conf = args["requesthandlerconf"].get<readoutconfig::RequestHandlerConf>();
+
+  auto reqh_conf = conf->get_module_configuration()->get_request_handler();
+  m_sourceid.id = conf->get_source_id();
   m_sourceid.subsystem = RDT::subsystem;
-  m_detid = conf.det_id;
-  m_stream_buffer_size = conf.stream_buffer_size;
-  m_warn_on_timeout = conf.warn_on_timeout;
-  m_warn_about_empty_buffer = conf.warn_about_empty_buffer;
-  // if (m_configured) {
-  //  ers::error(ConfigurationError(ERS_HERE, "This object is already configured!"));
+  m_detid = conf->get_detector_id();
+  m_pop_limit_pct = reqh_conf->get_pop_limit_pct();
+  m_pop_size_pct = reqh_conf->get_pop_size_pct();
+
+  m_buffer_capacity = conf->get_module_configuration()->get_latency_buffer()->get_size();
+  m_num_request_handling_threads = reqh_conf->get_handler_threads();
+  m_request_timeout_ms = reqh_conf->get_request_timeout();
+
+  for (auto output : conf->get_outputs()) {
+    if (output->get_data_type() == "Fragment") {
+      m_fragment_send_timeout_ms = output->get_send_timeout_ms();
+    }
+  }
+  //m_fragment_send_timeout_ms = conf.fragment_send_timeout_ms;
+  auto dr = reqh_conf->get_data_recorder();
+  if(dr != nullptr) {
+    m_output_file = dr->get_output_file();
+    if (remove(m_output_file.c_str()) == 0) {
+      TLOG(TLVL_WORK_STEPS) << "Removed existing output file from previous run: " << m_output_file << std::endl;
+    }
+    m_stream_buffer_size = dr->get_streaming_buffer_size();
+    m_buffered_writer.open(m_output_file, m_stream_buffer_size, dr->get_compression_algorithm(), dr->get_use_o_direct());
+    m_recording_configured = true;
+  }
+
+  m_warn_on_timeout = reqh_conf->get_warn_on_timeout();
+  m_warn_about_empty_buffer = reqh_conf->get_warn_on_empty_buffer();
+  m_periodic_data_transmission_ms = reqh_conf->get_periodic_data_transmission_ms();
+  
   if (m_pop_limit_pct < 0.0f || m_pop_limit_pct > 1.0f || m_pop_size_pct < 0.0f || m_pop_size_pct > 1.0f) {
     ers::error(ConfigurationError(ERS_HERE, m_sourceid, "Auto-pop percentage out of range."));
   } else {
@@ -30,18 +48,9 @@ DefaultRequestHandlerModel<RDT, LBT>::conf(const nlohmann::json& args)
     m_max_requested_elements = m_pop_limit_size - m_pop_limit_size * m_pop_size_pct;
   }
 
-  if (conf.enable_raw_recording && !m_recording_configured) {
-    std::string output_file = conf.output_file;
-    if (remove(output_file.c_str()) == 0) {
-      TLOG(TLVL_WORK_STEPS) << "Removed existing output file from previous run: " << conf.output_file << std::endl;
-    }
-
-    m_buffered_writer.open(conf.output_file, conf.stream_buffer_size, conf.compression_algorithm, conf.use_o_direct);
-    m_recording_configured = true;
-  }
-
-  m_recording_thread.set_name("recording", conf.source_id);
-  m_cleanup_thread.set_name("cleanup", conf.source_id);
+  m_recording_thread.set_name("recording", m_sourceid.id);
+  m_cleanup_thread.set_name("cleanup", m_sourceid.id);
+  m_periodic_transmission_thread.set_name("periodic", m_sourceid.id);
 
   std::ostringstream oss;
   oss << "RequestHandler configured. " << std::fixed << std::setprecision(2)
@@ -84,6 +93,10 @@ DefaultRequestHandlerModel<RDT, LBT>::start(const nlohmann::json& /*args*/)
 
   m_run_marker.store(true);
   m_cleanup_thread.set_work(&DefaultRequestHandlerModel<RDT, LBT>::periodic_cleanups, this);
+  if(m_periodic_data_transmission_ms > 0) {
+    m_periodic_transmission_thread.set_work(&DefaultRequestHandlerModel<RDT, LBT>::periodic_data_transmissions, this);
+  }
+
   m_waiting_queue_thread = 
     std::thread(&DefaultRequestHandlerModel<RDT, LBT>::check_waiting_requests, this);
 }
@@ -100,15 +113,21 @@ DefaultRequestHandlerModel<RDT, LBT>::stop(const nlohmann::json& /*args*/)
   while (!m_cleanup_thread.get_readiness()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
+  while (!m_periodic_transmission_thread.get_readiness()) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+
   m_waiting_queue_thread.join();
   m_request_handler_thread_pool->join();
 }
 
 template<class RDT, class LBT>
 void 
-DefaultRequestHandlerModel<RDT, LBT>::record(const nlohmann::json& args)
+DefaultRequestHandlerModel<RDT, LBT>::record(const nlohmann::json& /*args*/)
 {
-  auto conf = args.get<readoutconfig::RecordingParams>();
+  //auto conf = args.get<readoutconfig::RecordingParams>();
+  //FIXME: how do we pass the duration or recording?
+  int recording_time_sec = 1;
   if (m_recording.load()) {
     ers::error(CommandError(ERS_HERE, m_sourceid, "A recording is still running, no new recording was started!"));
     return;
@@ -169,7 +188,7 @@ DefaultRequestHandlerModel<RDT, LBT>::record(const nlohmann::json& args)
       m_recording.exchange(false);
       m_buffered_writer.flush();
     },
-    conf.duration);
+    recording_time_sec);
 }
 
 template<class RDT, class LBT>
@@ -329,6 +348,21 @@ DefaultRequestHandlerModel<RDT, LBT>::periodic_cleanups()
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
   }
 }
+
+template<class RDT, class LBT>
+void 
+DefaultRequestHandlerModel<RDT, LBT>::periodic_data_transmissions()
+{
+ while (m_run_marker.load()) {
+    periodic_data_transmission();
+    std::this_thread::sleep_for(std::chrono::milliseconds(m_periodic_data_transmission_ms));
+  }
+}
+
+template<class RDT, class LBT>
+void 
+DefaultRequestHandlerModel<RDT, LBT>::periodic_data_transmission()
+{}
 
 template<class RDT, class LBT>
 void 

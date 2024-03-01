@@ -9,9 +9,11 @@
 #define READOUTLIBS_INCLUDE_READOUTLIBS_CONCEPTS_RAWDATAPROCESSORCONCEPT_HPP_
 
 #include "opmonlib/InfoCollector.hpp"
-#include <nlohmann/json.hpp>
+#include "daqdataformats/SourceID.hpp"
+#include "appdal/ReadoutModule.hpp"
 
 #include <string>
+#include <nlohmann/json.hpp>
 
 namespace dunedaq {
 namespace readoutlibs {
@@ -31,14 +33,12 @@ public:
   RawDataProcessorConcept& operator=(RawDataProcessorConcept&&) =
     delete; ///< RawDataProcessorConcept is not move-assignable
 
-  //! Init the raw processor
-  virtual void init(const nlohmann::json& /*args*/) {}
   //! Start operation
   virtual void start(const nlohmann::json& args) = 0;
   //! Stop operation
   virtual void stop(const nlohmann::json& args) = 0;
   //! Set the emulator mode, if active, timestamps of processed packets are overwritten with new ones
-  virtual void conf(const nlohmann::json& cfg) = 0;
+  virtual void conf(const appdal::ReadoutModule* conf) = 0;
   //! Unconfigure
   virtual void scrap(const nlohmann::json& args) = 0;
   //! Get info from the raw processor

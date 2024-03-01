@@ -15,8 +15,11 @@
 
 #include "opmonlib/InfoCollector.hpp"
 
-#include "readoutlibs/sourceemulatorconfig/Nljs.hpp"
+//#include "readoutlibs/sourceemulatorconfig/Nljs.hpp"
 #include "readoutlibs/sourceemulatorinfo/InfoNljs.hpp"
+#include "coredal/DROStreamConf.hpp"
+#include "coredal/StreamParameters.hpp"
+#include "coredal/GeoId.hpp"
 
 #include "readoutlibs/ReadoutIssues.hpp"
 #include "readoutlibs/concepts/SourceEmulatorConcept.hpp"
@@ -91,10 +94,10 @@ public:
     ,m_frames_per_tick(frames_per_tick)
   {}
 
-  void init(const nlohmann::json& /*args*/) {}
+  //void init(const nlohmann::json& /*args*/) {}
   void set_sender(const std::string& conn_name);
 
-  void conf(const nlohmann::json& args, const nlohmann::json& link_conf);
+  void conf(const coredal::DROStreamConf* stream_conf, const appdal::StreamEmulationParameters* emu_conf);
   void scrap(const nlohmann::json& /*args*/)
   {
     m_file_source.reset();
@@ -126,7 +129,7 @@ private:
   std::atomic<int> m_packet_count{ 0 };
   std::atomic<int> m_packet_count_tot{ 0 };
 
-  sourceemulatorconfig::Conf m_cfg;
+  //sourceemulatorconfig::Conf m_cfg;
 
   // RAW SENDER
   std::chrono::milliseconds m_raw_sender_timeout_ms;
@@ -134,10 +137,10 @@ private:
   std::shared_ptr<raw_sender_ct> m_raw_data_sender;
 
   bool m_sender_is_set = false;
-  using module_conf_t = dunedaq::readoutlibs::sourceemulatorconfig::Conf;
-  module_conf_t m_conf;
-  using link_conf_t = dunedaq::readoutlibs::sourceemulatorconfig::LinkConfiguration;
-  link_conf_t m_link_conf;
+  //using module_conf_t = dunedaq::readoutlibs::sourceemulatorconfig::Conf;
+  //module_conf_t m_conf;
+  //using link_conf_t = dunedaq::readoutlibs::sourceemulatorconfig::LinkConfiguration;
+  //link_conf_t m_link_conf;
 
   std::unique_ptr<RateLimiter> m_rate_limiter;
   std::unique_ptr<FileSourceBuffer> m_file_source;
@@ -153,18 +156,20 @@ private:
   std::vector<bool> m_dropouts; // Random population
   std::vector<bool> m_frame_errors;
 
-  uint m_dropouts_length = 10000; // NOLINT(build/unsigned) Random population size
-  uint m_frame_errors_length = 10000;
+  uint m_dropouts_length; // NOLINT(build/unsigned) Random population size
+  uint m_frame_errors_length;
   daqdataformats::SourceID m_sourceid;
-  int m_crateid = 0;
-  int m_slotid = 0;
-  int m_linkid = 0;
+  int m_crateid;
+  int m_slotid;
+  int m_linkid;
 
+  bool m_t0_now;
   // Pattern generator configs
+  bool m_generate_periodic_adc_pattern;
   SourceEmulatorPatternGenerator m_pattern_generator;
   std::vector<int> m_random_channels; 
-  int m_pattern_index = 0;
-  uint64_t m_pattern_generator_previous_ts = 0;  
+  int m_pattern_index;
+  uint64_t m_pattern_generator_previous_ts;  
   // Adding a hit every 9768 gives a TP rate of approx 100 Hz/wire using WIBEthernet
   uint32_t m_time_to_wait = 9768; 
 };

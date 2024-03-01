@@ -8,18 +8,22 @@
 #ifndef READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_RECORDERMODEL_HPP_
 #define READOUTLIBS_INCLUDE_READOUTLIBS_MODELS_RECORDERMODEL_HPP_
 
-#include "appfwk/DAQModuleHelper.hpp"
+//#include "appfwk/DAQModuleHelper.hpp"
 #include "iomanager/IOManager.hpp"
 #include "iomanager/Receiver.hpp"
 #include "utilities/WorkerThread.hpp"
 #include "readoutlibs/ReadoutTypes.hpp"
 #include "readoutlibs/concepts/RecorderConcept.hpp"
-#include "readoutlibs/recorderconfig/Nljs.hpp"
-#include "readoutlibs/recorderconfig/Structs.hpp"
+//#include "readoutlibs/recorderconfig/Nljs.hpp"
+//#include "readoutlibs/recorderconfig/Structs.hpp"
 #include "readoutlibs/recorderinfo/InfoStructs.hpp"
 #include "readoutlibs/utils/BufferedFileWriter.hpp"
 #include "readoutlibs/utils/ReusableThread.hpp"
 
+#include "coredal/DaqModule.hpp"
+#include "coredal/Connection.hpp"
+#include "appdal/DataRecorder.hpp"
+#include "appdal/DataRecorderConf.hpp"
 #include <atomic>
 #include <fstream>
 #include <iostream>
@@ -38,9 +42,9 @@ public:
     , m_name(name)
   {}
 
-  void init(const nlohmann::json& args) override;
+  void init(const appdal::DataRecorder* conf) override;
   void get_info(opmonlib::InfoCollector& ci, int /* level */) override;
-  void do_conf(const nlohmann::json& args) override;
+  void do_conf(const nlohmann::json& /*args*/) override;
   void do_scrap(const nlohmann::json& /*args*/) override { m_buffered_writer.close(); }
   void do_start(const nlohmann::json& /* args */) override;
   void do_stop(const nlohmann::json& /* args */) override;
@@ -54,7 +58,12 @@ private:
   std::shared_ptr<source_t> m_data_receiver;
 
   // Internal
-  recorderconfig::Conf m_conf;
+  //recorderconfig::Conf m_conf;
+  std::string m_output_file;
+  size_t m_stream_buffer_size = 0;
+  std::string m_compression_algorithm;
+  bool m_use_o_direct;
+
   BufferedFileWriter<> m_buffered_writer;
 
   // Threading

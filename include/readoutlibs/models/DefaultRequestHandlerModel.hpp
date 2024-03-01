@@ -14,8 +14,15 @@
 #include "readoutlibs/utils/BufferedFileWriter.hpp"
 #include "readoutlibs/utils/ReusableThread.hpp"
 
-#include "readoutlibs/readoutconfig/Nljs.hpp"
+//#include "readoutlibs/readoutconfig/Nljs.hpp"
 #include "readoutlibs/readoutinfo/InfoNljs.hpp"
+#include "coredal/DaqModule.hpp"
+#include "coredal/Connection.hpp"
+#include "appdal/ReadoutModule.hpp"
+#include "appdal/ReadoutModuleConf.hpp"
+#include "appdal/RequestHandler.hpp"
+#include "appdal/LatencyBuffer.hpp"
+#include "appdal/DataRecorderConf.hpp"
 
 #include "appfwk/Issues.hpp"
 #include "dfmessages/Fragment_serialization.hpp"
@@ -123,10 +130,10 @@ public:
   };
 
   // Default init mechanism (no-op impl)
-  void init(const nlohmann::json& /*args*/) override { }
+  //void init(const nlohmann::json& /*args*/) override { }
 
   // Default configuration mechanism
-  void conf(const nlohmann::json& args);
+  void conf(const dunedaq::appdal::ReadoutModule*);
 
   // Default un-configure mechanism
   void scrap(const nlohmann::json& /*args*/) override;
@@ -142,6 +149,9 @@ public:
 
   // A function that determines if a cleanup request should be issued based on LB occupancy
   void cleanup_check() override;
+  
+  // Periodic data transmission method invoked at configurable interval
+  virtual void periodic_data_transmission() override;
 
   // Implementation of default request handling. (boost::asio post to a thread pool)
   void issue_request(dfmessages::DataRequest datarequest,
@@ -197,8 +207,13 @@ protected:
   // Cleanup thread's work function. Runs the cleanup() routine
   void periodic_cleanups();
 
+   // Periodic data transmission thread's work function. Runs the periodic_data_transmission() routine
+  void periodic_data_transmissions();
+
   // LB cleanup implementation
   void cleanup();
+
+
 
   // Function that checks delayed requests that are waiting for not yet present data in LB
   void check_waiting_requests();
@@ -220,6 +235,7 @@ protected:
   ReusableThread m_recording_thread;
 
   ReusableThread m_cleanup_thread;
+  ReusableThread m_periodic_transmission_thread;
 
   // Bookkeeping of OOB requests
   std::map<dfmessages::DataRequest, int> m_request_counter;
@@ -262,6 +278,8 @@ protected:
   bool m_recording_configured = false;
   bool m_warn_on_timeout = true; // Whether to warn when a request times out
   bool m_warn_about_empty_buffer = true; // Whether to warn about an empty buffer when processing a request
+  uint32_t m_periodic_data_transmission_ms = 0;
+  
   // Stats
   std::atomic<int> m_pop_counter;
   std::atomic<int> m_num_buffer_cleanups{ 0 };
@@ -285,9 +303,10 @@ protected:
   // std::deque<std::pair<int, int>> m_response_time_log;
   // std::mutex m_response_time_log_lock;
 
+  int m_fragment_send_timeout_ms;
 private:
-    int m_request_timeout_ms;
-    int m_fragment_send_timeout_ms;
+  int m_request_timeout_ms;
+    
 };
 
 } // namespace readoutlibs

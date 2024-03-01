@@ -32,7 +32,7 @@ public:
   }
 
   // Special configuration that checks LB alignment and O_DIRECT flag on output file
-  void conf(const nlohmann::json& args) override;
+  void conf(const appdal::ReadoutModule* conf) override;
 
   // Special record command that writes to files from memory aligned LBs
   void record(const nlohmann::json& args) override;
