@@ -203,7 +203,13 @@ SourceEmulatorModel<ReadoutType>::run_produce()
       
             // Set the ADC to the uint16 maximum value
             int channel = m_random_channels[m_pattern_index];
-            payload.fake_adc_pattern(channel);
+            try {
+              payload.fake_adc_pattern(channel);
+            }
+            catch (std::exception & ex) {
+              //FIXME: should not happen
+            }
+            
             //TLOG() << "Lift channel " << channel;
             
             // Update the previous timestamp of the pattern generator
