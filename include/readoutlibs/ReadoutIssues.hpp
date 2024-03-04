@@ -172,10 +172,12 @@ ERS_DECLARE_ISSUE(readoutlibs,
 
 ERS_DECLARE_ISSUE(readoutlibs,
                   DataPacketArrivedTooLate,
-                  "Received a late data packet in run " << run << ", payload first timestamp = " << ts1 <<
-                  ", request_handler cutoff timestamp = " << ts2 << ", difference = " << tick_diff <<
-                  " ticks, " << msec_diff << " msec.",
-                  ((daqdataformats::run_number_t)run)((daqdataformats::timestamp_t)ts1)((daqdataformats::timestamp_t)ts2)((int64_t)tick_diff)((double)msec_diff))
+                  "SourceID[" << sourceid << "] Received a late data packet in run " << run
+                  << ", the packet arrived " << msec_diff << " msec later than the allowed latency window of "
+                  << msec_allowed << " msec (" << ticks_allowed << " ticks).",
+                  ((daqdataformats::SourceID)sourceid)
+                  ((daqdataformats::run_number_t)run)((double)msec_diff)
+                  ((double)msec_allowed)((daqdataformats::timestamp_t)ticks_allowed))
 
 } // namespace dunedaq
 
