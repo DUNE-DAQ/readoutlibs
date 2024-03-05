@@ -50,23 +50,19 @@ class SourceEmulatorPatternGenerator {
 
 public:
   SourceEmulatorPatternGenerator() {
-    m_size = 1000000;
   };
   ~SourceEmulatorPatternGenerator() {};
 
-  void generate(int);
+  void generate(int, int);
 
-  std::vector<int> get_channels() {
-    return m_channel;
-  }
-
-  int get_total_size() {
-    return m_size;
+  int get_channel_number() {
+    if (m_index == m_channel.size()) m_index = 0;
+    return m_channel[m_index++];
   }
  
 private: 
-  int m_size;
   std::vector<int> m_channel;
+  int m_index = 0;
 };
 
 
@@ -167,8 +163,6 @@ private:
   // Pattern generator configs
   bool m_generate_periodic_adc_pattern;
   SourceEmulatorPatternGenerator m_pattern_generator;
-  std::vector<int> m_random_channels; 
-  int m_pattern_index;
   uint64_t m_pattern_generator_previous_ts;  
   // Adding a hit every 9768 gives a TP rate of approx 100 Hz/wire using WIBEthernet
   uint32_t m_time_to_wait = 9768; 
