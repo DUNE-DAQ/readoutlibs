@@ -276,6 +276,8 @@ DefaultRequestHandlerModel<RDT, LBT>::get_info(opmonlib::InfoCollector& ci, int 
   info.num_buffer_cleanups = m_num_buffer_cleanups.exchange(0);
   info.num_requests_waiting = m_waiting_requests.size();
   info.num_requests_timed_out = m_num_requests_timed_out.exchange(0);
+  info.num_periodic_sent = m_num_periodic_sent.exchange(0);
+  info.num_periodic_send_failed = m_num_periodic_send_failed.exchange(0);
   info.is_recording = m_recording;
   info.num_payloads_written = m_payloads_written.exchange(0);
   info.recording_status = m_recording ? "Y" : "N";
@@ -296,30 +298,13 @@ DefaultRequestHandlerModel<RDT, LBT>::get_info(opmonlib::InfoCollector& ci, int 
   TLOG_DEBUG(TLVL_HOUSEKEEPING) << "Cleanup request rate: " << new_pop_reqs / seconds / 1. << " [Hz]"
                                 << " Dropped: " << new_pop_count << " Occupancy: " << new_occupancy;
 
-
-  // std::unique_lock<std::mutex> time_lorunck_guard(m_response_time_log_lock);
-  // if (!m_response_time_log.empty()) {
-  //  std::ostringstream oss;
-  // oss << "Completed data requests [trig id, took us]: ";
-  //  while (!m_response_time_log.empty()) {
-  // for (int i = 0; i < m_response_time_log.size(); ++i) {
-  //    auto& fr = m_response_time_log.front();
-  //    ++new_request_count;
-  //    new_request_times += fr.second;
-  // oss << fr.first << ". in " << fr.second << " | ";
-  //    m_response_time_log.pop_front();
-  //}
-  // TLOG_DEBUG(TLVL_HOUSEKEEPING) << oss.str();
-  // TLOG_DEBUG(TLVL_HOUSEKEEPING) << "Completed requests: " << new_request_count
-  //                                << " | Avarage response time: " << new_request_times / new_request_count <<
-  //                                "[us]";
-  //}
-  // time_lock_guard.unlock();
   if (info.num_requests_handled > 0) {
 
     info.avg_request_response_time = info.tot_request_response_time / info.num_requests_handled;
-    TLOG_DEBUG(TLVL_HOUSEKEEPING) << "Completed requests: " << info.num_requests_handled
-                                  << " | Avarage response time: " << info.avg_request_response_time << "[us]";
+    //TLOG_DEBUG(TLVL_HOUSEKEEPING) << "Completed requests: " << info.num_requests_handled
+    TLOG() << "Completed requests: " << info.num_requests_handled
+                                  << " | Avarage response time: " << info.avg_request_response_time << "[us]"
+				  << " | Periodic sends: " << info.num_periodic_sent;
   }
 
   m_t0 = now;

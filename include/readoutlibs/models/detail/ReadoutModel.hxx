@@ -143,7 +143,9 @@ ReadoutModel<RDT, RHT, LBT, RPT>::get_info(opmonlib::InfoCollector& ci, int leve
   auto now = std::chrono::high_resolution_clock::now();
   int new_packets = m_stats_packet_count.exchange(0);
   double seconds = std::chrono::duration_cast<std::chrono::microseconds>(now - m_t0).count() / 1000000.;
-  TLOG_DEBUG(TLVL_TAKE_NOTE) << "Consumed Packet rate: " << std::to_string(new_packets / seconds / 1000.) << " [kHz]";
+  //TLOG_DEBUG(TLVL_TAKE_NOTE) << "Consumed Packet rate: " << std::to_string(new_packets / seconds / 1000.) << " [kHz]";
+  TLOG() << "Consumed Packet rate: " << std::to_string(new_packets / seconds / 1000.) 
+	  << " [kHz]. Payloads overwritten: " << ri.num_payloads_overwritten;
   auto rawq_timeouts = m_rawq_timeout_count.exchange(0);
   if (rawq_timeouts > 0) {
     TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Raw input queue timed out " 
@@ -220,10 +222,10 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
     // Add here a possible deferral of the post processing, to allow elements being reordered in the LB
     // Basically, find data older than a certain timestamp and process all data since the last post-processed element up to that value
     if (m_processing_delay_ticks !=0) {
-      std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-      auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(last_post_proc_time - now);
-      last_post_proc_time = now;
-      if (milliseconds.count() > 10) {
+      //std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+      //auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(last_post_proc_time - now);
+      //last_post_proc_time = now;
+      //if (milliseconds.count() > 10) {
         std::vector<std::pair<void*, size_t>> frag_pieces;
         // Get the LB boundtries
 	auto head = m_latency_buffer_impl->front();
@@ -253,7 +255,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
             processed_element = *element;
           }
         }
-      }
+      //}
      
     }
   }

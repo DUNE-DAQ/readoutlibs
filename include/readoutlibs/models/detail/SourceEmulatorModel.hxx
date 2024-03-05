@@ -7,12 +7,12 @@ namespace dunedaq {
 namespace readoutlibs {
 
 void
-SourceEmulatorPatternGenerator::generate(int source_id)
+SourceEmulatorPatternGenerator::generate(int source_id, int size)
 {
   //TLOG() << "Generate random ADC patterns" ;
-  std::srand(source_id*12345678);
-  m_channel.reserve(m_size);
-  for (int i = 0; i < m_size; i++) {
+  std::srand(source_id*12345);
+  m_channel.reserve(size);
+  for (int i = 0; i < size; i++) {
       int random_ch = std::rand()%64;
       m_channel.push_back(random_ch);
   }
@@ -76,10 +76,10 @@ SourceEmulatorModel<ReadoutType>::conf(const coredal::DROStreamConf* link_conf, 
 
     // Generate random ADC pattern
     m_generate_periodic_adc_pattern = emu_params->get_generate_periodic_adc_pattern();
+    auto vec_size = emu_params->get_random_population_size();
     if (m_generate_periodic_adc_pattern) {
       TLOG() << "Generated pattern.";
-      m_pattern_generator.generate(m_sourceid.id);
-      m_random_channels = m_pattern_generator.get_channels();
+      m_pattern_generator.generate(m_sourceid.id, vec_size);
 
       if (emu_params->get_TP_rate_per_channel() != 0) {
        TLOG() << "TP rate per channel multiplier (base of 100 Hz/ch): " << emu_params->get_TP_rate_per_channel();
@@ -195,16 +195,15 @@ SourceEmulatorModel<ReadoutType>::run_produce()
         if (m_generate_periodic_adc_pattern) { 
           if (timestamp - m_pattern_generator_previous_ts > m_time_to_wait) {
       
-            // Reset the pattern from the beginning if it reaches the maximum
+            /* Reset the pattern from the beginning if it reaches the maximum
             m_pattern_index++;
             if (m_pattern_index == m_pattern_generator.get_total_size()) {
               m_pattern_index = 0;
             }
-      
+            */
             // Set the ADC to the uint16 maximum value
-            int channel = m_random_channels[m_pattern_index];
             try {
-              payload.fake_adc_pattern(channel);
+              payload.fake_adc_pattern(m_pattern_generator.get_channel_number());
             }
             catch (std::exception & ex) {
               //FIXME: should not happen

@@ -297,6 +297,9 @@ protected:
   std::atomic<int> m_response_time_min{ std::numeric_limits<int>::max() };
   std::atomic<int> m_response_time_max{ 0 };
   std::atomic<int> m_payloads_written{ 0 };
+  std::atomic<uint64_t> m_num_periodic_sent{ 0 };  // NOLINT(build/unsigned)
+  std::atomic<uint64_t> m_num_periodic_send_failed{ 0 }; // NOLINT(build/unsigned)
+	
   // std::atomic<int> m_avg_req_count{ 0 }; // for opmon, later
   // std::atomic<int> m_avg_resp_time{ 0 };
   // Request response time log (kept for debugging if needed)
