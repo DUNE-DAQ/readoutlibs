@@ -143,8 +143,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::get_info(opmonlib::InfoCollector& ci, int leve
   auto now = std::chrono::high_resolution_clock::now();
   int new_packets = m_stats_packet_count.exchange(0);
   double seconds = std::chrono::duration_cast<std::chrono::microseconds>(now - m_t0).count() / 1000000.;
-  //TLOG_DEBUG(TLVL_TAKE_NOTE) << "Consumed Packet rate: " << std::to_string(new_packets / seconds / 1000.) << " [kHz]";
-  TLOG() << "Consumed Packet rate: " << std::to_string(new_packets / seconds / 1000.) 
+  TLOG_DEBUG(TLVL_TAKE_NOTE) << "Consumed Packet rate: " << std::to_string(new_packets / seconds / 1000.)
 	  << " [kHz]. Payloads overwritten: " << ri.num_payloads_overwritten;
   auto rawq_timeouts = m_rawq_timeout_count.exchange(0);
   if (rawq_timeouts > 0) {
