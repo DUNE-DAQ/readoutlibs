@@ -435,7 +435,7 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
                                                           RequestResult& rres)
 {
 
-  //TLOG() << "Looking for frags between " << start_win_ts << " and " << end_win_ts;
+  TLOG() << "Looking for frags between " << start_win_ts << " and " << end_win_ts;
   std::vector<std::pair<void*, size_t>> frag_pieces;
   RDT request_element = RDT();
   request_element.set_first_timestamp(start_win_ts-(request_element.get_num_frames() * RDT::expected_tick_difference));
@@ -446,9 +446,9 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
     // Due to some concurrent access, the start_iter could not be retrieved successfully, try again
     ++m_num_requests_delayed;
     rres.result_code = ResultCode::kNotYet; // give it another chance
-    //TLOG() << "Timestamp in future";
+    TLOG() << "Timestamp in future";
   } else {
-    //TLOG() << "Lower bound found " << start_iter->get_first_timestamp() << ", --> distance from window: " << int64_t(start_win_ts) - int64_t(start_iter->get_first_timestamp()) ;  
+    TLOG() << "Lower bound found " << start_iter->get_first_timestamp() << ", --> distance from window: " << int64_t(start_win_ts) - int64_t(start_iter->get_first_timestamp()) ;  
     rres.result_code = ResultCode::kFound;
     ++m_num_requests_found;
 
@@ -490,7 +490,7 @@ DefaultRequestHandlerModel<RDT, LBT>::get_fragment_pieces(uint64_t start_win_ts,
     }
     
   }
-  //TLOG() << "*** Number of frames retrieved: " << frag_pieces.size();
+  TLOG() << "*** Number of frames retrieved: " << frag_pieces.size();
   return frag_pieces;
 }
 
