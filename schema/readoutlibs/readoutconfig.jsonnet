@@ -65,6 +65,8 @@ local readoutconfig = {
                             doc="Enable TPG"),                            
             s.field("tpg_algorithm", self.string, "SimpleThreshold",
                             doc="SelectTPG algorithm"),
+            s.field("enable_simple_threshold_on_collection", self.choice, false,
+                            doc="Enable SimpleThreshold TPG algorithm only on collection planes when a Running Sum algorithm is enabled"),
             s.field("tpg_threshold", self.count, 120,
                             doc="Select TPG threshold"),
             s.field("tpg_rs_memory_factor", self.pct, 0.8,
