@@ -64,6 +64,11 @@ ERS_DECLARE_ISSUE(readoutlibs,
                   "Couldn't open file: " << filename,
                   ((std::string)filename))
 
+ERS_DECLARE_ISSUE(readoutlibs,
+                  BufferedReaderWriterInvalidBufferSize,
+                  "Buffer size misaligned. Must be a multiple of 4096 byte: " << buffersize,
+                  ((int)buffersize))
+
 ERS_DECLARE_ISSUE_BASE(readoutlibs,
                        CannotReadFile,
                        readoutlibs::ConfigurationError,
