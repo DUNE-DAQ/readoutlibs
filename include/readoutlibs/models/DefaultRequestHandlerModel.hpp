@@ -154,6 +154,7 @@ public:
   virtual bool supports_cutoff_timestamp() {return false;}
   virtual dunedaq::daqdataformats::timestamp_t get_allowed_latency() {return 0;}
   virtual void increment_tardy_tp_count() {}
+  virtual void report_tardy_packet(const RDT& /*packet*/, int64_t /*tardy_ticks*/) {}  // NOLINT
 
 protected:
   // An inline helper function that creates a fragment header based on a data request

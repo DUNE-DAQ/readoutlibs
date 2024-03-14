@@ -226,8 +226,9 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
         int64_t diff1 = m_request_handler_impl->get_cutoff_timestamp() - payload.get_first_timestamp();
         if (diff1 >= 0) {
           m_request_handler_impl->increment_tardy_tp_count();
-          ers::warning(DataPacketArrivedTooLate(ERS_HERE, m_sourceid, m_run_number,
-                                                (static_cast<double>(diff1)/62500.0),
+          m_request_handler_impl->report_tardy_packet(payload, diff1);
+          ers::warning(DataPacketArrivedTooLate(ERS_HERE, daqdataformats::SourceID::subsystem_to_string(m_sourceid.subsystem),
+                                                m_sourceid.id, (static_cast<double>(diff1)/62500.0),
                                                 (static_cast<double>(m_request_handler_allowed_latency)/62500.0),
                                                 m_request_handler_allowed_latency));
         }
