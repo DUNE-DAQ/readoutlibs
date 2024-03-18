@@ -170,14 +170,6 @@ ERS_DECLARE_ISSUE(readoutlibs,
                   "SourceID[" << sourceid << "] Empty fragment at the end of the run",
                   ((daqdataformats::SourceID)sourceid))
 
-ERS_DECLARE_ISSUE(readoutlibs,
-                  DataPacketArrivedTooLate,
-                  "SourceID[" << sid_subsystem << "," << sid_id << "] Received a late data packet, "
-                  << msec_diff << " ms beyond the allowed latency ("
-                  << msec_allowed << " ms, " << ticks_allowed << " ticks).",
-                  ((std::string)sid_subsystem)((daqdataformats::SourceID::ID_t)sid_id)((double)msec_diff)
-                  ((double)msec_allowed)((daqdataformats::timestamp_t)ticks_allowed))
-
 } // namespace dunedaq
 
 #endif // READOUTLIBS_INCLUDE_READOUTLIBS_READOUTISSUES_HPP_
