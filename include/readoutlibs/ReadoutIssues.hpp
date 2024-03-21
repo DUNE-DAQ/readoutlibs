@@ -170,13 +170,6 @@ ERS_DECLARE_ISSUE(readoutlibs,
                   "SourceID[" << sourceid << "] Empty fragment at the end of the run",
                   ((daqdataformats::SourceID)sourceid))
 
-ERS_DECLARE_ISSUE(readoutlibs,
-                  DataPacketArrivedTooLate,
-                  "Received a late data packet in run " << run << ", payload first timestamp = " << ts1 <<
-                  ", request_handler cutoff timestamp = " << ts2 << ", difference = " << tick_diff <<
-                  " ticks, " << msec_diff << " msec.",
-                  ((daqdataformats::run_number_t)run)((daqdataformats::timestamp_t)ts1)((daqdataformats::timestamp_t)ts2)((int64_t)tick_diff)((double)msec_diff))
-
 } // namespace dunedaq
 
 #endif // READOUTLIBS_INCLUDE_READOUTLIBS_READOUTISSUES_HPP_

@@ -139,6 +139,8 @@ local readoutconfig = {
                             doc="Latency introduced to allow for TPs to arrive and be reordered, default is 50 ms"),
             s.field("tpset_transmission_rate_hz", self.size, 2000,
                             doc="Max rate at which TPSets are sent. Default is 2 kHz"),
+            s.field("tardy_tp_quiet_time_at_start_sec", self.count, 10,
+                            doc="Amount of time that warning messages about tardy TPs will be suppressed at the start of a run, default is 10s"),
             s.field("send_partial_fragment_if_available", self.choice, false,
                             doc="Whether to send a partial fragment if one is available")
     ], doc="Readout Model Config"),
