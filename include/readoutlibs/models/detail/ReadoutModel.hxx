@@ -17,11 +17,10 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
     for (const auto &cr : ini.conn_refs) {
       if (cr.name == "raw_input") {
         TLOG() << "Create raw_input receiver";
-///////////////////////////
-// RS: FIXME -> This version won't pick up IOM receivers!!! This is only callback mode.
         m_raw_data_receiver_connection_name = cr.uid;
-  	    //m_raw_data_receiver = get_iom_receiver<RDT>(cr.uid);
-///////////////////////////
+        if (!m_callback_mode) {
+  	      m_raw_data_receiver = get_iom_receiver<RDT>(m_raw_data_receiver_connection_name);
+        }
       } else if (cr.name == "timesync_output") {
   	    TLOG() << "Create timesync sender";
   	    m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(cr.uid);
@@ -39,15 +38,12 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
 
   std::string errstring = "";
 
-///////////////////////////
-// RS: FIXME -> This version won't pick up IOM receivers!!! This is only callback mode.
-//  if (m_raw_data_receiver == nullptr) {
-//    errstring = "raw_input";
-//  }
-///////////////////////////
+  if (!m_callback_mode && m_raw_data_receiver == nullptr) {
+    errstring = "raw_input";
+  }
 
   if (m_timesync_sender == nullptr) {
-    if (errstring != "") { 
+				if (errstring != "") { 
       errstring += ", "; 
     }
     errstring += "timesync_output";
@@ -110,12 +106,14 @@ ReadoutModel<RDT, RHT, LBT, RPT>::conf(const nlohmann::json& args)
   m_sum_payloads = 0;
   m_stats_packet_count = 0;
 
-  // Configure and register consume callback
-  m_consume_callback = std::bind(&ReadoutModel<RDT, RHT, LBT, RPT>::consume_payload, this, std::placeholders::_1);
+  if (m_callback_mode) {
+    // Configure and register consume callback
+    m_consume_callback = std::bind(&ReadoutModel<RDT, RHT, LBT, RPT>::consume_payload, this, std::placeholders::_1);
 
-  // Register callback
-  auto dmcbr = DataMoveCallbackRegistry::get();
-  dmcbr->register_callback<RDT>(m_raw_data_receiver_connection_name, m_consume_callback);
+    // Register callback
+    auto dmcbr = DataMoveCallbackRegistry::get();
+    dmcbr->register_callback<RDT>(m_raw_data_receiver_connection_name, m_consume_callback);
+  }
 
   // Configure threads:
   m_consumer_thread.set_name("consumer", conf.source_id);
@@ -143,10 +141,9 @@ ReadoutModel<RDT, RHT, LBT, RPT>::start(const nlohmann::json& args)
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Starting threads...";
   m_raw_processor_impl->start(args);
   m_request_handler_impl->start(args);
-///////////////////////////
-// RS: FIXME -> This version won't pick up IOM receivers!!! This is only callback mode.
-  //m_consumer_thread.set_work(&ReadoutModel<RDT, RHT, LBT, RPT>::run_consume, this);
-///////////////////////////
+  if (!m_callback_mode) {
+    m_consumer_thread.set_work(&ReadoutModel<RDT, RHT, LBT, RPT>::run_consume, this);
+  }
   m_timesync_thread.set_work(&ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync, this);
   // Register callback to receive and dispatch data requests
   m_data_request_receiver->add_callback(
@@ -166,12 +163,11 @@ ReadoutModel<RDT, RHT, LBT, RPT>::stop(const nlohmann::json& args)
   while (!m_timesync_thread.get_readiness()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
-///////////////////////////
-// RS: FIXME -> This version won't pick up IOM receivers!!! This is only callback mode.
-//  while (!m_consumer_thread.get_readiness()) {
-//    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-//  }
-///////////////////////////
+  if (!m_callback_mode) {
+    while (!m_consumer_thread.get_readiness()) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+  }
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Flushing latency buffer with occupancy: " << m_latency_buffer_impl->occupancy();
   m_latency_buffer_impl->flush();
   m_raw_processor_impl->stop(args);
