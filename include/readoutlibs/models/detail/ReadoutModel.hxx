@@ -305,11 +305,8 @@ ReadoutModel<RDT, RHT, LBT, RPT>::consume_payload(RDT&& payload)
       m_raw_processor_impl->preprocess_item(&payload);
       if (m_request_handler_supports_cutoff_timestamp) {
         int64_t diff1 = payload.get_first_timestamp() - m_request_handler_impl->get_cutoff_timestamp();
-        if (diff1 <= 0) {
+        if (diff1 >= 0) {
           m_request_handler_impl->increment_tardy_tp_count();
-          ers::warning(DataPacketArrivedTooLate(ERS_HERE, m_run_number, payload.get_first_timestamp(),
-                                                m_request_handler_impl->get_cutoff_timestamp(), diff1,
-                                                (static_cast<double>(diff1)/62500.0)));
         }
       }
       if (!m_latency_buffer_impl->write(std::move(payload))) {
