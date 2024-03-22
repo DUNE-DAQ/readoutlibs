@@ -34,7 +34,8 @@ local info = {
    ], doc="Latency buffer information"),
 
    tpchannelinfo: s.record("TPChannelInfo", [
-        s.field("num_tp",                  self.uint8,     0, doc="Number of TPs per channel")
+        s.field("num_tp",                  self.uint8,     0, doc="Number of TPs per channel"),
+        s.field("channel",                 self.uint8,     0, doc="channel")
    ], doc="Info for a single TP channel"),
 
    requesthandlerinfo: s.record("RequestHandlerInfo", [
