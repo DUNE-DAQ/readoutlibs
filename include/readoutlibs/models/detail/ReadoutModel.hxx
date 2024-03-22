@@ -304,7 +304,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::consume_payload(RDT&& payload)
   //m_stats_packet_count = 0;
       m_raw_processor_impl->preprocess_item(&payload);
       if (m_request_handler_supports_cutoff_timestamp) {
-        int64_t diff1 = payload.get_first_timestamp() - m_request_handler_impl->get_cutoff_timestamp();
+        int64_t diff1 = m_request_handler_impl->get_cutoff_timestamp() - payload.get_first_timestamp();
         if (diff1 >= 0) {
           m_request_handler_impl->report_tardy_packet(payload, diff1);
         }
