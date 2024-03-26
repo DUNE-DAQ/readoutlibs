@@ -116,7 +116,8 @@ for proc in procs:
         print('      + Parent mask specified! Applying mask for every children and thread!')
         print('        - mask:', mask)
         if max(mask) > lcpu_count:
-          raise Exception('Error! The CPU mask contains higher CPU IDs than logical CPU count on system!')
+          print('WARNING! CPU Mask contains higher CPU IDs than logical CPU count visible by the kernel!')
+          #raise Exception('Error! The CPU mask contains higher CPU IDs than logical CPU count on system!')
         else: 
           for child in children:
             cid = psutil.Process(child.id)
@@ -146,7 +147,8 @@ for proc in procs:
           # print('        - For thread', tid.name(), 'applying mask', cpu_list)
           print(f'        - For thread {tid.name()} applying mask {cpu_list}')
           if max(cpu_list) > lcpu_count:
-            raise Exception('Error! The CPU mask contains higher CPU IDs than logical CPU count on system!')
+            print('WARNING! CPU Mask contains higher CPU IDs than logical CPU count visible by the kernel!')
+            #raise Exception('Error! The CPU mask contains higher CPU IDs than logical CPU count on system!')
           else:
             tid.cpu_affinity(cpu_list)
 
