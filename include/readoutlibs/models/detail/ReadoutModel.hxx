@@ -27,7 +27,11 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
           end = m_raw_data_receiver_connection_name.find(delim, start);
           words.push_back(m_raw_data_receiver_connection_name.substr(start, end - start));
         }
-        if (words.front() == "cb") {
+
+	TLOG() << "Initialize connection based on uid: " << m_raw_data_receiver_connection_name << " front word: " << words.front();
+
+	std::string cb_prefix("cb");
+        if (words.front() == cb_prefix) {
           m_callback_mode = true;
         }
 
