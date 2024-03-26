@@ -75,9 +75,8 @@ public:
   static inline constexpr timestamp_t s = 1000 * ms;
 
   // Explicit constructor with run marker pass-through
-  explicit ReadoutModel(std::atomic<bool>& run_marker, bool callback_mode=false)
+  explicit ReadoutModel(std::atomic<bool>& run_marker)
     : m_run_marker(run_marker)
-    , m_callback_mode(callback_mode)
     , m_fake_trigger(false)
     , m_current_fake_trigger_id(0)
     , m_send_partial_fragment_if_available(false)

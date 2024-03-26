@@ -16,9 +16,23 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
     auto ini = args.get<appfwk::app::ModInit>();
     for (const auto &cr : ini.conn_refs) {
       if (cr.name == "raw_input") {
-        TLOG() << "Create raw_input receiver";
         m_raw_data_receiver_connection_name = cr.uid;
+
+        // Parse for prefix 
+        const char delim = '_';
+        std::vector<std::string> words;
+        std::size_t start;
+        std::size_t end = 0;
+        while ((start = m_raw_data_receiver_connection_name.find_first_not_of(delim, end)) != std::string::npos) {
+          end = m_raw_data_receiver_connection_name.find(delim, start);
+          words.push_back(m_raw_data_receiver_connection_name.substr(start, end - start));
+        }
+        if (words.front() == "cb") {
+          m_callback_mode = true;
+        }
+
         if (!m_callback_mode) {
+          TLOG() << "Create raw_input receiver";
   	      m_raw_data_receiver = get_iom_receiver<RDT>(m_raw_data_receiver_connection_name);
         }
       } else if (cr.name == "timesync_output") {
