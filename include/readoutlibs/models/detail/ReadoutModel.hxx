@@ -11,6 +11,7 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
 {
   // Setupo request queues
   setup_request_queues(args);
+  m_callback_mode = false;
 
   try {
     auto ini = args.get<appfwk::app::ModInit>();
@@ -18,14 +19,15 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
       if (cr.name == "raw_input") {
         m_raw_data_receiver_connection_name = cr.uid;
 
-        // Parse for prefix 
+        // Parse for prefix
+        std::string conn_name = cr.uid; 
         const char delim = '_';
         std::vector<std::string> words;
         std::size_t start;
         std::size_t end = 0;
-        while ((start = m_raw_data_receiver_connection_name.find_first_not_of(delim, end)) != std::string::npos) {
-          end = m_raw_data_receiver_connection_name.find(delim, start);
-          words.push_back(m_raw_data_receiver_connection_name.substr(start, end - start));
+        while ((start = conn_name.find_first_not_of(delim, end)) != std::string::npos) {
+          end = conn_name.find(delim, start);
+          words.push_back(conn_name.substr(start, end - start));
         }
 
 	TLOG() << "Initialize connection based on uid: " << m_raw_data_receiver_connection_name << " front word: " << words.front();
