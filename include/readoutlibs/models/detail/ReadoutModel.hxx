@@ -11,13 +11,36 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
 {
   // Setupo request queues
   setup_request_queues(args);
+  m_callback_mode = false;
 
   try {
     auto ini = args.get<appfwk::app::ModInit>();
     for (const auto &cr : ini.conn_refs) {
       if (cr.name == "raw_input") {
-        TLOG() << "Create raw_input receiver";
-  	    m_raw_data_receiver = get_iom_receiver<RDT>(cr.uid);
+        m_raw_data_receiver_connection_name = cr.uid;
+
+        // Parse for prefix
+        std::string conn_name = cr.uid; 
+        const char delim = '_';
+        std::vector<std::string> words;
+        std::size_t start;
+        std::size_t end = 0;
+        while ((start = conn_name.find_first_not_of(delim, end)) != std::string::npos) {
+          end = conn_name.find(delim, start);
+          words.push_back(conn_name.substr(start, end - start));
+        }
+
+	TLOG() << "Initialize connection based on uid: " << m_raw_data_receiver_connection_name << " front word: " << words.front();
+
+	std::string cb_prefix("cb");
+        if (words.front() == cb_prefix) {
+          m_callback_mode = true;
+        }
+
+        if (!m_callback_mode) {
+          TLOG() << "Create raw_input receiver";
+  	      m_raw_data_receiver = get_iom_receiver<RDT>(m_raw_data_receiver_connection_name);
+        }
       } else if (cr.name == "timesync_output") {
   	    TLOG() << "Create timesync sender";
   	    m_timesync_sender = get_iom_sender<dfmessages::TimeSync>(cr.uid);
@@ -34,11 +57,13 @@ ReadoutModel<RDT, RHT, LBT, RPT>::init(const nlohmann::json& args)
   }
 
   std::string errstring = "";
-  if (m_raw_data_receiver == nullptr) {
+
+  if (!m_callback_mode && m_raw_data_receiver == nullptr) {
     errstring = "raw_input";
   }
+
   if (m_timesync_sender == nullptr) {
-    if (errstring != "") { 
+				if (errstring != "") { 
       errstring += ", "; 
     }
     errstring += "timesync_output";
@@ -95,6 +120,21 @@ ReadoutModel<RDT, RHT, LBT, RPT>::conf(const nlohmann::json& args)
 
   m_request_handler_impl->conf(args);
 
+  // Zero consume related metrics
+  m_rawq_timeout_count = 0;
+  m_num_payloads = 0;
+  m_sum_payloads = 0;
+  m_stats_packet_count = 0;
+
+  if (m_callback_mode) {
+    // Configure and register consume callback
+    m_consume_callback = std::bind(&ReadoutModel<RDT, RHT, LBT, RPT>::consume_payload, this, std::placeholders::_1);
+
+    // Register callback
+    auto dmcbr = DataMoveCallbackRegistry::get();
+    dmcbr->register_callback<RDT>(m_raw_data_receiver_connection_name, m_consume_callback);
+  }
+
   // Configure threads:
   m_consumer_thread.set_name("consumer", conf.source_id);
   m_timesync_thread.set_name("timesync", conf.source_id);
@@ -121,7 +161,9 @@ ReadoutModel<RDT, RHT, LBT, RPT>::start(const nlohmann::json& args)
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Starting threads...";
   m_raw_processor_impl->start(args);
   m_request_handler_impl->start(args);
-  m_consumer_thread.set_work(&ReadoutModel<RDT, RHT, LBT, RPT>::run_consume, this);
+  if (!m_callback_mode) {
+    m_consumer_thread.set_work(&ReadoutModel<RDT, RHT, LBT, RPT>::run_consume, this);
+  }
   m_timesync_thread.set_work(&ReadoutModel<RDT, RHT, LBT, RPT>::run_timesync, this);
   // Register callback to receive and dispatch data requests
   m_data_request_receiver->add_callback(
@@ -141,8 +183,10 @@ ReadoutModel<RDT, RHT, LBT, RPT>::stop(const nlohmann::json& args)
   while (!m_timesync_thread.get_readiness()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
-  while (!m_consumer_thread.get_readiness()) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  if (!m_callback_mode) {
+    while (!m_consumer_thread.get_readiness()) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
   }
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Flushing latency buffer with occupancy: " << m_latency_buffer_impl->occupancy();
   m_latency_buffer_impl->flush();
@@ -206,11 +250,6 @@ template<class RDT, class RHT, class LBT, class RPT>
 void 
 ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
 {
-  m_rawq_timeout_count = 0;
-  m_num_payloads = 0;
-  m_sum_payloads = 0;
-  m_stats_packet_count = 0;
-
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Consumer thread started...";
   while (m_run_marker.load()) {
     // Try to acquire data
@@ -273,6 +312,31 @@ ReadoutModel<RDT, RHT, LBT, RPT>::run_consume()
     // }
   }
   TLOG_DEBUG(TLVL_WORK_STEPS) << "Consumer thread joins... ";
+}
+
+template<class RDT, class RHT, class LBT, class RPT>
+void 
+ReadoutModel<RDT, RHT, LBT, RPT>::consume_payload(RDT&& payload)
+{
+  //m_rawq_timeout_count = 0;
+  //m_num_payloads = 0;
+  //m_sum_payloads = 0;
+  //m_stats_packet_count = 0;
+      m_raw_processor_impl->preprocess_item(&payload);
+      if (m_request_handler_supports_cutoff_timestamp) {
+        int64_t diff1 = m_request_handler_impl->get_cutoff_timestamp() - payload.get_first_timestamp();
+        if (diff1 >= 0) {
+          m_request_handler_impl->report_tardy_packet(payload, diff1);
+        }
+      }
+      if (!m_latency_buffer_impl->write(std::move(payload))) {
+        TLOG_DEBUG(TLVL_TAKE_NOTE) << "***ERROR: Latency buffer is full and data was overwritten!";
+        m_num_payloads_overwritten++;
+      }
+      m_raw_processor_impl->postprocess_item(m_latency_buffer_impl->back());
+      ++m_num_payloads;
+      ++m_sum_payloads;
+      ++m_stats_packet_count;
 }
 
 template<class RDT, class RHT, class LBT, class RPT>

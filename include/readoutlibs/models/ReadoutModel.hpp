@@ -33,6 +33,7 @@
 #include "readoutlibs/readoutconfig/Nljs.hpp"
 #include "readoutlibs/readoutinfo/InfoNljs.hpp"
 
+#include "readoutlibs/DataMoveCallbackRegistry.hpp"
 #include "readoutlibs/FrameErrorRegistry.hpp"
 
 #include "readoutlibs/concepts/LatencyBufferConcept.hpp"
@@ -119,6 +120,12 @@ public:
   // Opmon get_info call implementation
   void get_info(opmonlib::InfoCollector& ci, int level);
 
+  // Raw data consume callback
+  void consume_payload(RDT&& payload);
+
+  // CONSUME CALLBACK
+  std::function<void(RDT&&)> m_consume_callback;
+
 private:
   // Sets up input queues for requests
   void setup_request_queues(const nlohmann::json& args);
@@ -137,6 +144,7 @@ private:
 
   // CONFIGURATION
   appfwk::app::ModInit m_queue_config;
+  bool m_callback_mode;
   bool m_fake_trigger;
   int m_current_fake_trigger_id;
   daqdataformats::SourceID m_sourceid;
@@ -160,6 +168,7 @@ private:
   std::chrono::microseconds m_raw_receiver_sleep_us;
   using raw_receiver_ct = iomanager::ReceiverConcept<ReadoutType>;
   std::shared_ptr<raw_receiver_ct> m_raw_data_receiver;
+  std::string m_raw_data_receiver_connection_name;
 
   // REQUEST RECEIVERS
   using request_receiver_ct = iomanager::ReceiverConcept<dfmessages::DataRequest>;
