@@ -9,12 +9,12 @@ namespace readoutlibs {
 void
 SourceEmulatorPatternGenerator::generate(int source_id)
 {
-  //TLOG() << "Generate random ADC patterns" ;
-  std::srand(source_id*12345678);
+  // TLOG() << "Generate random ADC patterns" ;
+  std::srand(source_id * 12345678);
   m_channel.reserve(m_size);
   for (int i = 0; i < m_size; i++) {
-      int random_ch = std::rand()%64;
-      m_channel.push_back(random_ch);
+    int random_ch = std::rand() % 64;
+    m_channel.push_back(random_ch);
   }
 }
 
@@ -81,10 +81,10 @@ SourceEmulatorModel<ReadoutType>::conf(const nlohmann::json& args, const nlohman
 
       TLOG() << "TP rate per channel multiplier (base of 100 Hz/ch): " << m_conf.TP_rate_per_ch;
       if (m_conf.TP_rate_per_ch != 0) {
-       // Define time to wait when adding an ADC above threshold
-       // Adding a hit every 9768 gives a total Sent TP rate of approx 100 Hz/wire with WIBEth
-        m_time_to_wait = m_time_to_wait / m_conf.TP_rate_per_ch;       
-      }  
+        // Define time to wait when adding an ADC above threshold
+        // Adding a hit every 9768 gives a total Sent TP rate of approx 100 Hz/wire with WIBEth
+        m_time_to_wait = m_time_to_wait / m_conf.TP_rate_per_ch;
+      }
     }
 
     m_is_configured = true;
@@ -189,23 +189,23 @@ SourceEmulatorModel<ReadoutType>::run_produce()
         }
         payload.fake_frame_errors(&frame_errs);
 
-        if (m_conf.generate_periodic_adc_pattern) { 
+        if (m_conf.generate_periodic_adc_pattern) {
           if (timestamp - m_pattern_generator_previous_ts > m_time_to_wait) {
-      
+
             // Reset the pattern from the beginning if it reaches the maximum
             m_pattern_index++;
             if (m_pattern_index == m_pattern_generator.get_total_size()) {
               m_pattern_index = 0;
             }
-      
+
             // Set the ADC to the uint16 maximum value
             int channel = m_random_channels[m_pattern_index];
             payload.fake_adc_pattern(channel);
-            //TLOG() << "Lift channel " << channel;
-            
+            // TLOG() << "Lift channel " << channel;
+
             // Update the previous timestamp of the pattern generator
-            m_pattern_generator_previous_ts = timestamp;      
-            
+            m_pattern_generator_previous_ts = timestamp;
+
           } // timestamp difference
         }
 
@@ -221,13 +221,9 @@ SourceEmulatorModel<ReadoutType>::run_produce()
         ++offset;
         ++m_packet_count;
         ++m_packet_count_tot;
-
-
       }
     }
     timestamp += m_time_tick_diff * rptr->get_num_frames();
-
-
 
     m_rate_limiter->limit();
   }
