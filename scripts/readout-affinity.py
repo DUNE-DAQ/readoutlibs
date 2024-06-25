@@ -118,13 +118,13 @@ for proc in procs:
         if max(mask) > lcpu_count:
           print('WARNING! CPU Mask contains higher CPU IDs than logical CPU count visible by the kernel!')
           #raise Exception('Error! The CPU mask contains higher CPU IDs than logical CPU count on system!')
-        else: 
-          for child in children:
-            cid = psutil.Process(child.id)
-            cid.cpu_affinity(mask)
-          for thread in threads:
-            tid = psutil.Process(thread.id)
-            tid.cpu_affinity(mask)
+         
+        for child in children:
+          cid = psutil.Process(child.id)
+          cid.cpu_affinity(mask)
+        for thread in threads:
+          tid = psutil.Process(thread.id)
+          tid.cpu_affinity(mask)
 
       if 'threads' in affinity_dict[proc.name()][cmdl]:
         print('      + Thread masks specified! Applying thread specific masks!')
@@ -149,8 +149,8 @@ for proc in procs:
           if max(cpu_list) > lcpu_count:
             print('WARNING! CPU Mask contains higher CPU IDs than logical CPU count visible by the kernel!')
             #raise Exception('Error! The CPU mask contains higher CPU IDs than logical CPU count on system!')
-          else:
-            tid.cpu_affinity(cpu_list)
+ 
+          tid.cpu_affinity(cpu_list)
 
           # if tid.name() in affinity_dict[proc.name()][cmdl]['threads'].keys():
           #   tmask = affinity_dict[proc.name()][cmdl]['threads'][tid.name()]
