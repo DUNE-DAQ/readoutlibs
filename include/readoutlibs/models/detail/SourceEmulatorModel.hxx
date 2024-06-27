@@ -155,7 +155,10 @@ SourceEmulatorModel<ReadoutType>::run_produce()
     ts_0 = (m_conf.clock_speed_hz / 100000) * current_time;
     ts_0 /= 10;
   }
-  TLOG_DEBUG(TLVL_BOOKKEEPING) << "Using first timestamp: " << ts_0;
+  ts_0 *= 10;
+  ts_0 -= (m_conf.clock_speed_hz * 15 * (m_sourceid.id - 100));
+  ts_0 /= 10;
+  TLOG() << "Using first timestamp: " << ts_0 << " for source_id [" << m_sourceid << "]";
   uint64_t timestamp = ts_0; // NOLINT(build/unsigned)
   int dropout_index = 0;
 
@@ -201,7 +204,8 @@ SourceEmulatorModel<ReadoutType>::run_produce()
             // Set the ADC to the uint16 maximum value
             int channel = m_random_channels[m_pattern_index];
             payload.fake_adc_pattern(channel);
-            // TLOG() << "Lift channel " << channel;
+            TLOG_DEBUG(29) << "Lifting channel " << channel << " for source_id " << m_sourceid.id << " at timestamp "
+                           << timestamp;
 
             // Update the previous timestamp of the pattern generator
             m_pattern_generator_previous_ts = timestamp;
