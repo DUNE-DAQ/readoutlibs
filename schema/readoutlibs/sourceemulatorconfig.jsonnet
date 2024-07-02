@@ -79,6 +79,15 @@ local sourceemulatorconfig = {
         s.field("use_now_as_first_data_time", self.choice, false,
                 doc="Whether to use the current wallclock time for the timestamp of the first data frame"),
 
+        s.field("use_sourceid_for_different_data_start_times", self.choice, false,
+                doc="Whether to use different data start times for different streams, keying off the SourceID"),
+
+        s.field("sourceid_based_start_time_factor_ms", self.uint4, 2500,
+                doc="Number of milliseconds to use in the SourceID-based start time calculation"),
+
+        s.field("sourceid_based_start_time_sourceid_offset", self.uint4, 0,
+                doc="Value to be subtracted from the SourceID when calculating a SourceID-based start time"),
+
         s.field("clock_speed_hz", self.size, 62500000,
                 doc="Clock frequency in Hz (for use in calculating the first data frame timestamp)"),
 

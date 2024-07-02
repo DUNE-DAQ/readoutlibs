@@ -155,10 +155,15 @@ SourceEmulatorModel<ReadoutType>::run_produce()
     ts_0 = (m_conf.clock_speed_hz / 100000) * current_time;
     ts_0 /= 10;
   }
-  ts_0 *= 10;
-  ts_0 -= (m_conf.clock_speed_hz * 15 * (m_sourceid.id - 100));
-  ts_0 /= 10;
-  TLOG() << "Using first timestamp: " << ts_0 << " for source_id [" << m_sourceid << "]";
+  if (m_conf.use_sourceid_for_different_data_start_times) {
+    ts_0 *= 1000;
+    ts_0 -= (m_conf.clock_speed_hz * m_conf.sourceid_based_start_time_factor_ms *
+             (m_sourceid.id - m_conf.sourceid_based_start_time_sourceid_offset));
+    ts_0 /= 1000;
+  }
+  TLOG() << "Using first timestamp: " << ts_0 << " for source_id [" << m_sourceid << "] with clock speed of "
+         << m_conf.clock_speed_hz << " and different data start times turned "
+         << ((m_conf.use_sourceid_for_different_data_start_times) ? "ON" : "OFF");
   uint64_t timestamp = ts_0; // NOLINT(build/unsigned)
   int dropout_index = 0;
 
