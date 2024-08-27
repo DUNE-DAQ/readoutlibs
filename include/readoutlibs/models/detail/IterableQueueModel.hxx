@@ -55,6 +55,8 @@ IterableQueueModel<T>::allocate_memory(std::size_t size,
     numa_set_strict(WITH_LIBNUMA_STRICT_POLICY);    // https://linux.die.net/man/3/numa_set_strict
  #endif
     records_ = static_cast<T*>(numa_alloc_onnode(sizeof(T) * size, numa_node));
+    TLOG() << "Start of NUMA Allocation: " << records_;
+    TLOG() << "Second NUMA Allocation: " << &records_[1];
 #else
     throw GenericConfigurationError(ERS_HERE,
                                     "NUMA allocation was requested but program was built without USE_LIBNUMA");
@@ -157,6 +159,8 @@ bool
 IterableQueueModel<T>::write(T&& record)
 {
   auto const currentWrite = writeIndex_.load(std::memory_order_relaxed);
+  TLOG() << "currentWrite = " << currentWrite;
+  TLOG() << "Memory address at currentWrite = " << &records_[currentWrite];
   auto nextRecord = currentWrite + 1;
   if (nextRecord == size_) {
     nextRecord = 0;
