@@ -116,6 +116,10 @@ public:
       oflag = oflag | O_DIRECT;
     }
 
+    if (buffer_size % Alignment != 0) {
+      throw BufferedReaderWriterInvalidBufferSize(ERS_HERE, m_buffer_size);
+    }
+
     m_fd = ::open(m_filename.c_str(), oflag, 0644);
     if (m_fd == -1) {
       throw BufferedReaderWriterCannotOpenFile(ERS_HERE, m_filename);
